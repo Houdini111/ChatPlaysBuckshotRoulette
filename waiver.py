@@ -8,7 +8,8 @@ def waive(name: str):
 def pickUpWaiver():
 	print("##### Picking up waiver")
 	anyUse()
-	sleep(4) #Do I need more? Can I get away with less?
+	print("Waiting for waiver to be picked up")
+	sleep(3.5) #Do I need more? Can I get away with less?
 
 def enterName(name: str):
 	name = name.upper()[0:6] #Normalize to uppercase and truncate to the max of 6 characters
@@ -101,4 +102,5 @@ def submitName(currentX, currentY):
 	currentY = navToRow(currentY, 2)
 	currentX = navToColumn(currentX, 2)
 	confirm()
+	print("Waiting for waiver to be put down")
 	sleep(3) #Just enough for the paper to be lowered. The actual wait happens in grabItems

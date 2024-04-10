@@ -27,6 +27,9 @@ def down():
 	pyautogui.press('down')
 	
 def enterDirections(directions):
+	print(f"Entering directions {directions}")
+	if directions is None or len(directions) == 0:
+		return
 	for dir in directions:
 		if dir == 'l':
 			left()

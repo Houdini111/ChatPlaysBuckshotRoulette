@@ -1,5 +1,6 @@
 import pyautogui
 from time import sleep
+import colorsys
 
 from bathroom import throughToGameRoom
 from waiver import waive
@@ -11,5 +12,4 @@ def startGame(name: str):
 	grabItems()
 	awaitInputs()
 	
-
-startGame('Houdini')
+startGame('Chat')

@@ -1,29 +1,34 @@
 from time import sleep
 import colorsys
 from focus import waitFocused
-from screenColors import getPixelAreaBy1440p
+from screenColors import valueOverAmountInArea
 from basicActions import confirm, left, right, up, down, enterDirections, anyUse
+from util import waitForTrue, waitForFalse
 
 def throughToGameRoom():
 	enableEndless()
 	exitBathroom()
 	enterGameRoom()
 
+def doorFullBlack():
+	return valueOverAmountInArea(1, 1435, 641, 40, 5)
+
+def cursorOnBathroomDoor():
+	up()
+	#Targeting top left 
+	return valueOverAmountInArea(70, 1435, 641, 40, 5)
+
 def moveCursorToBathroomDoor():
 	print("### Moving cursor to bathroom door")
 	waitFocused()
 	up() #Make cursor show without changing selection
-	for movements in range(10): #Tries before movement
+	for movements in range(20): #Tries before movement
 		#Give each section 5 tries, in case the check missed
-		for i in range(5): 
+		for i in range(1): 
 			#Targeting bottom left of cursor. This should be a large enough area to see it, even with the swaying.
-			areaColors = getPixelAreaBy1440p(1432, 712, 40, 1)
-			for axisOne in areaColors: #Don't know if it's columns or rows but it doesn't matter
-				for pixel in axisOne:
-					(h, s, v) = colorsys.rgb_to_hsv(pixel[0], pixel[1], pixel[2])
-					if v >= 50:
-						print(f"Cursor should be on door now. Detected Value of {v}. RGB: {pixel}")
-						return
+			#valueOverAmount = valueOverAmountInArea(50, 1432, 712, 40, 1)
+			if cursorOnBathroomDoor():
+				return
 			sleep(0.1)
 		print("Didn't find cursor on door. Moving cursor and trying again.")
 		right()
@@ -33,19 +38,19 @@ def enableEndless():
 	print("##### Enabling endless")
 	moveCursorToBathroomDoor()
 	left()
-	sleep(1)
 	confirm()
 	print("Waiting for pills menu to open fully")
-	sleep(2)
+	sleep(1.75)
 	left()
 	confirm()
 	print("Pills consumed. Waiting for reload to bathroom.")
-	sleep(5)
+	waitForFalse(doorFullBlack)
+	waitForTrue(cursorOnBathroomDoor)
 
 def exitBathroom():
 	print("##### Exiting bathroom")
 	anyUse()
-	sleep(6) #Do I need more? Can I get away with less?
+	sleep(5.5) #Do I need more? Can I get away with less?
 	
 def enterGameRoom():
 	print("##### Entering game room")
