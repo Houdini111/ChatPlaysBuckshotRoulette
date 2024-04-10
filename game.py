@@ -13,7 +13,7 @@ currentItemPositions = []
 #TODO: 
 #  Handle dialogue box (currently registers as being player turn)
 #  Item place logic not skipping squares
-#  Sometimes endless activations goes to leaderboards instead
+#  Sometimes activating endless goes to leaderboards instead
 
 def cursorGun():
 	up()
@@ -96,13 +96,6 @@ def getDealerItemDirections(num: int):
 	return directions
 	
 def itemBoxIsOpen():
-	'''
-	#Targeting the dark shadow on the left of the box
-	areaColor = getPixelAreaAverageBy1440p(1025, 467, 10, 10)
-	r, g, b = areaColor
-	#I have yet to see this anything other than true black, but add a bit of wiggle room in case
-	return r < 5 and g < 5 and b < 5
-	'''
 	print("## Checking for item box open")
 	itemBoxBlackVisible = not valueOverAmountInArea(1, 1018, 468, 30, 100)
 	if not itemBoxBlackVisible:
@@ -151,7 +144,6 @@ def grabItems():
 		print("Item box not yet open. Waiting.")
 	while not itemBoxIsOpen():
 		sleep(0.25)
-	#sleep(1) #Sleep for a little extra because of the interactive delay
 	print("Item box open, waiting for cursor.")
 	waitForItemBoxCursorVisible()
 	while itemBoxIsOpen():
@@ -166,81 +158,7 @@ def grabItems():
 		while itemBoxIsOpen() and not itemBoxCursorVisible():
 			sleep(0.1)
 	print("All items withdrawn.")
-	#print("All items withdrawn. Waiting for loading animation.")
-	#sleep(12) #Maximum wait time assumes 8 shells to loading
 
-'''
-def dealerPixels():
-	return getPixelAreaAverageBy1440p(1248, 505, 28, 28)
-
-def dealerSeen():
-	#This logic relies on the fact that the dealer's head bobs, thus changing the pixels in this zone
-	#   Meanwhile, the player's board is completely static
-	r1, g1, b1 = dealerPixels()
-	sleep(0.1)
-	t2, g2, b2 = dealerPixels()
-	return r1 != r2 and g1 != g2 and b1 != b2
-
-def pixelsDifferent(old, new):
-	return old[0] != new[0] or old[1] != new[1] or old[2] != new[2]
-
-def playerTurn():
-	#There are several second pauses during actions (like when he disappears into the void after being shot)
-	#   As such, check to see if the dealer (who moves) can be seen. 
-	#   And keep checking until he can't be seen for multiple checks in a row. 
-	dealerPixelHistory = []
-	newPixels = dealerPixels()
-	dealerPixelHistory.append(newPixels)
-	sleep(0.1)
-	while (True): #TODO: Find exit condition
-		oldPixels = dealerPixelHistory[-1]
-		newPixels = dealerPixels()
-		dealerPixelHistory.append(newPixels)
-		
-		changed = pixelsDifferent(oldPixels, newPixels)
-	
-	if dealerSeen():
-		print("Waiting for dealer to not be seen)
-	while dealerSeen():
-		sleep(4)
-	sleep(4) #Wait for four seconds to 
-'''		
-
-########### TODO: Maybe just check for specific gun pixels? Have to save them from the first time after the item pickup and load
-###########       Or maybe just spam up and wait for the cursor to show up
-
-'''
-staticFramePixels = []
-nonboxStaticFramePixels = []
-def playerTurn():
-	#print(f"Static pixels first order len: {len(staticFramePixels)}")
-	currentPixels = getGunPixels()
-	return pixelsMatch(staticFramePixels, currentPixels)
-
-def saveGunPixels():
-	global staticFramePixels
-	staticFramePixels = getGunPixels()
-	print(f"Saved static pixels to find player turn. First order len: {len(staticFramePixels)}")
-
-def getGunPixels():
-	return getPixelAreaBy1440p(1373, 1416, 24, 24) #Bottom edge of table
-
-def boxNotVisible():
-	currentPixels = getNonBoxPixels()
-	return pixelsMatch(nonboxStaticFramePixels, currentPixels)
-
-def saveNonBoxPixels():
-	global nonboxStaticFramePixels
-	nonboxStaticFramePixels = getNonBoxPixels()
-	print(f"Saved non-box pixels to find if it's box time. First order len: {len(nonboxStaticFramePixels)}")
-
-def getNonBoxPixels():
-	return getPixelAreaBy1440p(1445, 674, 21, 21) #Top right of item box square
-
-def savePixels():
-	saveGunPixels()
-	saveNonBoxPixels()
-'''
 def noDialogueTextBoxVisible():
 	print("# Checking for no dialogue box")
 	noDialogueLeft = valueOverAmountInArea(1, 577, 1144, 11, 173)
@@ -313,12 +231,6 @@ def awaitInputs():
 		if itemBoxCursorVisible():
 			grabItems()
 			continue
-		#print("Is player turn? Wait then check for static non-box pixels")
-		#if not boxNotVisible():
-		#	print("Item box found?. Grab items.")
-		#	grabItems()
-		#print("Item box should be done? Seems to actually be player turn now")
-	
 		request = input("Next? ")
 		request = request.lower().strip()
 		splitRequest = request.split(' ')
