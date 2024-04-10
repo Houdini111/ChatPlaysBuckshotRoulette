@@ -5,6 +5,7 @@ import colorsys
 from bathroom import throughToGameRoom
 from waiver import waive
 from game import grabItems, awaitInputs
+from image import scoreboardText
 
 def startGame(name: str):
 	throughToGameRoom()
@@ -12,4 +13,7 @@ def startGame(name: str):
 	grabItems()
 	awaitInputs()
 	
-startGame('Chat')
+#startGame('Chat')
+
+sleep(2)
+print(scoreboardText())

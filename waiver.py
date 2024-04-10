@@ -1,9 +1,16 @@
 from time import sleep
 from basicActions import confirm, left, right, up, down, enterDirections, anyUse
 
+playerName = ""
+
+def getPlayerName() -> str:
+	return playerName
+
 def waive(name: str):
+	global playerName
 	pickUpWaiver()
 	enterName(name)
+	playerName = name
 
 def pickUpWaiver():
 	print("##### Picking up waiver")

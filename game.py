@@ -6,6 +6,7 @@ from screenColors import getPixelAreaAverageBy1440p, getPixelAreaBy1440p, pixels
 
 
 currentItemPositions = []
+roundsCleared = 0
 
 
 
@@ -14,6 +15,7 @@ currentItemPositions = []
 #  Handle dialogue box (currently registers as being player turn)
 #  Item place logic not skipping squares
 #  Sometimes activating endless goes to leaderboards instead
+#  Using item clearing to detect round ending doesn't work if there are no items to clear, and might not work for detecting the final round being ended (are items cleared before choosing to continue?). Need to find a different way to check. 
 
 def cursorGun():
 	up()
@@ -222,10 +224,53 @@ def gunCursorVisible():
 	print(f"Gun cursor top left: {topLeft} top right: {bottomRight}")
 	return topLeft and bottomRight
 
+def clearingItems():
+	global currentItemPositions
+	global roundsCleared
+	print("## Checking if items are being cleared")
+	topLeftItemSectionIsBlack = not valueOverAmountInArea(1, 1306, 490, 30, 30)
+	if not topLeftItemSectionIsBlack:
+		print("## Items not being cleared. Top left not black.")
+		return False
+	topRightItemSectionIsBlack = not valueOverAmountInArea(1, 1485, 266, 25, 25)
+	if not topRightItemSectionIsBlack:
+		print("## Items not being cleared. Top right not black.")
+		return False
+	bottomLeftItemSectionIsBlack = not valueOverAmountInArea(1, 719, 760, 25, 25)
+	if not bottomLeftItemSectionIsBlack:
+		print("## Items not being cleared. Bottom left not black.")
+		return False
+	bottomRightItemSectionIsBlack = not valueOverAmountInArea(1, 1751, 957, 25, 25)
+	if not bottomRightItemSectionIsBlack:
+		print("## Items not being cleared. Bottom right not black.")
+		return False
+	centerLineWhite = valueOverAmountInArea(85, 708, 424, 10, 10)
+	if not centerLineWhite:
+		print("## Items not being cleared. Center line white not found.")
+		return False
+	bulletSquareWhite = valueOverAmountInArea(85, 1473, 393, 15, 15)
+	if not centerLineWhite:
+		print("## Items not being cleared. Bullet square white not found.")
+		return False
+	print("## Found to be clearing items. Round must have ended. Clearing item position list.")
+	currentItemPositions.clear()
+	roundsCleared += 1
+	print("################")
+	print(f"## Rounds cleared: {roundsCleared}")
+	print("################")
+	if roundsCleared == 3:
+		print("################")
+		print("## Double or Nothing set cleared!")
+		print("################")
+		#TODO: Choose to begin a new double or nothing set
+		roundsCleared = 0
+	return True
+
+
 def awaitInputs():
 	while(True):
 		print("# Waiting for player turn")
-		while not playerTurn() and not itemBoxCursorVisible():
+		while not playerTurn() and not itemBoxCursorVisible() and not clearingItems():
 			sleep(0.5)
 		print("# Either playerTrn or itemBoxCursorVisible")
 		if itemBoxCursorVisible():
@@ -246,7 +291,7 @@ def awaitInputs():
 			usePersonalItem(int(param))
 			if extraParam != "":
 				print("Extra param given (presumably for adrenaline). Wait for adrenaline usage and movement.")
-				sleep(2.5)
+				sleep(1.5)
 				useDealerItem(int(extraParam))
 		elif action == 'shoot':
 			useGun()
