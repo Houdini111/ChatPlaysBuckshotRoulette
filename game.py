@@ -2,6 +2,9 @@ from time import sleep
 import colorsys
 from basicActions import confirm, left, right, up, down, enterDirections, anyUse
 from screenColors import getPixelAreaAverageBy1440p, getPixelAreaBy1440p, pixelsMatch, valueOverAmountInArea
+from waiver import getPlayerName
+from image import scoreboardText
+from bathroom import inStartingBathroom
 
 
 
@@ -12,10 +15,8 @@ roundsCleared = 0
 
 
 #TODO: 
-#  Handle dialogue box (currently registers as being player turn)
-#  Item place logic not skipping squares
+#  Item place logic sometimes skipping squares
 #  Sometimes activating endless goes to leaderboards instead
-#  Using item clearing to detect round ending doesn't work if there are no items to clear, and might not work for detecting the final round being ended (are items cleared before choosing to continue?). Need to find a different way to check. 
 
 def cursorGun():
 	up()
@@ -224,9 +225,7 @@ def gunCursorVisible():
 	print(f"Gun cursor top left: {topLeft} top right: {bottomRight}")
 	return topLeft and bottomRight
 
-def clearingItems():
-	global currentItemPositions
-	global roundsCleared
+def checkForClearingItems():
 	print("## Checking if items are being cleared")
 	topLeftItemSectionIsBlack = not valueOverAmountInArea(1, 1306, 490, 30, 30)
 	if not topLeftItemSectionIsBlack:
@@ -252,7 +251,41 @@ def clearingItems():
 	if not centerLineWhite:
 		print("## Items not being cleared. Bullet square white not found.")
 		return False
-	print("## Found to be clearing items. Round must have ended. Clearing item position list.")
+	print("## Found to be clearing items. Hopefully round won triggered.")
+	return True
+
+def checkForRoundIsWon() -> bool:
+	print("### Checking for round won")
+	scoreboardLeftBlack = not valueOverAmountInArea(1, 786, 481, 40, 150)
+	if not scoreboardLeftBlack:
+		print("### Round not found to be won. scoreboardLeftBlack check failed.")
+		return False
+	scoreboardRightBlack = not valueOverAmountInArea(1, 1493, 646, 99, 249)
+	if not scoreboardRightBlack:
+		print("### Round not found to be won. scoreboardRightBlack check failed.")
+		return False
+	bulletSquareWhite = valueOverAmountInArea(85, 675, 1246, 72, 72)
+	if not bulletSquareWhite:
+		print("### Round not found to be won. bulletSquareWhite check failed.")
+		return False
+	dealerItemSquare8White = valueOverAmountInArea(85, 303, 962, 65, 65)
+	if not dealerItemSquare8White:
+		print("### Round not found to be won. dealerItemSquare8White check failed.")
+		return False
+	blackAboveScoreboard = not valueOverAmountInArea(1, 615, 120, 31, 69)
+	if not blackAboveScoreboard:
+		print("### Round not found to be won. blackAboveScoreboard check failed.")
+		return False
+	ocrText = scoreboardText()
+	playerName = getPlayerName()
+	if octText == f"{playerName} WINS":
+		winRound()
+		return True
+	return False
+
+def winRound():
+	global currentItemPositions
+	global roundsCleared
 	currentItemPositions.clear()
 	roundsCleared += 1
 	print("################")
@@ -264,18 +297,26 @@ def clearingItems():
 		print("################")
 		#TODO: Choose to begin a new double or nothing set
 		roundsCleared = 0
-	return True
+	return 
 
+def hasPlayerLost() -> bool:
+	return inStartingBathroom()
 
 def awaitInputs():
 	while(True):
 		print("# Waiting for player turn")
-		while not playerTurn() and not itemBoxCursorVisible() and not clearingItems():
+		while not playerTurn():
+			if itemBoxCursorVisible():
+				print("# While waiting for the player's turn the item box was found to be open. Grabbing items.")
+				grabItems()
+				continue
+			checkForClearingItems()
+			checkForRoundIsWon()
+			if hasPlayerLost():
+				print("#### Player found to have lost. Returning to bathroom logic.")
+				return
 			sleep(0.5)
-		print("# Either playerTrn or itemBoxCursorVisible")
-		if itemBoxCursorVisible():
-			grabItems()
-			continue
+		print("# Should be player turn now.")
 		request = input("Next? ")
 		request = request.lower().strip()
 		splitRequest = request.split(' ')

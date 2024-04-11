@@ -1,7 +1,7 @@
 from time import sleep
 import colorsys
 from focus import waitFocused
-from screenColors import valueOverAmountInArea
+from screenColors import valueOverAmountInArea, valueUnderAmountInArea
 from basicActions import confirm, left, right, up, down, enterDirections, anyUse
 from util import waitForTrue, waitForFalse
 
@@ -56,3 +56,29 @@ def enterGameRoom():
 	print("##### Entering game room")
 	anyUse()
 	sleep(10) #Do I need more? Can I get away with less?
+
+def inStartingBathroom():
+	#TODO: Is this reliable enough of a check? All the swaying and grays makes it really hard to tell...
+	print("### Checking for if the player is in the bathroom.")
+	monitorHoleBlack = valueUnderAmountInArea(1, 342, 497, 50, 50)
+	if not monitorHoleBlack:
+		print("### Found to not be in the starting bathroom because of monitorHoleBlack")
+		return False
+	monitorScreenBlack = valueUnderAmountInArea(1, 533, 781, 50, 50)
+	if not monitorScreenBlack:
+		print("### Found to not be in the starting bathroom because of monitorScreenBlack")
+		return False
+	mirrorOffWhite1 = valueOverAmountInArea(80, 246, 290, 35, 35)
+	if not mirrorOffWhite1:
+		print("### Found to not be in the starting bathroom because of mirrorOffWhite1")
+		return False
+	mirrorOffWhite2 = valueOverAmountInArea(80, 444, 315, 35, 35)
+	if not mirrorOffWhite2:
+		print("### Found to not be in the starting bathroom because of mirrorOffWhite2")
+		return False
+	mirrorOffWhite3 = valueOverAmountInArea(80, 113, 278, 35, 35)
+	if not mirrorOffWhite3:
+		print("### Found to not be in the starting bathroom because of mirrorOffWhite3")
+		return False
+	#tilesAboveDoorGray = valueOverAmountInArea
+	return True
