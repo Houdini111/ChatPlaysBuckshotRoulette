@@ -1,7 +1,7 @@
 from time import sleep
-import colorsys
-from basicActions import confirm, left, right, up, down, enterDirections, anyUse
-from screenColors import getPixelAreaAverageBy1440p, getPixelAreaBy1440p, pixelsMatch, valueOverAmountInArea
+from basicActions import confirm, up, enterDirections
+from playerActions import doAction, getItemDirections
+from screenColors import valueOverAmountInArea
 from waiver import getPlayerName
 from image import scoreboardText
 from bathroom import inStartingBathroom
@@ -18,85 +18,6 @@ roundsCleared = 0
 #  Item place logic sometimes skipping squares
 #  Sometimes activating endless goes to leaderboards instead
 
-def cursorGun():
-	up()
-	up()
-	
-def cursorItem(num):
-	cursorGun()
-	enterDirections(getItemDirections(num, "use"))
-
-def useGun():
-	cursorGun()
-	confirm()
-
-def usePersonalItem(num):
-	global currentItemPositions
-	cursorItem(num)
-	confirm()
-	currentItemPositions.remove(num)
-	print("Waiting for item use animation")
-	#Is there a good way to check for which item it is to only wait as long as needed? 
-	#This long of a wait might conflict with adrenaline
-	sleep(6) #Has to be extra long for phone. 
-	print("Item use animation should be over")
-
-def useDealerItem(num):
-	down() #Move to ensure cursor is active
-	enterDirections(getDealerItemDirections(num))
-	confirm()
-	
-def chooseDealer():
-	up()
-	confirm()
-
-def chooseSelf():
-	down()
-	confirm()
-	
-def getItemDirections(num: int, mode: str):
-	verticalOffset = []
-	horizontalOffset = []
-	if num == 1 or num == 5:
-		horizontalOffset = ['l', 'l']
-	elif num == 2 or num == 6:
-		horizontalOffset = ['l']
-	elif num == 3 or num == 7:
-		horizontalOffset = ['r']
-	elif num == 4 or num == 8:
-		horizontalOffset = ['r', 'r']
-	
-	if mode == "use":
-		if num >= 5 and num <= 8:
-			verticalOffset = ['d']
-	elif mode == "pickup":
-		if num >= 1 and num <= 4:
-			verticalOffset = ['u']
-	directions = horizontalOffset + verticalOffset
-	print(f"Item directions for item {num} in mode: {mode} -> {directions}")
-	return directions
-
-def getDealerItemDirections(num: int):
-	#Starts on 6
-	if num == 6:
-		print("Requested dealer item 6, the starting position. No extra movements")
-		return []
-	horizontalOffset = []
-	verticalOffset = []
-	
-	if num == 1 or num == 5:
-		horizontalOffset = ['l']
-	elif num == 3 or num == 7:
-		horizontalOffset = ['r']
-	elif num == 4 or num == 8:
-		horizontalOffset = ['r', 'r']
-	
-	if num >= 1 and num <= 4:
-		verticalOffset = ['u']
-	
-	directions = horizontalOffset + verticalOffset
-	print(f"Dealer item directions for {num} -> {directions}")
-	return directions
 	
 def itemBoxIsOpen():
 	print("## Checking for item box open")
@@ -161,6 +82,8 @@ def grabItems():
 		while itemBoxIsOpen() and not itemBoxCursorVisible():
 			sleep(0.1)
 	print("All items withdrawn.")
+	#TODO: When player turn after grabbing items, don't allow player movmement first. 
+	#   Hover over every item and OCR to find what they are so we can more intelligently handle their usage times and requirements (adrenaline)
 
 def noDialogueTextBoxVisible():
 	print("# Checking for no dialogue box")
@@ -278,7 +201,7 @@ def checkForRoundIsWon() -> bool:
 		return False
 	ocrText = scoreboardText()
 	playerName = getPlayerName()
-	if octText == f"{playerName} WINS":
+	if ocrText == f"{playerName} WINS":
 		winRound()
 		return True
 	return False
@@ -302,6 +225,10 @@ def winRound():
 def hasPlayerLost() -> bool:
 	return inStartingBathroom()
 
+def itemAtPosition(pos: int) -> bool:
+	#TODO: Eventually return the actual item Enum/Class, rather than just saying one exists
+	return pos in currentItemPositions
+
 def awaitInputs():
 	while(True):
 		print("# Waiting for player turn")
@@ -317,35 +244,7 @@ def awaitInputs():
 				return
 			sleep(0.5)
 		print("# Should be player turn now.")
-		request = input("Next? ")
-		request = request.lower().strip()
-		splitRequest = request.split(' ')
-		action = splitRequest[0]
-		param = ""
-		extraParam = ""
-		if len(splitRequest) > 1:
-			param = splitRequest[1]
-		if len(splitRequest) > 2:
-			extraParam = splitRequest[2]
-			
-		if action == 'use' or action == 'item':
-			usePersonalItem(int(param))
-			if extraParam != "":
-				print("Extra param given (presumably for adrenaline). Wait for adrenaline usage and movement.")
-				sleep(1.5)
-				useDealerItem(int(extraParam))
-		elif action == 'shoot':
-			useGun()
-			sleep(0.75)
-			if param == 'self':
-				chooseSelf()
-			elif param == 'dealer':
-				chooseDealer()
-			else:
-				print(f"UNRECOGNIZED TARGET \"{param}\"")
-			print("Waiting for shooting animation")
-			sleep(2) 
-		elif action == 'take':
-			grabItems()
-		else:
-			print(f"UNRECOGNIZED ACTION \"{action}\"")
+		while (True):
+			request = input("Next? ")
+			if doAction(request):
+				break

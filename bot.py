@@ -8,10 +8,11 @@ from game import grabItems, awaitInputs
 from image import scoreboardText
 
 def startGame(name: str):
-	throughToGameRoom()
-	waive(name)
-	grabItems()
-	awaitInputs()
+	while(True):
+		throughToGameRoom()
+		waive(name)
+		awaitInputs()
+		#If it gets back here then it means the player died, so go through the whole process again. 
 	
 startGame('Chat')
 
