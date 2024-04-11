@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from time import sleep
+from items import getDealerItemDirections
 
 from util import safeInt
 from basicActions import confirm, left, right, up, down, enterDirections, anyUse
@@ -123,47 +124,3 @@ def chooseDealer():
 def chooseSelf():
 	down()
 	confirm()
-
-def getItemDirections(num: int, mode: str):
-	verticalOffset = []
-	horizontalOffset = []
-	if num == 1 or num == 5:
-		horizontalOffset = ['l', 'l']
-	elif num == 2 or num == 6:
-		horizontalOffset = ['l']
-	elif num == 3 or num == 7:
-		horizontalOffset = ['r']
-	elif num == 4 or num == 8:
-		horizontalOffset = ['r', 'r']
-	
-	if mode == "use":
-		if num >= 5 and num <= 8:
-			verticalOffset = ['d']
-	elif mode == "pickup":
-		if num >= 1 and num <= 4:
-			verticalOffset = ['u']
-	directions = horizontalOffset + verticalOffset
-	print(f"Item directions for item {num} in mode: {mode} -> {directions}")
-	return directions
-
-def getDealerItemDirections(num: int):
-	#Starts on 6
-	if num == 6:
-		print("Requested dealer item 6, the starting position. No extra movements")
-		return []
-	horizontalOffset = []
-	verticalOffset = []
-	
-	if num == 1 or num == 5:
-		horizontalOffset = ['l']
-	elif num == 3 or num == 7:
-		horizontalOffset = ['r']
-	elif num == 4 or num == 8:
-		horizontalOffset = ['r', 'r']
-	
-	if num >= 1 and num <= 4:
-		verticalOffset = ['u']
-	
-	directions = horizontalOffset + verticalOffset
-	print(f"Dealer item directions for {num} -> {directions}")
-	return directions

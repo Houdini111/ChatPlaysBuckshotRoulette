@@ -1,6 +1,6 @@
 from time import sleep
 from basicActions import confirm, up, enterDirections
-from playerActions import doAction, getItemDirections
+from items import grabItems, itemBoxCursorVisible
 from screenColors import valueOverAmountInArea
 from waiver import getPlayerName
 from image import scoreboardText
@@ -8,7 +8,6 @@ from bathroom import inStartingBathroom
 
 
 
-currentItemPositions = []
 roundsCleared = 0
 
 
@@ -18,72 +17,6 @@ roundsCleared = 0
 #  Item place logic sometimes skipping squares
 #  Sometimes activating endless goes to leaderboards instead
 
-	
-def itemBoxIsOpen():
-	print("## Checking for item box open")
-	itemBoxBlackVisible = not valueOverAmountInArea(1, 1018, 468, 30, 100)
-	if not itemBoxBlackVisible:
-		print("## Item box not visible. No item box black found.")
-		return False
-	bulletBoxWhiteVisible = valueOverAmountInArea(95, 1525, 23, 30, 30)
-	if not bulletBoxWhiteVisible:
-		print("## Item box not visible. No bullet square white found.")
-		return False
-	centerLineVisible = valueOverAmountInArea(95, 569, 68, 10, 10)
-	if not bulletBoxWhiteVisible:
-		print("## Item box not visible. No center line white found.")
-		return False
-	return True
-
-def itemBoxCursorVisible():
-	print("## Checking for item box cursor. First checking for box open.")
-	if not itemBoxIsOpen():
-		print("## Item box cursor not visible as item bot not found open.")
-		return False
-	up()
-	cursorVisible = valueOverAmountInArea(90, 956, 950, 47, 1) #Targeting bottom left of bracket
-	print(f"## Item box cursor visible: {cursorVisible}")
-	return cursorVisible
-
-def getOpenItemPosition():
-	for i in range(1, 9): #[1, 8]
-		if i not in currentItemPositions:
-			return i
-	print("ERRROR: NO FREE SLOT FOUND")
-	return 1
-
-def putItemAt(place):
-	global currentItemPositions
-	enterDirections(getItemDirections(place, "pickup"))
-	confirm()
-	currentItemPositions.append(place)
-
-def waitForItemBoxCursorVisible():
-	while not itemBoxCursorVisible():
-		sleep(0.1)
-
-def grabItems():
-	print("### Trying to grab items")
-	if not itemBoxIsOpen():
-		print("Item box not yet open. Waiting.")
-	while not itemBoxIsOpen():
-		sleep(0.25)
-	print("Item box open, waiting for cursor.")
-	waitForItemBoxCursorVisible()
-	while itemBoxIsOpen():
-		print("Grabbing item from box")
-		confirm()
-		print("Waiting for item to be pulled out")
-		sleep(0.5)
-		nextPosition = getOpenItemPosition()
-		putItemAt(nextPosition)
-		sleep(0.25) #A tiny wait while the item moves away from the box
-		print("Waiting for item to be placed and or box close animation")
-		while itemBoxIsOpen() and not itemBoxCursorVisible():
-			sleep(0.1)
-	print("All items withdrawn.")
-	#TODO: When player turn after grabbing items, don't allow player movmement first. 
-	#   Hover over every item and OCR to find what they are so we can more intelligently handle their usage times and requirements (adrenaline)
 
 def noDialogueTextBoxVisible():
 	print("# Checking for no dialogue box")
@@ -224,10 +157,6 @@ def winRound():
 
 def hasPlayerLost() -> bool:
 	return inStartingBathroom()
-
-def itemAtPosition(pos: int) -> bool:
-	#TODO: Eventually return the actual item Enum/Class, rather than just saying one exists
-	return pos in currentItemPositions
 
 def awaitInputs():
 	while(True):
