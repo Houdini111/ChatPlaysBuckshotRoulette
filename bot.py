@@ -13,7 +13,7 @@ def startGame(name: str):
 	grabItems()
 	awaitInputs()
 	
-#startGame('Chat')
+startGame('Chat')
 
-sleep(2)
-print(scoreboardText())
+#sleep(2)
+#print(scoreboardText())
