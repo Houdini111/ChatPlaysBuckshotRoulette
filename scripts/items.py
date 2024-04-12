@@ -6,7 +6,10 @@ from .log import log
 
 currentItemPositions: list[int] = []
 
-def getOpenItemPosition() -> int:
+def getAllCurrentItemPositions() -> list[int]:
+	return currentItemPositions
+
+def getNextOpenItemPosition() -> int:
 	for i in range(1, 9): #[1, 8]
 		if i not in currentItemPositions:
 			return i
@@ -44,7 +47,7 @@ def grabItems() -> None:
 		confirm()
 		log("Waiting for item to be pulled out")
 		sleep(0.5)
-		nextPosition = getOpenItemPosition()
+		nextPosition = getNextOpenItemPosition()
 		if nextPosition == 0:
 			log("Supposedly there's no free slots. The game should be saying the same thing to the player now. Ending grabItems loop.")
 			break

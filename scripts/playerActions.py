@@ -26,6 +26,10 @@ class Action(ABC):
 	@abstractmethod
 	def execute() -> bool:
 		pass
+	
+	@abstractmethod
+	def valid() -> bool:
+		pass
 
 class ShootAction(Action):
 	def __init__(self, target: str | Target):
@@ -33,9 +37,12 @@ class ShootAction(Action):
 			target = parseTarget(target)
 		self.target = target
 	
+	def valid(self) -> bool:
+		return self.target != Target.INVALID
+
 	def execute(self) -> bool:
-		if self.target == Target.INVALID:
-			return False		
+		if not self.valid():
+			return False
 
 		useGun()
 		sleep(0.75) #Wait for gun move animation
@@ -52,10 +59,15 @@ class UseItemAction(Action):
 		self.adrenalineItemNum = safeInt(adrenalineItemNum, 0)
 		pass
 	
-	def execute(self):
+	def valid(self) -> bool:
 		if not itemAtPosition(self.itemNum):
 			return False
 		if self.adrenalineItemNum < 0 or self.adrenalineItemNum > 8:
+			return False
+		return True
+	
+	def execute(self) -> bool:
+		if not self.valid():
 			return False
 		
 		#TODO: Check if dealer has item at location (difficult because I have to do pixel peeping that can vary based on the item it is and the item possibly in front)
@@ -65,12 +77,6 @@ class UseItemAction(Action):
 			sleep(1.5)
 			useDealerItem(self.adrenalineItemNum)
 		return True
-
-def doAction(userInput: str) -> bool:
-	action = parseAction(userInput)
-	if action is None:
-		return False
-	return action.execute()
 
 def parseAction(userInput: str) -> Action | None:
 	userInput = userInput.lower().strip()
