@@ -1,5 +1,8 @@
 from time import sleep
 from typing import Callable
+import math
+
+import pyautogui
 
 from log import log
 
@@ -37,4 +40,20 @@ def safeInt(inVal: str | int | None, defaultValue: int) -> int:
 	elif type(inVal) is str and inVal.isdigit():
 		return int(inVal)
 	return defaultValue
-	
+
+def resizePointFrom1440p(x1440: int, y1440: int) -> list[int]:
+	xPercent = x1440/2560
+	yPercent = y1440/1440
+	displayW, displayH = pyautogui.size()
+	realX = int(math.ceil(xPercent * displayW))
+	realY = int(math.ceil(yPercent * displayH))
+	return [realX, realY]
+
+def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[int]:
+	wPercent = w1440/2560
+	hPercent = h1440/1440
+	displayW, displayH = pyautogui.size()
+	realW = int(math.ceil(wPercent * displayW))
+	realH = int(math.ceil(hPercent * displayH))
+	realX, realY = resizePointFrom1440p(x1440, y1440)
+	return [realX, realY, realW, realH]
