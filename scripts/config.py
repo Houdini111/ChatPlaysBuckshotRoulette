@@ -20,13 +20,13 @@ class Config():
 		else:
 			return val
 
-	def getKey(self, key: str, expectedType: type[T]) -> T | None:
+	def getKey(self, key: str, expectedType: type) -> T | None:
 		val = self.innerDict.get(key)
 		if val is None:
 			return None
 		if val is expectedType:
 			return val
-		raise ValueError(f"Val: |{val}| was not None or expected type {expectedType} but was of type {type(val)}")
+		raise ValueError(f"Val: |{val}| was not None or expected type {expectedType} but was of type {val}")
 
 config: Config = Config()
 
