@@ -5,6 +5,7 @@ import colorsys
 from deprecation import deprecated
 
 from util import Rectangle
+from log import log
 
 def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[int]:
 	xPercent = x1440/2560
@@ -25,15 +26,15 @@ def getPixelAreaBy1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[
 #For a 2d array of pixels
 def pixelsMatch(expectedPixels: list[list[int]], realPixels: list[list[int]]) -> bool:
 	if len(expectedPixels) != len(realPixels):
-		print(f"Pixels don't match because first order array size is wrong. Expected: {len(expectedPixels)} Actual: {len(realPixels)}")
+		log(f"Pixels don't match because first order array size is wrong. Expected: {len(expectedPixels)} Actual: {len(realPixels)}")
 		return False
 	for expectedAxis, realAxis in zip(expectedPixels, realPixels):
 		if len(expectedAxis) != len(realAxis):
-			print(f"Pixels don't match because second order array size is wrong. Expected: {len(expectedAxis)} Actual: {len(realAxis)}")
+			log(f"Pixels don't match because second order array size is wrong. Expected: {len(expectedAxis)} Actual: {len(realAxis)}")
 			return False
 		for expectedPixel, realPixel in zip(expectedAxis, realAxis):
 			if not pixelMatches(expectedPixel, realPixel):
-				#print(f"Failed because pixel doesn't match. Expected {expectedPixel} Actual: {realPixel}")
+				#log(f"Failed because pixel doesn't match. Expected {expectedPixel} Actual: {realPixel}")
 				return False
 	return True 
 
@@ -65,9 +66,9 @@ def valueOverAmountInArea(valuePercent: float, x1440: int, y1440: int, w1440: in
 			if v > max:
 				max = v
 			if v >= valueAbsolute:
-				print(f"Found value of {v}, which is greater than the minimum {valuePercent}% (absolute: {valueAbsolute}). RGB: {pixel}")
+				log(f"Found value of {v}, which is greater than the minimum {valuePercent}% (absolute: {valueAbsolute}). RGB: {pixel}")
 				return True
-	print(f"Did not find Value over {valuePercent}% (absolute: {valueAbsolute}). Max found: {max}")
+	log(f"Did not find Value over {valuePercent}% (absolute: {valueAbsolute}). Max found: {max}")
 	return False
 
 def valuesInRangeInRect(lowPercent: float, highPercent: float, anyMode: bool, rect: Rectangle) -> bool:
@@ -90,15 +91,15 @@ def valuesInRangeInArea(lowPercent: float, highPercent: float, anyMode: bool, x1
 			#TODO: Rather than a "mode" with checkers in here, try a resolver that you just pass the current value and the goal range
 			if anyMode: 
 				if v >= lowAbsolute and v <= highAbsolute:
-					print(f"Found Value {v} in absolute range [{lowAbsolute}, {highPercent}] (percent range [{lowPercent}%, {highPercent}%]) during ANY mode. RGB: {pixel}. Returning True.")
+					log(f"Found Value {v} in absolute range [{lowAbsolute}, {highPercent}] (percent range [{lowPercent}%, {highPercent}%]) during ANY mode. RGB: {pixel}. Returning True.")
 					return True
 			else: #ALL mode
 				if v < lowAbsolute or v > highAbsolute:
-					print(f"Found Value {v} out of absolute range [{lowAbsolute}, {highPercent}] (percent range [{lowPercent}%, {highPercent}%]) during ALL mode. RGB: {pixel}. Returning True.")
+					log(f"Found Value {v} out of absolute range [{lowAbsolute}, {highPercent}] (percent range [{lowPercent}%, {highPercent}%]) during ALL mode. RGB: {pixel}. Returning True.")
 					return False
 	if anyMode:
-		print(f"Failed to find any Values in absolute range [{lowAbsolute}, {highPercent}] (percent range [{lowPercent}%, {highPercent}%]). Returning False.")
+		log(f"Failed to find any Values in absolute range [{lowAbsolute}, {highPercent}] (percent range [{lowPercent}%, {highPercent}%]). Returning False.")
 		return False
 	else: #ALL mode
-		print(f"All Values found to be in absolute range [{lowAbsolute}, {highPercent}] (percent range [{lowPercent}%, {highPercent}%]). Returning True.")
+		log(f"All Values found to be in absolute range [{lowAbsolute}, {highPercent}] (percent range [{lowPercent}%, {highPercent}%]). Returning True.")
 		return True

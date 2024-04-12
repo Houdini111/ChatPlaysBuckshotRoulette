@@ -5,13 +5,14 @@ import numpy as np
 import cv2
 
 from config import getTesseractPath
+from log import log
 
 def scoreboardText() -> str:
-	print("### Fetching scoreboard text. Starting by grabbing image.")
+	log("Fetching scoreboard text. Starting by grabbing image.")
 	img = grabScoreBoardImage()
-	print("## Scoreboard image grabbed. Preparing image for OCR.")
+	log("Scoreboard image grabbed. Preparing image for OCR.")
 	img = prepareImageForOCR(img)
-	print("## Scoreboard image prepared. Sending to OCR.")
+	log("Scoreboard image prepared. Sending to OCR.")
 	return OCR(img)
 
 def grabScoreBoardImage() -> Image:
@@ -44,5 +45,5 @@ def prepareImageForOCR(img: Image) -> Image:
 def OCR(img: Image) -> str:
 	pytesseract.pytesseract.tesseract_cmd = getTesseractPath()
 	out = pytesseract.image_to_string(img, lang='eng', config=r'--psm 7')
-	print(f"OCR RESULT: {out}")
+	log(f"OCR RESULT: {out}")
 	return out

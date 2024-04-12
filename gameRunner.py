@@ -6,7 +6,7 @@ from items import itemBoxCursorVisible, grabItems, clearItems
 from playerActions import doAction
 from bathroom import inStartingBathroom
 from waiver import getPlayerName
-
+from log import log
 
 #TODO: 
 #  Item place logic sometimes skipping squares
@@ -62,22 +62,22 @@ class GameRunner():
 		return self.clearingItemsPeeper.passes()
 
 	def playerTurn(self) -> bool:
-		print("### Beginning player turn check")
+		log("Beginning player turn check")
 		if not self.staticBoard():
-			print("Failed player turn check on first static board check")
+			log("Failed player turn check on first static board check")
 			return False
 		up()
 		if not self.gunCursorVisible():
-			print("Failed player turn  check on first gun cursor check")
+			log("Failed player turn  check on first gun cursor check")
 			return False
 		sleep(0.1)
 		#Double check to try to avoid coincidences
 		if not self.staticBoard():
-			print("Failed player turn check on second static board check")
+			log("Failed player turn check on second static board check")
 			return False
 		up()
 		if not self.gunCursorVisible():
-			print("Failed player turn  check on second gun cursor check")
+			log("Failed player turn  check on second gun cursor check")
 			return False
 		return True
 	
@@ -89,13 +89,13 @@ class GameRunner():
 
 	def winRound(self):
 		self.roundsCleared += 1
-		print("################")
-		print(f"## Rounds cleared: {self.roundsCleared}")
-		print("################")
+		log("################")
+		log(f"## Rounds cleared: {self.roundsCleared}")
+		log("################")
 		if self.roundsCleared == 3:
-			print("################")
-			print("## Double or Nothing set cleared!")
-			print("################")
+			log("################")
+			log("## Double or Nothing set cleared!")
+			log("################")
 			self.roundsCleared = 0
 			#TODO: Choose to begin a new double or nothing set
 
@@ -108,19 +108,19 @@ class GameRunner():
 
 	def go(self) -> None:
 		while(True):
-			print("# Waiting for player turn")
+			log("Waiting for player turn")
 			while not self.playerTurn():
 				if itemBoxCursorVisible():
-					print("# While waiting for the player's turn the item box was found to be open. Grabbing items.")
+					log("While waiting for the player's turn the item box was found to be open. Grabbing items.")
 					grabItems()
 					continue
 				self.checkForClearingItems()
 				self.checkForRoundIsWon()
 				if self.hasPlayerLost():
-					print("#### Player found to have lost. Returning to bathroom logic.")
+					log("Player found to have lost. Returning to bathroom logic.")
 					return
 				sleep(0.5)
-			print("# Should be player turn now.")
+			log("Should be player turn now.")
 			while (True):
 				request = input("Next? ")
 				if doAction(request):

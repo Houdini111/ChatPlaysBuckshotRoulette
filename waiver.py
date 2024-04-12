@@ -1,5 +1,7 @@
 from time import sleep
+
 from basicActions import up, down, left, right, confirm, anyUse
+from log import log
 
 playerName = ""
 
@@ -13,14 +15,14 @@ def waive(name: str) -> None:
 	playerName = name
 
 def pickUpWaiver() -> None:
-	print("##### Picking up waiver")
+	log("Picking up waiver")
 	anyUse()
-	print("Waiting for waiver to be picked up")
+	log("Waiting for waiver to be picked up")
 	sleep(3.5) #Do I need more? Can I get away with less?
 
 def enterName(name: str) -> None:
 	name = name.upper()[0:6] #Normalize to uppercase and truncate to the max of 6 characters
-	print("##### Entering name", name)
+	log(f"Entering name {name}")
 	#cursorOnA() #TODO: Cycles, so I'll have to pixel peep with getpixelcolor to be safer
 	#   For now, this works without intervention
 	cursorX = 0 
@@ -54,9 +56,9 @@ def enterName(name: str) -> None:
 		'Z': [2, 7]
 	}
 	for char in name:
-		print("Attempting to enter char", char)
+		log(f"Attempting to enter char {char}")
 		if char == 'A' and cursorX == 0 and cursorY == 0:
-			print("### Navigating to char A (Special case)")
+			log("Navigating to char A (Special case)")
 			#Because char A is the starting, and the entering only works if there is a cursor
 			#  We need to move it off and back on to ensure it's selected
 			right()
@@ -64,12 +66,12 @@ def enterName(name: str) -> None:
 			confirm()
 		else:
 			goalX, goalY = charMap[char]
-			print("### Navigating to char", char)
+			log(f"Navigating to char {char}")
 			navToChar(cursorX, cursorY, goalX, goalY)
 			cursorX = goalX
 			cursorY = goalY
 			confirm()
-		print("### Should have entered char", char)
+		log(f"Should have entered char {char}")
 	submitName(cursorX, cursorY) 
 		
 def navToChar(startX: int, startY: int, goalX: int, goalY: int) -> None:
@@ -80,7 +82,7 @@ def navToChar(startX: int, startY: int, goalX: int, goalY: int) -> None:
 	tempGoalX = goalX
 	if goalX >= 3:
 		tempGoalX = 2
-	#print(f"current: [{x}, {y}] goal: [{goalX}, {goalY}] tempGoalX: {tempGoalX}")
+	#log(f"current: [{x}, {y}] goal: [{goalX}, {goalY}] tempGoalX: {tempGoalX}")
 	x = navToColumn(x, tempGoalX)
 	y = navToRow(y, goalY)
 	x = navToColumn(x, goalX)
@@ -104,10 +106,10 @@ def navToRow(current: int, goal: int) -> int:
 	return current
 
 def submitName(currentX: int, currentY: int) -> None:
-	print("##### Submitting name")
+	log("Submitting name")
 	currentX = navToColumn(currentX, 1)
 	currentY = navToRow(currentY, 2)
 	currentX = navToColumn(currentX, 2)
 	confirm()
-	print("Waiting for waiver to be put down")
+	log("Waiting for waiver to be put down")
 	sleep(3) #Just enough for the paper to be lowered. The actual wait happens in grabItems

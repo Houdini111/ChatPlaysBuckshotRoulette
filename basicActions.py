@@ -1,33 +1,34 @@
 import pyautogui
 from focus import waitForFocus
+from log import log
 
 def confirm() -> None:
 	waitForFocus()
-	print("[CONFIRM]")
+	log("[CONFIRM]")
 	pyautogui.press('enter')
 
 def left() -> None:
 	waitForFocus()
-	print("<- LEFT")
+	log("<- LEFT")
 	pyautogui.press('left')
 
 def right() -> None:
 	waitForFocus()
-	print("-> RIGHT")
+	log("-> RIGHT")
 	pyautogui.press('right')
 
 def up() -> None:
 	waitForFocus()
-	print("^ UP")
+	log("^ UP")
 	pyautogui.press('up')
 
 def down() -> None:
 	waitForFocus()
-	print("v DOWN")
+	log("v DOWN")
 	pyautogui.press('down')
 	
 def enterDirections(directions: list[str]) -> None:
-	print(f"Entering directions {directions}")
+	log(f"Entering directions {directions}")
 	if len(directions) == 0:
 		return
 	for dir in directions:
@@ -40,9 +41,9 @@ def enterDirections(directions: list[str]) -> None:
 		elif dir == 'd':
 			down()
 		else:
-			print(f"Unrecognized direction: [{dir}]")
+			log(f"Unrecognized direction: [{dir}]")
 			
 def anyUse() -> None:
-	print("### Any use")
+	log("Any use")
 	left() #Any key
 	confirm()

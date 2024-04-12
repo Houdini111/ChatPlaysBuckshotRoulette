@@ -2,6 +2,8 @@ from time import sleep
 from typing import Optional
 from ctypes import wintypes, windll, create_unicode_buffer
 
+from log import log
+
 def buckshotRouletteFocused() -> bool:
 	windowName = getForegroundWindowTitle()
 	if windowName == "Buckshot Roulette":
@@ -15,7 +17,7 @@ def waitForFocus() -> None:
 	if buckshotRouletteFocused():
 		return
 	#This method is written like this so I can write just a single message instead of spamming
-	print("Waiting for game to be focused")
+	log("Waiting for game to be focused")
 	while not buckshotRouletteFocused():
 		sleep(0.1)
 

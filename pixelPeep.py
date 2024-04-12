@@ -4,6 +4,7 @@ from image import scoreboardText
 from screenColors import valuesInRangeInRect
 
 from util import Rectangle
+from log import log
 
 class Checker(ABC):
 	@abstractmethod
@@ -110,6 +111,6 @@ class Peeper(Checker):
 		for checker in self.checkers:
 			if not checker.passes():
 				self.failedChecker = checker
-				print(self.failureMessage())
+				log(self.failureMessage())
 				return False
 		return True
