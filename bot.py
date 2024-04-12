@@ -1,13 +1,13 @@
-import bathroom
-import waiver
-import gameRunner
+from bathroom import throughToGameRoom
+from waiver import waive
+from gameRunner import GameRunner
 
 def startGame(name: str):
 	while(True):
-		bathroom.throughToGameRoom()
-		waiver.waive(name)
-		gameRunner = gameRunner.GameRunner()
-		gameRunner.go()
+		throughToGameRoom()
+		waive(name)
+		runner = GameRunner()
+		runner.go()
 		#If it gets back here then it means the player died, so go through the whole process again. 
 	
 startGame('Chat')

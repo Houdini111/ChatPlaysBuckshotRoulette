@@ -1,10 +1,9 @@
 from time import sleep
-import colorsys
 
-import screenColors
-import basicActions
-import focus
-import util
+from screenColors import valueOverAmountInArea, valueUnderAmountInArea
+from basicActions import up, right, left, confirm, anyUse
+from focus import waitForFocus
+from util import waitForFalse, waitForTrue
 
 def throughToGameRoom():
 	enableEndless()
@@ -13,18 +12,18 @@ def throughToGameRoom():
 
 def doorFullBlack():
 	#TODO: Convert to peeper
-	return screenColors.valueOverAmountInArea(1, 1435, 641, 40, 5)
+	return valueOverAmountInArea(1, 1435, 641, 40, 5)
 
 def cursorOnBathroomDoor():
-	basicActions.up()
+	up()
 	#Targeting top left 
 	#TODO: Conver to peeper
-	return screenColors.alueOverAmountInArea(70, 1435, 641, 40, 5)
+	return valueOverAmountInArea(70, 1435, 641, 40, 5)
 
 def moveCursorToBathroomDoor():
 	print("### Moving cursor to bathroom door")
-	focus.waitFocused()
-	basicActions.up() #Make cursor show without changing selection
+	waitForFocus()
+	up() #Make cursor show without changing selection
 	for movements in range(20): #Tries before movement
 		#Give each section 5 tries, in case the check missed
 		for i in range(1): 
@@ -34,53 +33,55 @@ def moveCursorToBathroomDoor():
 				return
 			sleep(0.1)
 		print("Didn't find cursor on door. Moving cursor and trying again.")
-		basicActions.right()
+		right()
 	raise Exception("Couldn't locate door cursor")
 
 def enableEndless():
 	print("##### Enabling endless")
 	moveCursorToBathroomDoor()
-	basicActions.left()
-	basicActions.confirm()
+	left()
+	confirm()
 	print("Waiting for pills menu to open fully")
 	sleep(1.75)
-	basicActions.left()
-	basicActions.confirm()
+	left()
+	confirm()
 	print("Pills consumed. Waiting for reload to bathroom.")
-	basicActions.waitForFalse(doorFullBlack)
-	util.waitForTrue(cursorOnBathroomDoor)
+	sleep(1.2) #Typically takes 15 0.1 seconds waits for the following to return. To prevent some logspam I'm just going to wait for 1.2 seconds here
+	waitForFalse(doorFullBlack)
+	sleep(0.5)    #Likewise, but 8 0.1 second waits, so waiting 0.5 seconds here.
+	waitForTrue(cursorOnBathroomDoor)
 
 def exitBathroom():
 	print("##### Exiting bathroom")
-	basicActions.anyUse()
+	anyUse()
 	sleep(5.5) #Do I need more? Can I get away with less?
 	
 def enterGameRoom():
 	print("##### Entering game room")
-	basicActions.anyUse()
+	anyUse()
 	sleep(10) #Do I need more? Can I get away with less?
 
 def inStartingBathroom():
 	#TODO: Is this reliable enough of a check? All the swaying and grays makes it really hard to tell...
 	#TODO: Convert to Peepers
 	print("### Checking for if the player is in the bathroom.")
-	monitorHoleBlack = screenColors.valueUnderAmountInArea(1, 342, 497, 50, 50)
+	monitorHoleBlack = valueUnderAmountInArea(1, 342, 497, 50, 50)
 	if not monitorHoleBlack:
 		print("### Found to not be in the starting bathroom because of monitorHoleBlack")
 		return False
-	monitorScreenBlack = screenColors.valueUnderAmountInArea(1, 533, 781, 50, 50)
+	monitorScreenBlack = valueUnderAmountInArea(1, 533, 781, 50, 50)
 	if not monitorScreenBlack:
 		print("### Found to not be in the starting bathroom because of monitorScreenBlack")
 		return False
-	mirrorOffWhite1 = screenColors.valueOverAmountInArea(80, 246, 290, 35, 35)
+	mirrorOffWhite1 = valueOverAmountInArea(80, 246, 290, 35, 35)
 	if not mirrorOffWhite1:
 		print("### Found to not be in the starting bathroom because of mirrorOffWhite1")
 		return False
-	mirrorOffWhite2 = screenColors.valueOverAmountInArea(80, 444, 315, 35, 35)
+	mirrorOffWhite2 = valueOverAmountInArea(80, 444, 315, 35, 35)
 	if not mirrorOffWhite2:
 		print("### Found to not be in the starting bathroom because of mirrorOffWhite2")
 		return False
-	mirrorOffWhite3 = screenColors.valueOverAmountInArea(80, 113, 278, 35, 35)
+	mirrorOffWhite3 = valueOverAmountInArea(80, 113, 278, 35, 35)
 	if not mirrorOffWhite3:
 		print("### Found to not be in the starting bathroom because of mirrorOffWhite3")
 		return False

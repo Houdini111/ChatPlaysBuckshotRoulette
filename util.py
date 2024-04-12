@@ -6,6 +6,9 @@ class Rectangle():
 		self.y = y
 		self.w = w
 		self.h = h
+	
+	def __str__(self):
+		return "{" + f"x: {self.x}, y: {self.y}, w: {self.w}, y: {self.h}" + "}"
 
 def waitForFalse(checker):
 	print("Waiting for method to return false")

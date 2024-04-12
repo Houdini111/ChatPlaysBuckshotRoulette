@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from time import sleep
 
-import items
-import util
-import basicActions
+from items import itemAtPosition, getPlayerItemDirections, getDealerItemDirections, removeItem
+from util import safeInt
+from basicActions import up, down, confirm, enterDirections
 
 class Target(Enum):
 	INVALID = -1
@@ -46,13 +46,13 @@ class ShootAction(Action):
 
 class UseItemAction(Action):
 	def __init__(self, itemNum: str | int, adrenalineItemNum: str | int | None = None):
-		self.itemNum = util.safeInt(itemNum)
+		self.itemNum = safeInt(itemNum)
 		#TODO: Check if adrenaline number needed
-		self.adrenalineItemNum = util.safeInt(adrenalineItemNum)
+		self.adrenalineItemNum = safeInt(adrenalineItemNum)
 		pass
 	
 	def execute(self):
-		if not items.itemAtPosition(self.itemNum):
+		if not itemAtPosition(self.itemNum):
 			return False
 		
 		#TODO: Check if dealer has item at location (difficult because I have to do pixel peeping that can vary based on the item it is and the item possibly in front)
@@ -90,22 +90,22 @@ def parseAction(userInput: str) -> Action:
 
 
 def cursorGun():
-	basicActions.up()
-	basicActions.up()
+	up()
+	up()
 	
 def cursorItem(num):
 	cursorGun()
-	basicActions.enterDirections(items.getItemDirections(num, "use"))
+	enterDirections(getPlayerItemDirections(num, "use"))
 
 def useGun():
 	cursorGun()
-	basicActions.confirm()
+	confirm()
 
 def usePersonalItem(num):
 	global currentItemPositions
 	cursorItem(num)
-	basicActions.confirm()
-	currentItemPositions.remove(num)
+	confirm()
+	removeItem(num)
 	print("Waiting for item use animation")
 	#Is there a good way to check for which item it is to only wait as long as needed? 
 	#This long of a wait might conflict with adrenaline
@@ -113,14 +113,14 @@ def usePersonalItem(num):
 	print("Item use animation should be over")
 
 def useDealerItem(num):
-	basicActions.down() #Move to ensure cursor is active
-	basicActions.enterDirections(items.getDealerItemDirections(num))
-	basicActions.confirm()
+	down() #Move to ensure cursor is active
+	enterDirections(getDealerItemDirections(num))
+	confirm()
 	
 def chooseDealer():
-	basicActions.up()
-	basicActions.confirm()
+	up()
+	confirm()
 
 def chooseSelf():
-	basicActions.down()
-	basicActions.confirm()
+	down()
+	confirm()

@@ -1,13 +1,11 @@
 from time import sleep
 
-import basicActions
-import items
-import pixelPeep
-import playerActions
-import screenColors
-import waiver
-import image
-import bathroom
+from basicActions import up
+from pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, RangePeep
+from items import itemBoxCursorVisible, grabItems, clearItems
+from playerActions import doAction
+from bathroom import inStartingBathroom
+from waiver import getPlayerName
 
 
 #TODO: 
@@ -18,36 +16,37 @@ class GameRunner():
 	def __init__(self):
 		self.roundsCleared = 0
 		
-		self.noDialogueTextBoxPeeper = pixelPeep.Peeper("NoDialogueTextBoxPeeper", 
-			pixelPeep.WhitePeep("noDialogueLeft", 577, 1153, 11, 173),
-			pixelPeep.WhitePeep("noDialogueRight", 1972, 1972, 11, 173)
+		#TODO: Move these definitions to their own class/file
+		self.noDialogueTextBoxPeeper = Peeper("NoDialogueTextBoxPeeper", 
+			RangePeep("noDialogueLeft", 10, 100, False, 577, 1153, 11, 173),
+			RangePeep("noDialogueRight", 10, 100, False, 1972, 1153, 11, 173)
 		)
-		self.staticBoardPeeper = pixelPeep.Peeper("StaticBoardPeeper", 
-			pixelPeep.BlackPeep("staticBoardblackTop", 1159, 31, 168, 1),
-			pixelPeep.BlackPeep("staticBoardblackLeft", 3, 488, 12, 12),
-			pixelPeep.WhitePeep("staticBoardbulletSquare", 1477, 389, 50, 53),
-			pixelPeep.WhitePeep("staticBoardscoreboardBlack", 2040, 347, 5, 5),
+		self.staticBoardPeeper = Peeper("StaticBoardPeeper", 
+			AllBlackPeep("staticBoardBlackTop", 1159, 31, 168, 1),
+			AllBlackPeep("staticBoardBlackLeft", 3, 488, 12, 12),
+			AnyWhitePeep("staticBoardBulletSquare", 1477, 389, 50, 53),
+			AllBlackPeep("staticBoardScoreboardBlack", 2039, 347, 7, 7),
 			self.noDialogueTextBoxPeeper,
 		)
-		self.gunCursorVisiblePeeper = pixelPeep.Peeper("GunCursorVisiblePeeper",
-			pixelPeep.WhitePeep("gunCursorTopLeft", 1170, 359, 20, 1),
-			pixelPeep.WhitePeep("gunCursorBottomRight", 1306, 490, 20, 1)
+		self.gunCursorVisiblePeeper = Peeper("GunCursorVisiblePeeper",
+			AnyWhitePeep("gunCursorTopLeft", 1170, 359, 20, 1),
+			AnyWhitePeep("gunCursorBottomRight", 1306, 490, 20, 1)
 		)
-		self.clearingItemsPeeper = pixelPeep.Peeper("ClearingItemsPeeper",
-			pixelPeep.BlackPeep("topLeftItemSectionIsBlack", 1306, 490, 30, 30),
-			pixelPeep.BlackPeep("topRightItemSectionIsIsBlack", 1485, 266, 25, 25),
-			pixelPeep.BlackPeep("bottomLeftItemSectionIsBlack", 719, 760, 25, 25),
-			pixelPeep.BlackPeep("bottomRightItemSectionIsBlack", 1751, 957, 25, 25),
-			pixelPeep.WhitePeep("centerLineWhite", 708, 424, 10, 10),
-			pixelPeep.WhitePeep("bulletSquareWhite", 1751, 1473, 15, 15)
+		self.clearingItemsPeeper = Peeper("ClearingItemsPeeper",
+			AllBlackPeep("topLeftItemSectionIsBlack", 1306, 490, 30, 30),
+			AllBlackPeep("topRightItemSectionIsIsBlack", 1485, 266, 25, 25),
+			AllBlackPeep("bottomLeftItemSectionIsBlack", 719, 760, 25, 25),
+			AllBlackPeep("bottomRightItemSectionIsBlack", 1751, 957, 25, 25),
+			AnyWhitePeep("centerLineWhite", 708, 424, 10, 10),
+			AnyWhitePeep("bulletSquareWhite", 1475, 392, 25, 25)
 		)
-		self.roundIsWonPeeper = pixelPeep.Peeper("RoundIsWonPeeper",
-			pixelPeep.BlackPeep("scoreboardLeftBlack", 786, 418, 40, 150),
-			pixelPeep.BlackPeep("scoreboardRightBlack", 1493, 646, 99, 249),
-			pixelPeep.WhitePeep("bulletSquareWhite", 675, 1246, 72, 72),
-			pixelPeep.WhitePeep("dealerItemSquare8White", 303, 962, 65, 65),
-			pixelPeep.WhitePeep("blackAboveScoreboard", 615, 120, 31, 69),
-			pixelPeep.OCRScoreboardPeep("OCRScoreboardPlayerWins", f"{getPlayerName()} WINS")
+		self.roundIsWonPeeper = Peeper("RoundIsWonPeeper",
+			AllBlackPeep("scoreboardLeftBlack", 786, 475, 40, 150),
+			AllBlackPeep("scoreboardRightBlack", 1539, 700, 40, 150),
+			AnyWhitePeep("bulletSquareWhite", 675, 1246, 72, 72),
+			AnyWhitePeep("dealerItemSquare8White", 303, 962, 65, 65),
+			AnyWhitePeep("blackAboveScoreboard", 615, 120, 31, 69),
+			OCRScoreboardPeep("OCRScoreboardPlayerWins", f"{getPlayerName()} WINS")
 		)
 		
 	def noDialogueTextBoxVisible(self) -> bool:
@@ -67,7 +66,7 @@ class GameRunner():
 		if not self.staticBoard():
 			print("Failed player turn check on first static board check")
 			return False
-		basicActions.up()
+		up()
 		if not self.gunCursorVisible():
 			print("Failed player turn  check on first gun cursor check")
 			return False
@@ -76,7 +75,7 @@ class GameRunner():
 		if not self.staticBoard():
 			print("Failed player turn check on second static board check")
 			return False
-		basicActions.up()
+		up()
 		if not self.gunCursorVisible():
 			print("Failed player turn  check on second gun cursor check")
 			return False
@@ -102,18 +101,18 @@ class GameRunner():
 
 			#Do NOT clear items
 		else:
-			items.clearItems()
+			clearItems()
 
 	def hasPlayerLost(self) -> bool:
-		return bathroom.inStartingBathroom()
+		return inStartingBathroom()
 
 	def go(self):
 		while(True):
 			print("# Waiting for player turn")
 			while not self.playerTurn():
-				if items.itemBoxCursorVisible():
+				if itemBoxCursorVisible():
 					print("# While waiting for the player's turn the item box was found to be open. Grabbing items.")
-					items.grabItems(self.itemBoxIsOpen)
+					grabItems()
 					continue
 				self.checkForClearingItems()
 				self.checkForRoundIsWon()
@@ -124,5 +123,5 @@ class GameRunner():
 			print("# Should be player turn now.")
 			while (True):
 				request = input("Next? ")
-				if playerActions.doAction(request):
+				if doAction(request):
 					break

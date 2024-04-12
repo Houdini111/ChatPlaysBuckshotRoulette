@@ -11,7 +11,7 @@ def buckshotRouletteFocused():
 #  Not everything is built around ensuring the cursor is still around. 
 #  That would require a lot of pixel peeping.
 #  So many things (like entering text) would break
-def waitFocused():
+def waitForFocus():
 	if buckshotRouletteFocused():
 		return
 	#This method is written like this so I can write just a single message instead of spamming
