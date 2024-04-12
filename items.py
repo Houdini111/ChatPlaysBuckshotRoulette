@@ -1,7 +1,8 @@
 from time import sleep
-from basicActions import confirm, enterDirections, up
-from game import itemBoxIsOpen
-from screenColors import valueOverAmountInArea
+
+import basicActions
+import gameRunner
+import screenColors
 
 currentItemPositions = []
 
@@ -9,13 +10,17 @@ def getOpenItemPosition():
 	for i in range(1, 9): #[1, 8]
 		if i not in currentItemPositions:
 			return i
-	print("ERRROR: NO FREE SLOT FOUND")
+	print("ERROR: NO FREE SLOT FOUND")
 	return 0
+
+def clearItems():
+	global currentItemPositions
+	currentItemPositions.clear()
 
 def putItemAt(place):
 	global currentItemPositions
-	enterDirections(getItemDirections(place, "pickup"))
-	confirm()
+	basicActions.enterDirections(getItemDirections(place, "pickup"))
+	basicActions.confirm()
 	currentItemPositions.append(place)
 
 def itemAtPosition(pos: int) -> bool:
@@ -32,7 +37,7 @@ def grabItems():
 	waitForItemBoxCursorVisible()
 	while itemBoxIsOpen():
 		print("Grabbing item from box")
-		confirm()
+		basicActions.confirm()
 		print("Waiting for item to be pulled out")
 		sleep(0.5)
 		nextPosition = getOpenItemPosition()
@@ -49,16 +54,17 @@ def grabItems():
 	#   Hover over every item and OCR to find what they are so we can more intelligently handle their usage times and requirements (adrenaline)
 
 def itemBoxIsOpen():
+	#TODO: Convert to Peepers
 	print("## Checking for item box open")
-	itemBoxBlackVisible = not valueOverAmountInArea(1, 1018, 468, 30, 100)
+	itemBoxBlackVisible = not screenColors.valueOverAmountInArea(1, 1018, 468, 30, 100)
 	if not itemBoxBlackVisible:
 		print("## Item box not visible. No item box black found.")
 		return False
-	bulletBoxWhiteVisible = valueOverAmountInArea(95, 1525, 23, 30, 30)
+	bulletBoxWhiteVisible = screenColors.valueOverAmountInArea(95, 1525, 23, 30, 30)
 	if not bulletBoxWhiteVisible:
 		print("## Item box not visible. No bullet square white found.")
 		return False
-	centerLineVisible = valueOverAmountInArea(95, 569, 68, 10, 10)
+	centerLineVisible = screenColors.valueOverAmountInArea(95, 569, 68, 10, 10)
 	if not bulletBoxWhiteVisible:
 		print("## Item box not visible. No center line white found.")
 		return False
@@ -73,8 +79,9 @@ def itemBoxCursorVisible():
 	if not itemBoxIsOpen():
 		print("## Item box cursor not visible as item bot not found open.")
 		return False
-	up()
-	cursorVisible = valueOverAmountInArea(90, 956, 950, 47, 1) #Targeting bottom left of bracket
+	basicActions.up()
+	#OTOD: Convert to Peepers
+	cursorVisible = screenColors.valueOverAmountInArea(90, 956, 950, 47, 1) #Targeting bottom left of bracket
 	print(f"## Item box cursor visible: {cursorVisible}")
 	return cursorVisible
 

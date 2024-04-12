@@ -1,28 +1,28 @@
 import pyautogui
-from focus import waitFocused
+import focus
 
 def confirm():
-	waitFocused()
+	focus.waitFocused()
 	print("[CONFIRM]")
 	pyautogui.press('enter')
 
 def left():
-	waitFocused()
+	focus.waitFocused()
 	print("<- LEFT")
 	pyautogui.press('left')
 
 def right():
-	waitFocused()
+	focus.waitFocused()
 	print("-> RIGHT")
 	pyautogui.press('right')
 
 def up():
-	waitFocused()
+	focus.waitFocused()
 	print("^ UP")
 	pyautogui.press('up')
 
 def down():
-	waitFocused()
+	focus.waitFocused()
 	print("v DOWN")
 	pyautogui.press('down')
 	

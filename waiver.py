@@ -1,5 +1,5 @@
 from time import sleep
-from basicActions import confirm, left, right, up, down, enterDirections, anyUse
+import basicActions
 
 playerName = ""
 
@@ -14,7 +14,7 @@ def waive(name: str):
 
 def pickUpWaiver():
 	print("##### Picking up waiver")
-	anyUse()
+	basicActions.anyUse()
 	print("Waiting for waiver to be picked up")
 	sleep(3.5) #Do I need more? Can I get away with less?
 
@@ -59,16 +59,16 @@ def enterName(name: str):
 			print("### Navigating to char A (Special case)")
 			#Because char A is the starting, and the entering only works if there is a cursor
 			#  We need to move it off and back on to ensure it's selected
-			right()
-			left()
-			confirm()
+			basicActions.right()
+			basicActions.left()
+			basicActions.confirm()
 		else:
 			goalX, goalY = charMap[char]
 			print("### Navigating to char", char)
 			navToChar(cursorX, cursorY, goalX, goalY)
 			cursorX = goalX
 			cursorY = goalY
-			confirm()
+			basicActions.confirm()
 		print("### Should have entered char", char)
 	submitName(cursorX, cursorY) 
 		
@@ -87,10 +87,10 @@ def navToChar(startX, startY, goalX, goalY):
 
 def navToColumn(current, goal):
 	while current < goal:
-		right()
+		basicActions.right()
 		current += 1
 	while current > goal:
-		left()
+		basicActions.left()
 		current -= 1
 	return current
 
@@ -108,6 +108,6 @@ def submitName(currentX, currentY):
 	currentX = navToColumn(currentX, 1)
 	currentY = navToRow(currentY, 2)
 	currentX = navToColumn(currentX, 2)
-	confirm()
+	basicActions.confirm()
 	print("Waiting for waiver to be put down")
 	sleep(3) #Just enough for the paper to be lowered. The actual wait happens in grabItems

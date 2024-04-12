@@ -3,7 +3,8 @@ from PIL import Image, ImageGrab, ImageTransform, ImageEnhance
 import pytesseract
 import numpy as np
 import cv2
-from config import getTesseractPath
+
+import config
 
 def scoreboardText() -> str:
 	print("### Fetching scoreboard text. Starting by grabbing image.")
@@ -41,7 +42,7 @@ def prepareImageForOCR(img: Image) -> Image:
 	return contrasted
 
 def OCR(img: Image) -> str:
-	pytesseract.pytesseract.tesseract_cmd = getTesseractPath()
+	pytesseract.pytesseract.tesseract_cmd = config.getTesseractPath()
 	out = pytesseract.image_to_string(img, lang='eng', config=r'--psm 7')
 	print(f"OCR RESULT: {out}")
 	return

@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from time import sleep
-from items import getDealerItemDirections
 
-from util import safeInt
-from basicActions import confirm, left, right, up, down, enterDirections, anyUse
+import items
+import util
+import basicActions
 
 class Target(Enum):
 	INVALID = -1
@@ -46,13 +46,13 @@ class ShootAction(Action):
 
 class UseItemAction(Action):
 	def __init__(self, itemNum: str | int, adrenalineItemNum: str | int | None = None):
-		self.itemNum = safeInt(itemNum)
+		self.itemNum = util.safeInt(itemNum)
 		#TODO: Check if adrenaline number needed
-		self.adrenalineItemNum = safeInt(adrenalineItemNum)
+		self.adrenalineItemNum = util.safeInt(adrenalineItemNum)
 		pass
 	
 	def execute(self):
-		if not itemAtPosition(self.itemNum):
+		if not items.itemAtPosition(self.itemNum):
 			return False
 		
 		#TODO: Check if dealer has item at location (difficult because I have to do pixel peeping that can vary based on the item it is and the item possibly in front)
@@ -90,21 +90,21 @@ def parseAction(userInput: str) -> Action:
 
 
 def cursorGun():
-	up()
-	up()
+	basicActions.up()
+	basicActions.up()
 	
 def cursorItem(num):
 	cursorGun()
-	enterDirections(getItemDirections(num, "use"))
+	basicActions.enterDirections(items.getItemDirections(num, "use"))
 
 def useGun():
 	cursorGun()
-	confirm()
+	basicActions.confirm()
 
 def usePersonalItem(num):
 	global currentItemPositions
 	cursorItem(num)
-	confirm()
+	basicActions.confirm()
 	currentItemPositions.remove(num)
 	print("Waiting for item use animation")
 	#Is there a good way to check for which item it is to only wait as long as needed? 
@@ -113,14 +113,14 @@ def usePersonalItem(num):
 	print("Item use animation should be over")
 
 def useDealerItem(num):
-	down() #Move to ensure cursor is active
-	enterDirections(getDealerItemDirections(num))
-	confirm()
+	basicActions.down() #Move to ensure cursor is active
+	basicActions.enterDirections(items.getDealerItemDirections(num))
+	basicActions.confirm()
 	
 def chooseDealer():
-	up()
-	confirm()
+	basicActions.up()
+	basicActions.confirm()
 
 def chooseSelf():
-	down()
-	confirm()
+	basicActions.down()
+	basicActions.confirm()

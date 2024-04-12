@@ -2,15 +2,6 @@ from time import sleep
 from typing import Optional
 from ctypes import wintypes, windll, create_unicode_buffer
 
-#From https://stackoverflow.com/a/58355052
-def getForegroundWindowTitle() -> Optional[str]:
-    hWnd = windll.user32.GetForegroundWindow()
-    length = windll.user32.GetWindowTextLengthW(hWnd)
-    buf = create_unicode_buffer(length + 1)
-    windll.user32.GetWindowTextW(hWnd, buf, length + 1)
-
-    return buf.value if buf.value else None
-
 def buckshotRouletteFocused():
 	windowName = getForegroundWindowTitle()
 	if windowName == "Buckshot Roulette":
@@ -27,3 +18,13 @@ def waitFocused():
 	print("Waiting for game to be focused")
 	while not buckshotRouletteFocused():
 		sleep(0.1)
+
+
+#From https://stackoverflow.com/a/58355052
+def getForegroundWindowTitle() -> Optional[str]:
+    hWnd = windll.user32.GetForegroundWindow()
+    length = windll.user32.GetWindowTextLengthW(hWnd)
+    buf = create_unicode_buffer(length + 1)
+    windll.user32.GetWindowTextW(hWnd, buf, length + 1)
+
+    return buf.value if buf.value else None

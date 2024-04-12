@@ -3,6 +3,8 @@ import pyautogui
 import getpixelcolor
 import colorsys
 
+import util
+
 def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int):
 	xPercent = x1440/2560
 	yPercent = y1440/1440
@@ -42,8 +44,14 @@ def pixelsMatch(expectedPixels, realPixels):
 def pixelMatches(expectedPixel, realPixel) -> bool:
 	return expectedPixel[0] == realPixel[0] and expectedPixel[1] == realPixel[1] and expectedPixel[2] == realPixel[2]
 
+def valueUnderAmountInArea(valuePercent: float, rect: util.Rectangle) -> bool:
+	return valueUnderAmountInArea(valuePercent, rect.x, rect.y, rect.w, rect.h)
+
 def valueUnderAmountInArea(valuePercent: float, x1440: int, y1440: int, w1440: int, h1440: int) -> bool:
 	return not valueOverAmountInArea(valuePercent, x1440, y1440, w1440, h1440)
+
+def valueOverAmountInArea(valuePercent: float, rect: util.Rectangle) -> bool:
+	return valueOverAmountInArea(valuePercent, rect.x, rect.y, rect.w, rect.h)
 
 def valueOverAmountInArea(valuePercent: float, x1440: int, y1440: int, w1440: int, h1440: int) -> bool:
 	areaColors = getPixelAreaBy1440p(x1440, y1440, w1440, h1440)
