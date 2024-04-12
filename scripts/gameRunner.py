@@ -121,6 +121,7 @@ class GameRunner():
 				self.checkForRoundIsWon()
 				if self.hasPlayerLost():
 					log("Player found to have lost. Returning to bathroom logic.")
+					clearItems()
 					return
 				sleep(0.5)
 			log("Should be player turn now.")
