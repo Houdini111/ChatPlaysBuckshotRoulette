@@ -9,7 +9,7 @@ class Config():
 		self.loadConfig()
 	
 	def loadConfig(self) -> None:
-		with open("config.json", "r") as file:
+		with open("../config.json", "r") as file:
 			self.innerDict = json.load(file)
 	
 	def getKeyOrDefault(self, key: str, expectedType: type[T], defaultValue: T) -> T:

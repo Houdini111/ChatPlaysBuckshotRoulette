@@ -1,7 +1,7 @@
-from bathroom import throughToGameRoom
-from waiver import waive
-from gameRunner import GameRunner
-from log import log
+from scripts.bathroom import throughToGameRoom
+from scripts.waiver import waive
+from scripts.gameRunner import GameRunner
+from scripts.log import log
 
 def startGame(name: str) -> None:
 	log("Starting game bot.")
