@@ -1,8 +1,10 @@
 from bathroom import throughToGameRoom
 from waiver import waive
 from gameRunner import GameRunner
+from log import log
 
 def startGame(name: str) -> None:
+	log("Starting game bot.")
 	while(True):
 		throughToGameRoom()
 		waive(name)
