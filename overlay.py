@@ -11,12 +11,11 @@ from util import resizePointFrom1440p
 displayW, displayH = pyautogui.size()
 
 root: tk.Tk = tk.Tk()
-root.overrideredirect(True)
+#root.overrideredirect(True)
 canvas = tk.Canvas(width=displayW, height=displayH, bg="green")
 canvas.pack(expand=tk.YES, fill=tk.BOTH)
 
-root.wm_attributes("-topmost", True)
-root.wm_attributes("-disabled", True)
+root.wm_attributes("-fullscreen", True)
 root.wm_attributes("-transparentcolor", "green")
 
 fontSize = math.ceil(80 * (float(displayH) / 1440)) #80 is the size I want at 1440p
@@ -48,7 +47,7 @@ def closeRootAfterATime(toClose: tk.Tk, canvas: tk.Canvas) -> None:
 	canvas.create_rectangle(0, 0, 2560, 1440, width = 10, outline="white")
 	drawNumberGrid(canvas, list(range(1, 9)))
 	print("Starting close wait")
-	sleep(5)
+	sleep(10)
 	print("After close wait, sending quit command")
 	toClose.destroy()
 
