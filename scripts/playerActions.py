@@ -6,6 +6,7 @@ from .items import itemAtPosition, getPlayerItemDirections, getDealerItemDirecti
 from .util import safeInt
 from .basicActions import up, down, confirm, enterDirections
 from .log import log
+from .status import status
 
 class Target(Enum):
 	INVALID = -1
@@ -44,6 +45,7 @@ class ShootAction(Action):
 		if not self.valid():
 			return False
 
+		status("Executing shoot action")
 		useGun()
 		sleep(0.75) #Wait for gun move animation
 		if self.target == Target.SELF:
@@ -70,6 +72,7 @@ class UseItemAction(Action):
 		if not self.valid():
 			return False
 		
+		status("Executing use item action")
 		#TODO: Check if dealer has item at location (difficult because I have to do pixel peeping that can vary based on the item it is and the item possibly in front)
 		usePersonalItem(self.itemNum)
 		if self.adrenalineItemNum != 0:
@@ -115,7 +118,7 @@ def usePersonalItem(num):
 	cursorItem(num)
 	confirm()
 	removeItem(num)
-	log("Waiting for item use animation")
+	status("Waiting for item use animation")
 	#Is there a good way to check for which item it is to only wait as long as needed? 
 	#This long of a wait might conflict with adrenaline
 	sleep(6) #Has to be extra long for phone. 

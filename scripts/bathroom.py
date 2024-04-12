@@ -1,10 +1,13 @@
 from time import sleep
 
+from scripts.overlay import getOverlay
+
 from .screenColors import valueOverAmountInArea, valueUnderAmountInArea
 from .basicActions import up, right, left, confirm, anyUse
 from .focus import waitForFocus
 from .util import waitForFalse, waitForTrue
 from .log import log
+from .status import status
 
 def throughToGameRoom() -> None:
 	enableEndless()
@@ -22,7 +25,7 @@ def cursorOnBathroomDoor() -> bool:
 	return valueOverAmountInArea(70, 1435, 641, 40, 5)
 
 def moveCursorToBathroomDoor() -> None:
-	log("Moving cursor to bathroom door")
+	status("Moving cursor to bathroom door")
 	waitForFocus()
 	up() #Make cursor show without changing selection
 	movements: int = 0
@@ -40,27 +43,27 @@ def moveCursorToBathroomDoor() -> None:
 	raise RuntimeError("Couldn't locate door cursor")
 
 def enableEndless() -> None:
-	log("Enabling endless")
+	status("Enabling endless")
 	moveCursorToBathroomDoor()
 	left()
 	confirm()
-	log("Waiting for pills menu to open fully")
+	status("Waiting for pills menu to open fully")
 	sleep(1.75)
 	left()
 	confirm()
-	log("Pills consumed. Waiting for reload to bathroom.")
+	status("Pills consumed. Waiting for reload to bathroom.")
 	sleep(1.2) #Typically takes 15 0.1 seconds waits for the following to return. To prevent some logspam I'm just going to wait for 1.2 seconds here
 	waitForFalse(doorFullBlack)
 	sleep(0.5)    #Likewise, but 8 0.1 second waits, so waiting 0.5 seconds here.
 	waitForTrue(cursorOnBathroomDoor)
 
 def exitBathroom() -> None:
-	log("Exiting bathroom")
+	status("Exiting bathroom")
 	anyUse()
 	sleep(5.5) #Do I need more? Can I get away with less?
 	
 def enterGameRoom() -> None:
-	log("Entering game room")
+	status("Entering game room")
 	anyUse()
 	sleep(10) #Do I need more? Can I get away with less?
 

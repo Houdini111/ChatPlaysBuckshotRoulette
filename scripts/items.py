@@ -3,6 +3,7 @@ from time import sleep
 from .basicActions import enterDirections, confirm, up
 from .screenColors import valueOverAmountInArea
 from .log import log
+from .status import removeAllTempStatus, status, tempStatus
 
 currentItemPositions: list[int] = []
 
@@ -35,7 +36,7 @@ def itemAtPosition(pos: int) -> bool:
 	return pos in currentItemPositions
 
 def grabItems() -> None:
-	log("Trying to grab items")
+	tempStatus("Trying to grab items")
 	if not itemBoxIsOpen():
 		log("Item box not yet open. Waiting.")
 	while not itemBoxIsOpen():
@@ -43,9 +44,9 @@ def grabItems() -> None:
 	log("Item box open, waiting for cursor.")
 	waitForItemBoxCursorVisible()
 	while itemBoxIsOpen():
-		log("Grabbing item from box")
+		tempStatus("Grabbing item from box")
 		confirm()
-		log("Waiting for item to be pulled out")
+		tempStatus("Waiting for item to be pulled out")
 		sleep(0.5)
 		nextPosition = getNextOpenItemPosition()
 		if nextPosition == 0:
@@ -53,9 +54,10 @@ def grabItems() -> None:
 			break
 		putItemAt(nextPosition)
 		sleep(0.25) #A tiny wait while the item moves away from the box
-		log("Waiting for item to be placed and or box close animation")
+		tempStatus("Waiting for item to be placed and or box close animation")
 		while itemBoxIsOpen() and not itemBoxCursorVisible():
 			sleep(0.1)
+	removeAllTempStatus()
 	log("All items withdrawn.")
 	#TODO: When player turn after grabbing items, don't allow player movmement first. 
 	#   Hover over every item and OCR to find what they are so we can more intelligently handle their usage times and requirements (adrenaline)

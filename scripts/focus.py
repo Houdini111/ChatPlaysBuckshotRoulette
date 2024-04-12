@@ -2,12 +2,13 @@ from time import sleep
 from typing import Optional
 from ctypes import wintypes, windll, create_unicode_buffer
 
-from .log import log
+from .status import removeTempStatus, tempStatus
 
 def buckshotRouletteFocused() -> bool:
 	windowName = getForegroundWindowTitle()
 	if windowName == "Buckshot Roulette":
 		return True
+	return False
 
 #Despite having this method, it's not recommended to tab out
 #  Not everything is built around ensuring the cursor is still around. 
@@ -17,9 +18,10 @@ def waitForFocus() -> None:
 	if buckshotRouletteFocused():
 		return
 	#This method is written like this so I can write just a single message instead of spamming
-	log("Waiting for game to be focused")
+	tempStatus("Waiting for game to be focused")
 	while not buckshotRouletteFocused():
 		sleep(0.1)
+	removeTempStatus()
 
 
 #From https://stackoverflow.com/a/58355052

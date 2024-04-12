@@ -2,6 +2,7 @@ from time import sleep
 
 from .basicActions import up, down, left, right, confirm, anyUse
 from .log import log
+from .status import status
 
 playerName = ""
 
@@ -15,14 +16,14 @@ def waive(name: str) -> None:
 	playerName = name
 
 def pickUpWaiver() -> None:
-	log("Picking up waiver")
+	status("Picking up waiver")
 	anyUse()
-	log("Waiting for waiver to be picked up")
+	status("Waiting for waiver to be picked up")
 	sleep(3.5) #Do I need more? Can I get away with less?
 
 def enterName(name: str) -> None:
 	name = name.upper()[0:6] #Normalize to uppercase and truncate to the max of 6 characters
-	log(f"Entering name {name}")
+	status(f"Entering name {name}")
 	#cursorOnA() #TODO: Cycles, so I'll have to pixel peep with getpixelcolor to be safer
 	#   For now, this works without intervention
 	cursorX = 0 
@@ -106,10 +107,10 @@ def navToRow(current: int, goal: int) -> int:
 	return current
 
 def submitName(currentX: int, currentY: int) -> None:
-	log("Submitting name")
+	status("Submitting name")
 	currentX = navToColumn(currentX, 1)
 	currentY = navToRow(currentY, 2)
 	currentX = navToColumn(currentX, 2)
 	confirm()
-	log("Waiting for waiver to be put down")
+	status("Waiting for waiver to be put down")
 	sleep(3) #Just enough for the paper to be lowered. The actual wait happens in grabItems

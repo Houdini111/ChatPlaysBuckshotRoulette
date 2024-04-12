@@ -3,6 +3,7 @@ import traceback
 from itertools import count
 
 tabSize = 2
+
 def log(toPrint: str) -> None:
 	logWithLevel(toPrint, stack_size() - 1)
 

@@ -8,17 +8,16 @@ from .playerActions import Action, parseAction
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
 from .log import log
-from .overlay import Overlay
+from .overlay import Overlay, getOverlay
+from .status import status
 
 #TODO: 
 #  Item place logic sometimes skipping squares
 #  Sometimes activating endless goes to leaderboards instead
 
 class GameRunner():
-	def __init__(self, chatOverlay: Overlay):
+	def __init__(self):
 		self.roundsCleared = 0
-		
-		self.chatOverlay = chatOverlay
 		
 		#TODO: Move these definitions to their own class/file
 		self.noDialogueTextBoxPeeper = Peeper("NoDialogueTextBoxPeeper", 
@@ -112,7 +111,7 @@ class GameRunner():
 
 	def go(self) -> None:
 		while(True):
-			log("Waiting for player turn")
+			status("Waiting for player turn")
 			while not self.playerTurn():
 				if itemBoxCursorVisible():
 					log("While waiting for the player's turn the item box was found to be open. Grabbing items.")
@@ -125,13 +124,14 @@ class GameRunner():
 					return
 				sleep(0.5)
 			log("Should be player turn now.")
+			status("Awaiting player input")
 			while (True):
-				self.chatOverlay.drawNumberGrid(getAllCurrentItemPositions())
+				getOverlay().drawNumberGrid(getAllCurrentItemPositions())
 				request = input("Next? ")
 				action: Action | None = parseAction(request)
 				if action is None:
 					continue
 				if action.valid():
-					self.chatOverlay.clearNumberGrid()
+					getOverlay().clearNumberGrid()
 					action.execute()
 					break
