@@ -1,8 +1,8 @@
 from time import sleep
 
-from basicActions import enterDirections, confirm, up
-from screenColors import valueOverAmountInArea
-from log import log
+from .basicActions import enterDirections, confirm, up
+from .screenColors import valueOverAmountInArea
+from .log import log
 
 currentItemPositions: list[int] = []
 

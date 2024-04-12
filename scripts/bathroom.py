@@ -1,10 +1,10 @@
 from time import sleep
 
-from screenColors import valueOverAmountInArea, valueUnderAmountInArea
-from basicActions import up, right, left, confirm, anyUse
-from focus import waitForFocus
-from util import waitForFalse, waitForTrue
-from log import log
+from .screenColors import valueOverAmountInArea, valueUnderAmountInArea
+from .basicActions import up, right, left, confirm, anyUse
+from .focus import waitForFocus
+from .util import waitForFalse, waitForTrue
+from .log import log
 
 def throughToGameRoom() -> None:
 	enableEndless()

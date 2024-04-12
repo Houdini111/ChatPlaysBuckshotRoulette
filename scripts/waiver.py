@@ -1,7 +1,7 @@
 from time import sleep
 
-from basicActions import up, down, left, right, confirm, anyUse
-from log import log
+from .basicActions import up, down, left, right, confirm, anyUse
+from .log import log
 
 playerName = ""
 

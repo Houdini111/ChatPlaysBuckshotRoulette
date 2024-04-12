@@ -1,12 +1,12 @@
 from time import sleep
 
-from basicActions import up
-from pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, RangePeep
-from items import itemBoxCursorVisible, grabItems, clearItems
-from playerActions import doAction
-from bathroom import inStartingBathroom
-from waiver import getPlayerName
-from log import log
+from .basicActions import up
+from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, RangePeep
+from .items import itemBoxCursorVisible, grabItems, clearItems
+from .playerActions import doAction
+from .bathroom import inStartingBathroom
+from .waiver import getPlayerName
+from .log import log
 
 #TODO: 
 #  Item place logic sometimes skipping squares

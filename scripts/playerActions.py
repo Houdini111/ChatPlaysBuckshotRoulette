@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from time import sleep
 
-from items import itemAtPosition, getPlayerItemDirections, getDealerItemDirections, removeItem
-from util import safeInt
-from basicActions import up, down, confirm, enterDirections
-from log import log
+from .items import itemAtPosition, getPlayerItemDirections, getDealerItemDirections, removeItem
+from .util import safeInt
+from .basicActions import up, down, confirm, enterDirections
+from .log import log
 
 class Target(Enum):
 	INVALID = -1

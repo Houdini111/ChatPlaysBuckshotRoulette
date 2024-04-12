@@ -5,56 +5,51 @@ from time import sleep
 from threading import Thread
 import math
 
-from util import resizePointFrom1440p
+from .util import resizePointFrom1440p
 
+class Overlay():
+	def __init__(self):
+		self.displayW, self.displayH = pyautogui.size()
+		self.root: tk.Tk = tk.Tk()
+		self.root.title("Chat Plays Buckshot Roulette - Chat Overlay")
+		self.root.wm_attributes("-fullscreen", True)
+		self.root.wm_attributes("-transparentcolor", "green")
 
-displayW, displayH = pyautogui.size()
+		self.canvas = tk.Canvas(width = self.displayW, height = self.displayH, bg="green")
+		self.canvas.pack(expand=tk.YES, fill=tk.BOTH)
+		
+		self.optionsFontSize = math.ceil(80 * (float(self.displayH) / 1440)) #80 is the size I want at 1440p
+		
+		self.playerNumGridPositions = {
+			1: [650, 500],	
+			2: [875, 500],
+			3: [1600, 500],
+			4: [1825, 500],
+			5: [525, 750],
+			6: [825, 750],
+			7: [1675, 750],
+			8: [1950, 750]
+		}
+		
+		self.draw_text_1440("Chat Overlay Active", 10, 10, 40)
+		self.drawNumberGrid(list(range(1, 9)))
+	
+	def run(self) -> None:
+		tk.mainloop()
+	
+	def stop(self) -> None:
+		self.root.destroy()
 
-root: tk.Tk = tk.Tk()
-#root.overrideredirect(True)
-canvas = tk.Canvas(width=displayW, height=displayH, bg="green")
-canvas.pack(expand=tk.YES, fill=tk.BOTH)
+	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, bold: bool = True) -> None:
+		realX, realY = resizePointFrom1440p(x1440, y1440)
+		font = ("Arial", fontSize)
+		if bold:
+			font += ("bold", )
+		self.canvas.create_text(realX, realY, text = text, fill = "white", font = font, anchor = "nw")
 
-root.wm_attributes("-fullscreen", True)
-root.wm_attributes("-transparentcolor", "green")
-
-fontSize = math.ceil(80 * (float(displayH) / 1440)) #80 is the size I want at 1440p
-overlayFont = ("Arial", fontSize, "bold")
-playerNumGridPositions = {
-	1: [700, 550],	
-	2: [900, 550],
-	3: [1625, 550],
-	4: [1850, 550],
-	5: [575, 800],
-	6: [850, 800],
-	7: [1700, 800],
-	8: [1975, 800]
-}
-
-def draw_text_1440(canvas: tk.Canvas, text: str, x1440: int, y1440: int) -> None:
-	realX, realY = resizePointFrom1440p(x1440, y1440)
-	canvas.create_text(realX, realY, text = text, fill="white", font=overlayFont)
-
-def drawNumberGrid(canvas: tk.Canvas, numbersToDraw: list[int]) -> None:
-	for i in numbersToDraw:
-		if i < 1 or i > 8:
-			continue
-		pos = playerNumGridPositions[i]
-		draw_text_1440(canvas, str(i), pos[0], pos[1])
-
-
-def closeRootAfterATime(toClose: tk.Tk, canvas: tk.Canvas) -> None:
-	canvas.create_rectangle(0, 0, 2560, 1440, width = 10, outline="white")
-	drawNumberGrid(canvas, list(range(1, 9)))
-	print("Starting close wait")
-	sleep(10)
-	print("After close wait, sending quit command")
-	toClose.destroy()
-
-def createHandlerThread() -> None:
-	handlerThread = Thread(target = closeRootAfterATime, args=([root, canvas]))
-	handlerThread.daemon = True
-	handlerThread.start()
-
-createHandlerThread()
-tk.mainloop()
+	def drawNumberGrid(self, numbersToDraw: list[int]) -> None:
+		for i in numbersToDraw:
+			if i < 1 or i > 8:
+				continue
+			pos = self.playerNumGridPositions[i]
+			self.draw_text_1440(str(i), pos[0], pos[1], self.optionsFontSize)

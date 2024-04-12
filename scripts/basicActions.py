@@ -1,6 +1,7 @@
 import pyautogui
-from focus import waitForFocus
-from log import log
+
+from .focus import waitForFocus
+from .log import log
 
 def confirm() -> None:
 	waitForFocus()

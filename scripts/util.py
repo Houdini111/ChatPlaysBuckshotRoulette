@@ -4,7 +4,7 @@ import math
 
 import pyautogui
 
-from log import log
+from .log import log
 
 class Rectangle():
 	def __init__(self, x: int, y: int, w: int, h: int):

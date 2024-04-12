@@ -4,8 +4,8 @@ import getpixelcolor
 import colorsys
 from deprecation import deprecated
 
-from util import Rectangle, resizeRectFrom1440p
-from log import log
+from .util import Rectangle, resizeRectFrom1440p
+from .log import log
 
 def getPixelAreaBy1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[list[int]]:
 	realX, realY, realW, realH = resizeRectFrom1440p(x1440, y1440, w1440, h1440)
