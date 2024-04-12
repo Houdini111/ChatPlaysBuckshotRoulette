@@ -6,7 +6,7 @@ from deprecation import deprecated
 
 from util import Rectangle
 
-def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int):
+def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[int]:
 	xPercent = x1440/2560
 	yPercent = y1440/1440
 	wPercent = w1440/2560
@@ -18,16 +18,12 @@ def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int):
 	realH = int(math.ceil(hPercent * displayH))
 	return [realX, realY, realW, realH]
 
-def getPixelAreaBy1440p(x1440: int, y1440: int, w1440: int, h1440: int):
+def getPixelAreaBy1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[list[int]]:
 	realX, realY, realW, realH = resizeRectFrom1440p(x1440, y1440, w1440, h1440)
 	return getpixelcolor.area(realX, realY, realW, realH)
 
-def getPixelAreaAverageBy1440p(x1440: int, y1440: int, w1440: int, h1440: int):
-	realX, realY, realW, realH = resizeRectFrom1440p(x1440, y1440, w1440, h1440)
-	return getpixelcolor.average(realX, realY, realW, realH)
-
 #For a 2d array of pixels
-def pixelsMatch(expectedPixels, realPixels):
+def pixelsMatch(expectedPixels: list[list[int]], realPixels: list[list[int]]) -> bool:
 	if len(expectedPixels) != len(realPixels):
 		print(f"Pixels don't match because first order array size is wrong. Expected: {len(expectedPixels)} Actual: {len(realPixels)}")
 		return False
@@ -42,7 +38,7 @@ def pixelsMatch(expectedPixels, realPixels):
 	return True 
 
 #For a single pixel
-def pixelMatches(expectedPixel, realPixel) -> bool:
+def pixelMatches(expectedPixel: list[int], realPixel: list[int]) -> bool:
 	return expectedPixel[0] == realPixel[0] and expectedPixel[1] == realPixel[1] and expectedPixel[2] == realPixel[2]
 
 
@@ -60,7 +56,7 @@ def valueOverAmountInRect(valuePercent: float, rect: Rectangle) -> bool:
 
 @deprecated(details="Use valuesInRangeInArea")
 def valueOverAmountInArea(valuePercent: float, x1440: int, y1440: int, w1440: int, h1440: int) -> bool:
-	areaColors = getPixelAreaBy1440p(x1440, y1440, w1440, h1440)
+	areaColors: list[list[int]] = getPixelAreaBy1440p(x1440, y1440, w1440, h1440)
 	max = 0
 	valueAbsolute = float(255 * valuePercent) / 100
 	for axisOne in areaColors: #Don't know if it's columns or rows but it doesn't matter

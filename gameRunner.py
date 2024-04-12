@@ -26,7 +26,7 @@ class GameRunner():
 			AllBlackPeep("staticBoardBlackLeft", 3, 488, 12, 12),
 			AnyWhitePeep("staticBoardBulletSquare", 1477, 389, 50, 53),
 			AllBlackPeep("staticBoardScoreboardBlack", 2039, 347, 7, 7),
-			self.noDialogueTextBoxPeeper,
+			self.noDialogueTextBoxPeeper
 		)
 		self.gunCursorVisiblePeeper = Peeper("GunCursorVisiblePeeper",
 			AnyWhitePeep("gunCursorTopLeft", 1170, 359, 20, 1),
@@ -90,13 +90,13 @@ class GameRunner():
 	def winRound(self):
 		self.roundsCleared += 1
 		print("################")
-		print(f"## Rounds cleared: {roundsCleared}")
+		print(f"## Rounds cleared: {self.roundsCleared}")
 		print("################")
-		if roundsCleared == 3:
+		if self.roundsCleared == 3:
 			print("################")
 			print("## Double or Nothing set cleared!")
 			print("################")
-			roundsCleared = 0
+			self.roundsCleared = 0
 			#TODO: Choose to begin a new double or nothing set
 
 			#Do NOT clear items
@@ -106,7 +106,7 @@ class GameRunner():
 	def hasPlayerLost(self) -> bool:
 		return inStartingBathroom()
 
-	def go(self):
+	def go(self) -> None:
 		while(True):
 			print("# Waiting for player turn")
 			while not self.playerTurn():

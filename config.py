@@ -1,13 +1,33 @@
 import json
+from typing import TypeVar
+from typing_extensions import TypeAlias
 
-config = None
+T = TypeVar("T")
+
+class Config():
+	def __init__(self):
+		self.loadConfig()
+	
+	def loadConfig(self) -> None:
+		with open("config.json", "r") as file:
+			self.innerDict = json.load(file)
+	
+	def getKeyOrDefault(self, key: str, expectedType: type[T], defaultValue: T) -> T:
+		val = self.getKey(key, expectedType)
+		if val is None:
+			return defaultValue
+		else:
+			return val
+
+	def getKey(self, key: str, expectedType: type[T]) -> T | None:
+		val = self.innerDict.get(key)
+		if val is None:
+			return None
+		if val is expectedType:
+			return val
+		raise ValueError(f"Val: |{val}| was not None or expected type {expectedType} but was of type {type(val)}")
+
+config: Config = Config()
 
 def getTesseractPath() -> str:
-	ensureConfigLoaded()
-	return config["tesseractPath"]
-
-def ensureConfigLoaded():
-	global config
-	if config is None:
-		with open("config.json", "r") as file:
-			config = json.load(file)
+	return config.getKeyOrDefault("tesseractPath", type(str), r"C:\Program Files\Tesseract-OCR\tesseract")

@@ -45,4 +45,4 @@ def OCR(img: Image) -> str:
 	pytesseract.pytesseract.tesseract_cmd = getTesseractPath()
 	out = pytesseract.image_to_string(img, lang='eng', config=r'--psm 7')
 	print(f"OCR RESULT: {out}")
-	return
+	return out

@@ -12,7 +12,7 @@ class Target(Enum):
 	DEALER = 2
 	
 	@staticmethod
-	def parseTarget(target: str):
+	def parseTarget(target: str) -> Target:
 		target = target.lower()
 		if target == "self" or target == "player" or target == "me":
 			return Target.SELF
@@ -46,9 +46,9 @@ class ShootAction(Action):
 
 class UseItemAction(Action):
 	def __init__(self, itemNum: str | int, adrenalineItemNum: str | int | None = None):
-		self.itemNum = safeInt(itemNum)
+		self.itemNum = safeInt(itemNum, 0)
 		#TODO: Check if adrenaline number needed
-		self.adrenalineItemNum = safeInt(adrenalineItemNum)
+		self.adrenalineItemNum = safeInt(adrenalineItemNum, 0)
 		pass
 	
 	def execute(self):
@@ -69,7 +69,7 @@ def doAction(userInput: str) -> bool:
 		return False
 	return action.execute()
 
-def parseAction(userInput: str) -> Action:
+def parseAction(userInput: str) -> Action | None:
 	userInput = userInput.lower().strip()
 	splitInput = userInput.split(' ')
 	action = splitInput[0]

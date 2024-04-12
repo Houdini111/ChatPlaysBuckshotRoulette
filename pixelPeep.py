@@ -15,7 +15,7 @@ class Checker(ABC):
 		pass
 	
 	@abstractmethod
-	def failureMessage(self):
+	def failureMessage(self) -> str:
 		pass
 
 class Peep(Checker):
@@ -57,6 +57,7 @@ class RangePeep(Peep):
 			raise ValueError(f"RIGHT EDGE ({rect.x + rect.w}) INVALID")
 		if rect.y + rect.h > 1440:
 			raise ValueError(f"LEFT EDGE ({rect.y + rect.h}) INVALID")
+		return True
 
 
 class AnyWhitePeep(RangePeep):
@@ -90,14 +91,20 @@ class OCRScoreboardPeep(Peep):
 	def getRequirement(self) -> str:
 		return f"Text to match {self.expectedText}. Found {self.ocrTextFound})."
 
-class Peeper():
+class Peeper(Checker):
 	def __init__(self, name: str, *checkers: Checker):
 		self.name = name
 		self.checkers = list(checkers)
-		self.failedChecker = None
+		self.failedChecker: Checker
 	
+	def getName(self) -> str:
+		return self.name
+
 	def failureMessage(self) -> str:
-		return f"Peeper {self.name} fails because of -> {self.failedChecker.failureMessage()}";
+		failedMessage: str = "No Fail Message Found"
+		if self.failedChecker is not None:
+			failedMessage = self.failedChecker.failureMessage()
+		return f"Peeper {self.name} fails because of -> {failedMessage}";
 	
 	def passes(self) -> bool:
 		for checker in self.checkers:

@@ -6,19 +6,19 @@ playerName = ""
 def getPlayerName() -> str:
 	return playerName
 
-def waive(name: str):
+def waive(name: str) -> None:
 	global playerName
 	pickUpWaiver()
 	enterName(name)
 	playerName = name
 
-def pickUpWaiver():
+def pickUpWaiver() -> None:
 	print("##### Picking up waiver")
 	anyUse()
 	print("Waiting for waiver to be picked up")
 	sleep(3.5) #Do I need more? Can I get away with less?
 
-def enterName(name: str):
+def enterName(name: str) -> None:
 	name = name.upper()[0:6] #Normalize to uppercase and truncate to the max of 6 characters
 	print("##### Entering name", name)
 	#cursorOnA() #TODO: Cycles, so I'll have to pixel peep with getpixelcolor to be safer
@@ -72,7 +72,7 @@ def enterName(name: str):
 		print("### Should have entered char", char)
 	submitName(cursorX, cursorY) 
 		
-def navToChar(startX, startY, goalX, goalY):
+def navToChar(startX: int, startY: int, goalX: int, goalY: int) -> None:
 	x = startX
 	y = startY
 	#Avoid traversing columns 3 and 4, as backspace and enter make that unreliable.
@@ -85,7 +85,7 @@ def navToChar(startX, startY, goalX, goalY):
 	y = navToRow(y, goalY)
 	x = navToColumn(x, goalX)
 
-def navToColumn(current, goal):
+def navToColumn(current: int, goal: int) -> int:
 	while current < goal:
 		right()
 		current += 1
@@ -94,7 +94,7 @@ def navToColumn(current, goal):
 		current -= 1
 	return current
 
-def navToRow(current, goal):
+def navToRow(current: int, goal: int) -> int:
 	while current < goal:
 		down()
 		current += 1
@@ -103,7 +103,7 @@ def navToRow(current, goal):
 		current -= 1
 	return current
 
-def submitName(currentX, currentY):
+def submitName(currentX: int, currentY: int) -> None:
 	print("##### Submitting name")
 	currentX = navToColumn(currentX, 1)
 	currentY = navToRow(currentY, 2)

@@ -5,38 +5,40 @@ from basicActions import up, right, left, confirm, anyUse
 from focus import waitForFocus
 from util import waitForFalse, waitForTrue
 
-def throughToGameRoom():
+def throughToGameRoom() -> None:
 	enableEndless()
 	exitBathroom()
 	enterGameRoom()
 
-def doorFullBlack():
+def doorFullBlack() -> bool:
 	#TODO: Convert to peeper
 	return valueOverAmountInArea(1, 1435, 641, 40, 5)
 
-def cursorOnBathroomDoor():
+def cursorOnBathroomDoor() -> bool:
 	up()
 	#Targeting top left 
 	#TODO: Conver to peeper
 	return valueOverAmountInArea(70, 1435, 641, 40, 5)
 
-def moveCursorToBathroomDoor():
+def moveCursorToBathroomDoor() -> None:
 	print("### Moving cursor to bathroom door")
 	waitForFocus()
 	up() #Make cursor show without changing selection
+	movements: int = 0
 	for movements in range(20): #Tries before movement
 		#Give each section 5 tries, in case the check missed
+		i: int = 0
 		for i in range(1): 
 			#Targeting bottom left of cursor. This should be a large enough area to see it, even with the swaying.
 			#valueOverAmount = valueOverAmountInArea(50, 1432, 712, 40, 1)
 			if cursorOnBathroomDoor():
 				return
 			sleep(0.1)
-		print("Didn't find cursor on door. Moving cursor and trying again.")
+		print(f"Didn't find cursor on door. Moving cursor and trying again. Momvent: {movements}")
 		right()
-	raise Exception("Couldn't locate door cursor")
+	raise RuntimeError("Couldn't locate door cursor")
 
-def enableEndless():
+def enableEndless() -> None:
 	print("##### Enabling endless")
 	moveCursorToBathroomDoor()
 	left()
@@ -51,17 +53,17 @@ def enableEndless():
 	sleep(0.5)    #Likewise, but 8 0.1 second waits, so waiting 0.5 seconds here.
 	waitForTrue(cursorOnBathroomDoor)
 
-def exitBathroom():
+def exitBathroom() -> None:
 	print("##### Exiting bathroom")
 	anyUse()
 	sleep(5.5) #Do I need more? Can I get away with less?
 	
-def enterGameRoom():
+def enterGameRoom() -> None:
 	print("##### Entering game room")
 	anyUse()
 	sleep(10) #Do I need more? Can I get away with less?
 
-def inStartingBathroom():
+def inStartingBathroom() -> bool:
 	#TODO: Is this reliable enough of a check? All the swaying and grays makes it really hard to tell...
 	#TODO: Convert to Peepers
 	print("### Checking for if the player is in the bathroom.")

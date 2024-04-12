@@ -2,7 +2,7 @@ from bathroom import throughToGameRoom
 from waiver import waive
 from gameRunner import GameRunner
 
-def startGame(name: str):
+def startGame(name: str) -> None:
 	while(True):
 		throughToGameRoom()
 		waive(name)

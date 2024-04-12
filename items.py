@@ -3,24 +3,24 @@ from time import sleep
 from basicActions import enterDirections, confirm, up
 from screenColors import valueOverAmountInArea
 
-currentItemPositions = []
+currentItemPositions: list[int] = []
 
-def getOpenItemPosition():
+def getOpenItemPosition() -> int:
 	for i in range(1, 9): #[1, 8]
 		if i not in currentItemPositions:
 			return i
 	print("ERROR: NO FREE SLOT FOUND")
 	return 0
 
-def clearItems():
+def clearItems() -> None:
 	global currentItemPositions
 	currentItemPositions.clear()
 
-def removeItem(num: int):
+def removeItem(num: int) -> None:
 	global currentItemPositions
 	currentItemPositions.remove(num)
 
-def putItemAt(place):
+def putItemAt(place: int) -> None:
 	global currentItemPositions
 	enterDirections(getPlayerItemDirections(place, "pickup"))
 	confirm()
@@ -30,7 +30,7 @@ def itemAtPosition(pos: int) -> bool:
 	#TODO: Eventually return the actual item Enum/Class, rather than just saying one exists
 	return pos in currentItemPositions
 
-def grabItems():
+def grabItems() -> None:
 	print("### Trying to grab items")
 	if not itemBoxIsOpen():
 		print("Item box not yet open. Waiting.")
@@ -56,7 +56,7 @@ def grabItems():
 	#TODO: When player turn after grabbing items, don't allow player movmement first. 
 	#   Hover over every item and OCR to find what they are so we can more intelligently handle their usage times and requirements (adrenaline)
 
-def itemBoxIsOpen():
+def itemBoxIsOpen() -> bool:
 	#TODO: Convert to Peepers
 	print("## Checking for item box open")
 	itemBoxBlackVisible = not valueOverAmountInArea(1, 1018, 468, 30, 100)
@@ -73,11 +73,11 @@ def itemBoxIsOpen():
 		return False
 	return True
 
-def waitForItemBoxCursorVisible():
+def waitForItemBoxCursorVisible() -> None:
 	while not itemBoxCursorVisible():
 		sleep(0.1)
 
-def itemBoxCursorVisible():
+def itemBoxCursorVisible() -> bool:
 	print("## Checking for item box cursor. First checking for box open.")
 	if not itemBoxIsOpen():
 		print("## Item box cursor not visible as item bot not found open.")
@@ -90,7 +90,7 @@ def itemBoxCursorVisible():
 
 
 
-def getPlayerItemDirections(num: int, mode: str):
+def getPlayerItemDirections(num: int, mode: str) -> list[str]:
 	verticalOffset = []
 	horizontalOffset = []
 	if num == 1 or num == 5:
@@ -112,7 +112,7 @@ def getPlayerItemDirections(num: int, mode: str):
 	print(f"Item directions for item {num} in mode: {mode} -> {directions}")
 	return directions
 
-def getDealerItemDirections(num: int):
+def getDealerItemDirections(num: int) -> list[str]:
 	#Starts on 6
 	if num == 6:
 		print("Requested dealer item 6, the starting position. No extra movements")
