@@ -11,8 +11,15 @@ def getAllCurrentItemPositions() -> list[int]:
 	return currentItemPositions
 
 def getNextOpenItemPosition() -> int:
+	positionsStr: str = ""
+	for pos in currentItemPositions:
+		positionsStr += str(pos) + ", "
+	if len(positionsStr) > 2:
+		positionsStr = positionsStr[0: -2]
+	log(f"Current item positions: [{positionsStr}]")
 	for i in range(1, 9): #[1, 8]
 		if i not in currentItemPositions:
+			log(f"Next item position found: {i}")
 			return i
 	log("ERROR: NO FREE SLOT FOUND")
 	return 0
