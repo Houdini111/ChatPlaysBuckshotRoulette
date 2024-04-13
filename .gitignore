@@ -163,5 +163,5 @@ cython_debug/
 
 
 
-secrets.json
-config.json
+/secrets.json
+/config.json
