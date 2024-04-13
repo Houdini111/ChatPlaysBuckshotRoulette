@@ -164,3 +164,4 @@ cython_debug/
 
 
 secrets.json
+config.json
