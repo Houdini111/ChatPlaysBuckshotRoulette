@@ -1,5 +1,7 @@
 from time import sleep
 
+from bot.chatbot import getChatbot
+
 
 from .basicActions import up
 from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, RangePeep
@@ -127,9 +129,10 @@ class GameRunner():
 				sleep(0.5)
 			log("Should be player turn now.")
 			status("Awaiting player input")
+			getOverlay().drawNumberGrid(getAllCurrentItemPositions())
 			while (True):
-				getOverlay().drawNumberGrid(getAllCurrentItemPositions())
-				request = input("Next? ")
+				#request = input("Next? ")
+				request = getChatbot().getVotedAction()
 				action: Action | None = parseAction(request)
 				if action is None:
 					continue

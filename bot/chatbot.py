@@ -13,6 +13,37 @@ from scripts.config import getChannels, getDefaultName
 
 logger = logging.getLogger(__name__ + 'bot.chatbot')
 
+
+class VoteResult():
+	def __init__(self, winners: list[str], winningVotes: int, totalVotes: int, byDefault: bool):
+		self.winners = winners
+		self.winningVotes = winningVotes
+		self.byDefault = byDefault
+		self.totalVotes = totalVotes
+	
+	def winnerCount(self) -> int:
+		return len(self.winners)
+
+	def tied(self) -> bool: 
+		return len(self.winners) > 1
+
+	def getWinner(self) -> str:
+		if self.winnerCount() == 1:
+			return self.winners[0]
+		return random.choice(self.winners)
+
+	def getAllWinners(self) -> list[str]:
+		return self.winners
+	
+	def getWinningVotes(self) -> int:
+		return self.winningVotes
+	
+	def wonByDefault(self) -> bool:
+		return self.byDefault
+	
+	def winningPercentage(self) -> str:
+		return str(round(float(self.winningVotes)/self.totalVotes))+"%"
+
 class Chatbot(commands.Bot):
 	def __init__(self):
 		pass
@@ -47,37 +78,37 @@ class Chatbot(commands.Bot):
 	#######
 	## "Public" methods
 	#######
-	def awaitActionInputs(self) -> None:
+	def openActionInputVoting(self) -> None:
 		self.awaitingActionInputs = True
 	
-	def stopAwaitingActionInputs(self) -> None:
+	def getVotedAction(self) -> str:
 		self.awaitingActionInputs = False
+		#Actions will require an actual winner. No tie breaker or win by default
+		if len(self.actionVotesByAction) < 1:
+			return "" #No action can be taken yet because no one voted. Wait longer.
+		voteResult: VoteResult = self.tallyVote(self.actionVotesByAction, "")
+		if voteResult.wonByDefault():
+			return ""
+		elif voteResult.tied():
+			return ""
+		self.sendMessage(f"Winning action of {voteResult.getWinner()} won with a vote count of {voteResult.getWinningVotes()} ({voteResult.winningPercentage()")
+		#Do not clear votes immediately, as it might not be valid. 
+		
+	def clearActionVotes(self) -> None:
 		self.actionVotesByAction.clear()
 		self.actionVotesByUser.clear()
 
 	def getVotedName(self) -> str:
-		highestNames: list[str] = [ getDefaultName() ]
-		highestCount: int = -1
-		for name in self.nameVotesByName:
-			count = self.nameVotesByName[name]
-			if count > highestCount:
-				highestNames = [name]
-				highestCount = count
-			elif self.nameVotesByName[name] == highestCount:
-				highestNames.append(name)
-		self.clearNameVotes()
+		voteResult: VoteResult = self.tallyVote(self.nameVotesByName, getDefaultName())
 		
-		winningName: str = ""
-		if highestCount == -1:
-			winningName = getDefaultName()
+		winningName: str = voteResult.getWinner()
+		if voteResult.wonByDefault():
 			self.sendMessage(f"No votes gathered. Winning name by default: \"{winningName}\"")
-		elif len(highestNames) > 1:
-			#Tie breaker, choose random
-			winningName = random.choice(highestNames)
-			self.sendMessage(f"{len(highestNames)} names tied with {highestCount} votes. Winning name chosen randomly: \"{winningName}\"")
+		elif voteResult.tied():
+			self.sendMessage(f"{voteResult.winnerCount()} names tied with {voteResult.getWinningVotes()} votes ({voteResult.winningPercentage()}). Winning name chosen randomly: \"{winningName}\"")
 		else:
-			winningName = highestNames[0]
-			self.sendMessage(f"Winning name chosen with {highestCount} votes: \"{winningName}\"")
+			self.sendMessage(f"Winning name chosen with {voteResult.getWinningVotes()} votes ({voteResult.winningPercentage()}): \"{winningName}\"")
+		self.clearNameVotes()
 		return winningName
 
 	def clearNameVotes(self) -> None:
@@ -203,6 +234,22 @@ class Chatbot(commands.Bot):
 		if argLen > 1:
 			normalizedArgs += " " + args[1]
 		return f"{self.useNames[0]} {normalizedArgs}"
+	
+	def tallyVote(self, voteCount: dict[str, int], defaultOption: str) -> VoteResult:
+		winningVotes: list[str] = [ defaultOption ]
+		highestCount: int = -1
+		for voteOption in voteCount:
+			count = voteCount[voteOption]
+			if count > highestCount:
+				winningVotes = [voteOption]
+				highestCount = count
+			elif voteCount[voteOption] == highestCount:
+				winningVotes.append(voteOption)
+		byDefault = highestCount < 0
+		if highestCount < 0:
+			highestCount = 0
+		return VoteResult(winningVotes, highestCount, byDefault)
+
 
 bot: Chatbot | None = None
 def getChatbot() -> Chatbot:
