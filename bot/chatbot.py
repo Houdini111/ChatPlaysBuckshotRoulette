@@ -5,6 +5,8 @@ import logging
 import json
 import random
 import asyncio
+from bot.vote import RunningVote, VotingTally, VotingTallyEntry, tallyVotes
+from scripts.overlay import getOverlay
 
 from scripts.util import get_event_loop
 
@@ -12,39 +14,6 @@ from .secrets import getSecrets
 from scripts.config import getChannels, getDefaultName
 
 logger = logging.getLogger(__name__ + 'bot.chatbot')
-
-
-class VoteResult():
-	def __init__(self, winners: list[str], winningVotes: int, totalVotes: int, byDefault: bool):
-		self.winners = winners
-		self.winningVotes = winningVotes
-		self.byDefault = byDefault
-		self.totalVotes = totalVotes
-		if self.tied():
-			self.winner = random.choice(self.winners)
-		else:
-			self.winner = self.winners[0]
-	
-	def winnerCount(self) -> int:
-		return len(self.winners)
-
-	def tied(self) -> bool: 
-		return len(self.winners) > 1
-
-	def getWinner(self) -> str:
-		return self.winner
-
-	def getAllWinners(self) -> list[str]:
-		return self.winners
-	
-	def getWinningVotes(self) -> int:
-		return self.winningVotes
-	
-	def wonByDefault(self) -> bool:
-		return self.byDefault
-	
-	def winningPercentage(self) -> str:
-		return str(round(float(self.winningVotes)/self.totalVotes*100))+"%"
 
 class Chatbot(commands.Bot):
 	def __init__(self):
@@ -60,11 +29,11 @@ class Chatbot(commands.Bot):
 		self.playerNames = ["self", "me", "player", "i", "myself"]
 
 		self.nameVotesByUser: dict[str, str] = {}
-		self.nameVotesByName: dict[str, int] = {}
+		self.nameVotesByName: RunningVote = RunningVote()
 		
 		self.actionVotesByUser: dict[str, str] = {}
-		self.actionVotesByAction: dict[str, int] = {}
-		self.modifiedActionVotesByAction: dict[str, int] = {}
+		self.actionVotesByAction: RunningVote = RunningVote()
+		self.talliedActions: VotingTally
 		
 		self.awaitingActionInputs = False
 
@@ -81,9 +50,10 @@ class Chatbot(commands.Bot):
 	#######
 	## "Public" methods
 	#######
+		
+	#TODO: Consolidate messages. For example "After ignoring invalid votes, the winner is"
 	def openActionInputVoting(self, retrying: bool) -> None:
 		self.awaitingActionInputs = True
-		self.modifiedActionVotesByAction.clear()
 		if not retrying:
 			self.sendMessage("Voting for action now open.")
 		else:
@@ -91,7 +61,7 @@ class Chatbot(commands.Bot):
 		
 	def closeActionInputVoting(self, retrying: bool) -> None:
 		self.awaitingActionInputs = False
-		self.modifiedActionVotesByAction = self.actionVotesByAction.copy()
+		self.talliedActions = tallyVotes(self.actionVotesByAction)
 		if not retrying:
 			self.sendMessage("Voting for action closed. Deciding on winner.")
 		else:
@@ -100,35 +70,36 @@ class Chatbot(commands.Bot):
 	def getVotedAction(self) -> str:
 		self.awaitingActionInputs = False
 		#Actions will require an actual winner. No tie breaker or win by default
-		if len(self.actionVotesByAction) < 1:
+		if not self.actionVotesByAction.hasVotes():
 			return "" #No action can be taken yet because no one voted. Wait longer.
-		voteResult: VoteResult = self.tallyVote(self.modifiedActionVotesByAction, "")
-		if voteResult.wonByDefault():
-			return ""
-		elif voteResult.tied():
-			return ""
-		self.sendMessage(f"Winning action of {voteResult.getWinner()} won with a vote count of {voteResult.getWinningVotes()} ({voteResult.winningPercentage()}")
-		return voteResult.getWinner()
+		self.talliedActions = tallyVotes(self.actionVotesByAction)
+		winningVote: VotingTallyEntry | None = self.talliedActions.getWinner()
+		if winningVote is None:
+			return "" #Don't allow tiebreakers in action votes. Wait longer.
+		self.sendMessage(f"Winning action of {winningVote.getVote()} won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()}")
+		return winningVote.getVote()
 		#Do not clear votes immediately, as it might not be valid. 
 	
 	def removeVotedAction(self, actionToRemove: str) -> None:
-		self.modifiedActionVotesByAction.pop(actionToRemove)
+		self.actionVotesByAction.removeVote(actionToRemove)
+		self.talliedActions.removeVote(actionToRemove)
 
 	def clearActionVotes(self) -> None:
 		self.actionVotesByAction.clear()
 		self.actionVotesByUser.clear()
-		self.modifiedActionVotesByAction.clear()
 
 	def getVotedName(self) -> str:
-		voteResult: VoteResult = self.tallyVote(self.nameVotesByName, getDefaultName())
-		
-		winningName: str = voteResult.getWinner()
-		if voteResult.wonByDefault():
-			self.sendMessage(f"No votes gathered. Winning name by default: \"{winningName}\"")
-		elif voteResult.tied():
-			self.sendMessage(f"{voteResult.winnerCount()} names tied with {voteResult.getWinningVotes()} votes ({voteResult.winningPercentage()}). Winning name chosen randomly: \"{winningName}\"")
+		talliedNames: VotingTally = tallyVotes(self.nameVotesByName)
+		winner: VotingTallyEntry | None = talliedNames.getNextWinner()
+		if winner is None:
+			self.sendMessage(f"No votes gathered. Winning name by default: \"{getDefaultName()}\"")
+			return getDefaultName()
+		chosenRandomly: bool = talliedNames.chosenRandomly()
+		winningName: str = winner.getVote()
+		if chosenRandomly:
+			self.sendMessage(f"{talliedNames.numNamesTied()} names tied with {winner.getNumVotes()} votes ({winner.getPercentageStr()}). Winning name chosen randomly: \"{winningName}\"")
 		else:
-			self.sendMessage(f"Winning name chosen with {voteResult.getWinningVotes()} votes ({voteResult.winningPercentage()}): \"{winningName}\"")
+			self.sendMessage(f"Winning name chosen with {winner.getNumVotes()} votes ({winner.getPercentageStr()}): \"{winningName}\"")
 		self.clearNameVotes()
 		return winningName
 
@@ -200,16 +171,17 @@ class Chatbot(commands.Bot):
 		
 		self.vote(self.nameVotesByName, name)
 		self.nameVotesByUser[authorName] = name
-		print(f"Name Votes By User: {json.dumps(self.nameVotesByUser)}")
-		print(f"Name Votes By Name: {json.dumps(self.nameVotesByName)}")
+		getOverlay().drawNameVoteLeaderboard(self.nameVotesByName);
+		#print(f"Name Votes By User: {json.dumps(self.nameVotesByUser)}")
+		#print(f"Name Votes By Name: {json.dumps(self.nameVotesByName)}")
 	
 	def vote(self, dictToVoteOn: dict[str, int], vote: str) -> None:
 		if vote in dictToVoteOn:
 			dictToVoteOn[vote] += 1
 		else:
 			dictToVoteOn[vote] = 1
-		print(f"Action Votes By User: {json.dumps(self.actionVotesByUser)}")
-		print(f"Action Votes By Action: {json.dumps(self.actionVotesByAction)}")
+		#print(f"Action Votes By User: {json.dumps(self.actionVotesByUser)}")
+		#print(f"Action Votes By Action: {json.dumps(self.actionVotesByAction)}")
 
 	def removeExistingVote(self, authorName: str) -> None:
 		if authorName in self.actionVotesByUser:
@@ -261,23 +233,6 @@ class Chatbot(commands.Bot):
 		if argLen > 1:
 			normalizedArgs += " " + args[1]
 		return f"{self.useNames[0]} {normalizedArgs}"
-	
-	def tallyVote(self, voteCount: dict[str, int], defaultOption: str) -> VoteResult:
-		winningVotes: list[str] = [ defaultOption ]
-		highestCount: int = -1
-		totalCount: int = 0
-		for voteOption in voteCount:
-			count = voteCount[voteOption]
-			totalCount += count
-			if count > highestCount:
-				winningVotes = [voteOption]
-				highestCount = count
-			elif voteCount[voteOption] == highestCount:
-				winningVotes.append(voteOption)
-		byDefault = highestCount < 0
-		if highestCount < 0:
-			highestCount = 0
-		return VoteResult(winningVotes, highestCount, totalCount, byDefault)
 
 
 bot: Chatbot | None = None

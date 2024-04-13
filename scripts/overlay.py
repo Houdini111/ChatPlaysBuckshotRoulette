@@ -1,13 +1,17 @@
+import json
 import tkinter as tk
 from PIL import ImageTk, Image
 import pyautogui
 from time import sleep
 from threading import Thread
 import math
+from operator import itemgetter
 
 from .util import resizePointFrom1440p
 
 #TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?, countdown (including clock?) for voting time
+
+
 
 class Overlay():
 	def __init__(self):
@@ -36,9 +40,12 @@ class Overlay():
 		}
 		
 		self.numberGridTextIds = []
+		self.voteList = []
 		
+		self.voteLeaderboardY = 400
 		self.draw_text_1440("Chat Overlay Active", 12, 10, 40)
 		self.statusText = self.draw_text_1440("", 0, 0, 0)
+		self.nameHeader = self.draw_text_1440("Top names", 12, self.voteLeaderboardY, 40)
 	
 	def run(self) -> None:
 		tk.mainloop()
@@ -71,6 +78,23 @@ class Overlay():
 			pos = self.playerNumGridPositions[i]
 			textId = self.draw_text_1440(str(i), pos[0], pos[1], self.optionsFontSize)
 			self.numberGridTextIds.append(textId)
+	
+	def clearOldNameLeaderboard(self) -> None:
+		for oldVote in self.voteList:
+			self.canvas.delete(oldVote)
+		self.voteList.clear()
+		
+	def 
+
+	def drawNameVoteLeaderboard(self, votes: dict[str, int]) -> None:
+		self.clearOldNameLeaderboard()
+		sortedVotes = sorted(votes.items(), key=lambda kv: kv[1])
+		print(f"Sorted votes: {json.dumps(sortedVotes)}")
+		y = self.voteLeaderboardY + 40 #Offset + fontsize
+		for vote in sortedVotes:
+			voteId = self.draw_text_1440(, 12, y, 20)
+			self.voteList.append(voteId)
+			y += 40
 
 overlay: Overlay
 
