@@ -3,8 +3,10 @@ from twitchio import Message, Chatter, PartialChatter
 from twitchio.ext import commands
 import logging
 import json
+import random
 
 from bot.secrets import getSecrets
+from scripts.config import getChannels, getDefaultName
 
 logger = logging.getLogger(__name__ + '.bot')
 
@@ -20,16 +22,48 @@ class Chatbot(commands.Bot):
 		
 		self.actionVotesByUser: dict[str, str] = {}
 		self.actionVotesByAction: dict[str, int] = {}
+		
+		self.awaitingActionInputs = False
 
-		#TODO: load initial channel from config
 		super().__init__(
 			token = getSecrets().getAccessToken(), 
 			client_secret = getSecrets().getSecret(),
-			prefix='#', 
-			initial_channels=['houdini111'],
+			prefix='#', #Unused. Listens to raw messages, not commands
+			initial_channels = getChannels(),
 			case_insensitive = True
 		)
 	
+	def awaitActionInputs(self) -> None:
+		self.awaitingActionInputs = True
+	
+	def stopAwaitingActionInputs(self) -> None:
+		self.awaitingActionInputs = False
+		self.actionVotesByAction.clear()
+		self.actionVotesByUser.clear()
+
+	def getVotedName(self) -> str:
+		if len(self.nameVotesByName) < 1:
+			return getDefaultName()
+		highestNames: list[str] = [ getDefaultName() ]
+		highestCount: int = -1
+		for name in self.nameVotesByName:
+			count = self.nameVotesByName[name]
+			if count > highestCount:
+				highestNames = [name]
+				highestCount = count
+			elif self.nameVotesByName[name] == highestCount:
+				highestNames.append(name)
+		self.clearNameVotes()
+		if len(highestNames) > 1:
+			#Tie breaker, choose random
+			return random.choice(highestNames)
+		return highestNames[0]
+
+	def clearNameVotes(self) -> None:
+		self.nameVotesByName.clear()
+		self.nameVotesByUser.clear()
+
+
 	async def event_ready(self):
 		logger.info(f"Logged in as {self.nick}")
 
@@ -47,10 +81,11 @@ class Chatbot(commands.Bot):
 		authorId = author.id
 		if command == "name":
 			self.nameVote(authorId, messageSplit[1])
-		elif command in self.useNames:
-			self.useVote(authorId, commandArgs)
-		elif command in self.shootNames:
-			self.shootVote(authorId, commandArgs)
+		elif self.awaitingActionInputs:
+			if command in self.useNames:
+				self.useVote(authorId, commandArgs)
+			elif command in self.shootNames:
+				self.shootVote(authorId, commandArgs)
 	
 	def nameVote(self, authorId: str, name: str) -> None:
 		name = name[0: 5].upper()

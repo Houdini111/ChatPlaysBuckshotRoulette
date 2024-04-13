@@ -45,6 +45,7 @@ $channel = Read-Host -Prompt "Please type the name of the channel to read inputs
 $config = [PSCustomObject]@{
   tesseractPath=$tesseractPath
   channels=@($channel)
+  defaultName='CHAT'
 } 
 $config | ConvertTo-Json -Depth 4 | Out-File .\config.json  
-Read-Host -Prompt "Success! Bot configured successfully."
+Write-Host -Prompt "Success! Bot configured successfully."
