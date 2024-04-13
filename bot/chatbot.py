@@ -6,6 +6,8 @@ import json
 import random
 import asyncio
 
+from scripts.util import get_event_loop
+
 from .secrets import getSecrets
 from scripts.config import getChannels, getDefaultName
 
@@ -22,7 +24,7 @@ class Chatbot(commands.Bot):
 		self.useNames = ["use", "item", "consume", "take"]
 		self.shootNames = ["shoot", "shot", "attack", "hit", "target"]
 		self.dealerNames = ["dealer", "them", "guy", "other"]
-		self.playerNames = ["self", "me", "player", "i"]
+		self.playerNames = ["self", "me", "player", "i", "myself"]
 
 		self.nameVotesByUser: dict[str, str] = {}
 		self.nameVotesByName: dict[str, int] = {}
@@ -32,7 +34,7 @@ class Chatbot(commands.Bot):
 		
 		self.awaitingActionInputs = False
 
-		await getSecrets().refresh_tokens_and_save()
+		#await getSecrets().refresh_tokens_and_save() #Don't bother until twitch stops giving me 400s
 		self.channels: dict[str, Channel] = {}
 		super().__init__(
 			token = getSecrets().getAccessToken(), 
@@ -75,7 +77,7 @@ class Chatbot(commands.Bot):
 			self.sendMessage(f"{len(highestNames)} names tied with {highestCount} votes. Winning name chosen randomly: \"{winningName}\"")
 		else:
 			winningName = highestNames[0]
-			self.sendMessage(f"Winning name chosen with {highestCount}: \"{winningName}\"")
+			self.sendMessage(f"Winning name chosen with {highestCount} votes: \"{winningName}\"")
 		return winningName
 
 	def clearNameVotes(self) -> None:
@@ -88,9 +90,11 @@ class Chatbot(commands.Bot):
 		if len(self.channels) < 1:
 			raise Exception("Chatbot#sendMessage has no channel to send the message to")
 		channel: Channel = list(self.channels.values())[0]
-		loop = asyncio.get_event_loop()
-		loop.run_until_complete(channel.send(message))
+		loop = get_event_loop()
+		loop.run_until_complete(self.sendMessageToChannel(channel, message))
 
+	async def sendMessageToChannel(self, channel: Channel, message: str) -> None:
+		await channel.send(message)
 
 
 	#######
@@ -106,34 +110,38 @@ class Chatbot(commands.Bot):
 		logger.info(f"Logged in as {self.nick}")
 
 	async def event_notice(self, message: str, msg_id: str, channel):
-		logger.info("EVENT_NOTICE: {message}")
+		logger.info(f"EVENT_NOTICE: {message}")
 	
 	async def event_message(self, message: Message) -> None:
+		author: Chatter | PartialChatter = message.author
+		if author is None:
+			#Self messages? Or just messages that they failed to send?
+			return
+
 		messageBody = message.content
 		messageSplit = messageBody.split(' ')
 		if len(messageSplit) < 2:
 			return
 		command = messageSplit[0].lower()
 		commandArgs = messageSplit[1: 3]
-		author: Chatter | PartialChatter = message.author
-		authorId = author.id
+		authorName: str = author.name
 		if command == "name":
-			self.nameVote(authorId, messageSplit[1])
+			self.nameVote(authorName, messageSplit[1])
 		elif self.awaitingActionInputs:
 			if command in self.useNames:
-				self.useVote(authorId, commandArgs)
+				self.useVote(authorName, commandArgs)
 			elif command in self.shootNames:
-				self.shootVote(authorId, commandArgs)
+				self.shootVote(authorName, commandArgs)
 	
-	def nameVote(self, authorId: str, name: str) -> None:
+	def nameVote(self, authorName: str, name: str) -> None:
 		name = name[0: 5].upper()
 
-		if authorId in self.nameVotesByUser:
-			previousVote = self.nameVotesByUser[authorId]
+		if authorName in self.nameVotesByUser:
+			previousVote = self.nameVotesByUser[authorName]
 			self.nameVotesByName[previousVote] -= 1
 		
 		self.vote(self.nameVotesByName, name)
-		self.nameVotesByUser[authorId] = name
+		self.nameVotesByUser[authorName] = name
 		print(f"Name Votes By User: {json.dumps(self.nameVotesByUser)}")
 		print(f"Name Votes By Name: {json.dumps(self.nameVotesByName)}")
 	
@@ -145,28 +153,28 @@ class Chatbot(commands.Bot):
 		print(f"Action Votes By User: {json.dumps(self.actionVotesByUser)}")
 		print(f"Action Votes By Action: {json.dumps(self.actionVotesByAction)}")
 
-	def removeExistingVote(self, authorId: str) -> None:
-		if authorId in self.actionVotesByUser:
-			oldVote: str = self.actionVotesByUser[authorId]
+	def removeExistingVote(self, authorName: str) -> None:
+		if authorName in self.actionVotesByUser:
+			oldVote: str = self.actionVotesByUser[authorName]
 			self.actionVotesByAction[oldVote] -= 1
 
-	def addActionVote(self, authorId: str, vote: str) -> None:
-		self.actionVotesByUser[authorId] = vote
+	def addActionVote(self, authorName: str, vote: str) -> None:
+		self.actionVotesByUser[authorName] = vote
 		self.vote(self.actionVotesByAction, vote)
 
-	def shootVote(self, authorId: str, args: list[str]) -> None:
+	def shootVote(self, authorName: str, args: list[str]) -> None:
 		normalizedShootVote: str | None = self.normalizeShootVote(args)
 		if normalizedShootVote is None:
 			return
-		self.removeExistingVote(authorId)
-		self.addActionVote(authorId, normalizedShootVote)
+		self.removeExistingVote(authorName)
+		self.addActionVote(authorName, normalizedShootVote)
 		
-	def useVote(self, authorId: str, args: list[str]) -> None:
+	def useVote(self, authorName: str, args: list[str]) -> None:
 		normalizedUseVote: str | None = self.normalizeUseVote(args)
 		if normalizedUseVote is None:
 			return
-		self.removeExistingVote(authorId)
-		self.addActionVote(authorId, normalizedUseVote)
+		self.removeExistingVote(authorName)
+		self.addActionVote(authorName, normalizedUseVote)
 
 	def normalizeShootVote(self, args: list[str]) -> str | None:
 		if len(args) <= 0:
@@ -201,6 +209,6 @@ def getChatbot() -> Chatbot:
 	global bot
 	if bot is None:
 		bot = Chatbot()
-		loop = asyncio.get_event_loop()
+		loop = get_event_loop()
 		loop.run_until_complete(bot.init())
 	return bot

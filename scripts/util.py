@@ -1,3 +1,4 @@
+import asyncio
 from time import sleep
 from typing import Callable
 import math
@@ -57,3 +58,12 @@ def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[
 	realH = int(math.ceil(hPercent * displayH))
 	realX, realY = resizePointFrom1440p(x1440, y1440)
 	return [realX, realY, realW, realH]
+
+def get_event_loop() -> asyncio.AbstractEventLoop:
+	loop: asyncio.AbstractEventLoop
+	try: 
+		loop = asyncio.get_event_loop()
+	except RuntimeError:
+		loop = asyncio.new_event_loop()
+		asyncio.set_event_loop(loop)
+	return loop

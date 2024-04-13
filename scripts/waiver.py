@@ -1,19 +1,19 @@
 from time import sleep
 
+from bot.chatbot import getChatbot
 from .basicActions import up, down, left, right, confirm, anyUse
 from .log import log
 from .status import status
 
 playerName = ""
-
 def getPlayerName() -> str:
 	return playerName
 
-def waive(name: str) -> None:
+def waive() -> None:
 	global playerName
 	pickUpWaiver()
-	enterName(name)
-	playerName = name
+	playerName = getChatbot().getVotedName()
+	enterName(playerName)
 
 def pickUpWaiver() -> None:
 	status("Picking up waiver")
@@ -81,8 +81,8 @@ def navToChar(startX: int, startY: int, goalX: int, goalY: int) -> None:
 	#Avoid traversing columns 3 and 4, as backspace and enter make that unreliable.
 	#   Go to at least 2 before going down and then over
 	tempGoalX = goalX
-	if goalX >= 3:
-		tempGoalX = 2
+	if goalX >= 2:
+		tempGoalX = 1
 	#log(f"current: [{x}, {y}] goal: [{goalX}, {goalY}] tempGoalX: {tempGoalX}")
 	x = navToColumn(x, tempGoalX)
 	y = navToRow(y, goalY)
