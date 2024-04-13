@@ -24,11 +24,11 @@ class Config():
 		val = self.innerDict.get(key)
 		if val is None:
 			return None
-		if val is expectedType:
+		if type(val) is expectedType:
 			return val
-		raise ValueError(f"Val: |{val}| was not None or expected type {expectedType} but was of type {val}")
+		raise ValueError(f"Val: |{val}| was not None or expected type {expectedType} but was of type {type(val)}")
 
 config: Config = Config()
 
 def getTesseractPath() -> str:
-	return config.getKeyOrDefault("tesseractPath", type(str), r"C:\Program Files\Tesseract-OCR\tesseract")
+	return config.getKeyOrDefault("tesseractPath", str, r"C:\Program Files\Tesseract-OCR\tesseract")

@@ -1,4 +1,5 @@
 from time import sleep
+import json
 
 from .basicActions import enterDirections, confirm, up
 from .screenColors import valueOverAmountInArea
@@ -26,11 +27,13 @@ def getNextOpenItemPosition() -> int:
 
 def clearItems() -> None:
 	global currentItemPositions
+	log("Clearing current items")
 	currentItemPositions.clear()
 
 def removeItem(num: int) -> None:
 	global currentItemPositions
 	currentItemPositions.remove(num)
+	log(f"Removing item {num}. Remaining items: {json.dumps(currentItemPositions)}")
 
 def putItemAt(place: int) -> None:
 	global currentItemPositions
@@ -96,7 +99,7 @@ def itemBoxCursorVisible() -> bool:
 		log("Item box cursor not visible as item bot not found open.")
 		return False
 	up()
-	#OTOD: Convert to Peepers
+	#TODO: Convert to Peepers
 	cursorVisible = valueOverAmountInArea(90, 956, 950, 47, 1) #Targeting bottom left of bracket
 	log(f"Item box cursor visible: {cursorVisible}")
 	return cursorVisible

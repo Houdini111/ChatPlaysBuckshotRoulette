@@ -78,18 +78,18 @@ class AllBlackPeep(RangePeep):
 class OCRScoreboardPeep(Peep):
 	def __init__(self, name: str, expectedText: str):
 		self.name = name
-		self.expectedText = expectedText
+		self.expectedText = expectedText.upper().strip()
 		self.ocrTextFound = ""
 	
 	def passes(self) -> bool:
-		self.ocrTextFound = scoreboardText()
+		self.ocrTextFound = scoreboardText().upper().strip()
 		return self.ocrTextFound == self.expectedText
 
 	def getName(self) -> str:
 		return self.name
 	
 	def getRequirement(self) -> str:
-		return f"Text to match {self.expectedText}. Found {self.ocrTextFound})."
+		return f"Text to match \"{self.expectedText}\". Found \"{self.ocrTextFound}\"."
 
 class Peeper(Checker):
 	def __init__(self, name: str, *checkers: Checker):
