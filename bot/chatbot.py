@@ -20,6 +20,10 @@ class VoteResult():
 		self.winningVotes = winningVotes
 		self.byDefault = byDefault
 		self.totalVotes = totalVotes
+		if self.tied():
+			self.winner = random.choice(self.winners)
+		else:
+			self.winner = self.winners[0]
 	
 	def winnerCount(self) -> int:
 		return len(self.winners)
@@ -28,9 +32,7 @@ class VoteResult():
 		return len(self.winners) > 1
 
 	def getWinner(self) -> str:
-		if self.winnerCount() == 1:
-			return self.winners[0]
-		return random.choice(self.winners)
+		return self.winner
 
 	def getAllWinners(self) -> list[str]:
 		return self.winners
@@ -42,7 +44,7 @@ class VoteResult():
 		return self.byDefault
 	
 	def winningPercentage(self) -> str:
-		return str(round(float(self.winningVotes)/self.totalVotes))+"%"
+		return str(round(float(self.winningVotes)/self.totalVotes*100))+"%"
 
 class Chatbot(commands.Bot):
 	def __init__(self):
@@ -62,6 +64,7 @@ class Chatbot(commands.Bot):
 		
 		self.actionVotesByUser: dict[str, str] = {}
 		self.actionVotesByAction: dict[str, int] = {}
+		self.modifiedActionVotesByAction: dict[str, int] = {}
 		
 		self.awaitingActionInputs = False
 
@@ -78,25 +81,43 @@ class Chatbot(commands.Bot):
 	#######
 	## "Public" methods
 	#######
-	def openActionInputVoting(self) -> None:
+	def openActionInputVoting(self, retrying: bool) -> None:
 		self.awaitingActionInputs = True
+		self.modifiedActionVotesByAction.clear()
+		if not retrying:
+			self.sendMessage("Voting for action now open.")
+		else:
+			self.sendMessage("No consensus reached. Re-opening voting.")
+		
+	def closeActionInputVoting(self, retrying: bool) -> None:
+		self.awaitingActionInputs = False
+		self.modifiedActionVotesByAction = self.actionVotesByAction.copy()
+		if not retrying:
+			self.sendMessage("Voting for action closed. Deciding on winner.")
+		else:
+			self.sendMessage("Voting has re-closed. Deciding on winner again.")
 	
 	def getVotedAction(self) -> str:
 		self.awaitingActionInputs = False
 		#Actions will require an actual winner. No tie breaker or win by default
 		if len(self.actionVotesByAction) < 1:
 			return "" #No action can be taken yet because no one voted. Wait longer.
-		voteResult: VoteResult = self.tallyVote(self.actionVotesByAction, "")
+		voteResult: VoteResult = self.tallyVote(self.modifiedActionVotesByAction, "")
 		if voteResult.wonByDefault():
 			return ""
 		elif voteResult.tied():
 			return ""
-		self.sendMessage(f"Winning action of {voteResult.getWinner()} won with a vote count of {voteResult.getWinningVotes()} ({voteResult.winningPercentage()")
+		self.sendMessage(f"Winning action of {voteResult.getWinner()} won with a vote count of {voteResult.getWinningVotes()} ({voteResult.winningPercentage()}")
+		return voteResult.getWinner()
 		#Do not clear votes immediately, as it might not be valid. 
-		
+	
+	def removeVotedAction(self, actionToRemove: str) -> None:
+		self.modifiedActionVotesByAction.pop(actionToRemove)
+
 	def clearActionVotes(self) -> None:
 		self.actionVotesByAction.clear()
 		self.actionVotesByUser.clear()
+		self.modifiedActionVotesByAction.clear()
 
 	def getVotedName(self) -> str:
 		voteResult: VoteResult = self.tallyVote(self.nameVotesByName, getDefaultName())
@@ -165,7 +186,13 @@ class Chatbot(commands.Bot):
 				self.shootVote(authorName, commandArgs)
 	
 	def nameVote(self, authorName: str, name: str) -> None:
-		name = name[0: 5].upper()
+		name = name[0: 5].upper().strip()
+
+		for char in name:
+			if not char.isalpha():
+				return
+
+		#TODO: Ignore names the game won't allow ("GOD", "DEALER")
 
 		if authorName in self.nameVotesByUser:
 			previousVote = self.nameVotesByUser[authorName]
@@ -238,8 +265,10 @@ class Chatbot(commands.Bot):
 	def tallyVote(self, voteCount: dict[str, int], defaultOption: str) -> VoteResult:
 		winningVotes: list[str] = [ defaultOption ]
 		highestCount: int = -1
+		totalCount: int = 0
 		for voteOption in voteCount:
 			count = voteCount[voteOption]
+			totalCount += count
 			if count > highestCount:
 				winningVotes = [voteOption]
 				highestCount = count
@@ -248,7 +277,7 @@ class Chatbot(commands.Bot):
 		byDefault = highestCount < 0
 		if highestCount < 0:
 			highestCount = 0
-		return VoteResult(winningVotes, highestCount, byDefault)
+		return VoteResult(winningVotes, highestCount, totalCount, byDefault)
 
 
 bot: Chatbot | None = None

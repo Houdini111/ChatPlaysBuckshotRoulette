@@ -130,13 +130,32 @@ class GameRunner():
 			log("Should be player turn now.")
 			status("Awaiting player input")
 			getOverlay().drawNumberGrid(getAllCurrentItemPositions())
-			while (True):
-				#request = input("Next? ")
-				request = getChatbot().getVotedAction()
-				action: Action | None = parseAction(request)
-				if action is None:
-					continue
-				if action.valid():
-					getOverlay().clearNumberGrid()
-					action.execute()
-					break
+			actionSuccess: bool = False
+			retry: bool = False
+			invalid: bool = False
+			while not actionSuccess:
+				if not invalid:
+					getChatbot().openActionInputVoting(retry)
+					sleep(15) #TODO: Configurable voting time. When implemented, add time to open voting message.
+					getChatbot().closeActionInputVoting(retry)
+				while (True):
+					#request = input("Next? ")
+					request = getChatbot().getVotedAction()
+					if request == "": #Tie or something. Re-open votes
+						retry = True
+						invalid = False
+						break
+					action: Action | None = parseAction(request)
+					if action is not None:
+						if action.valid():
+							getOverlay().clearNumberGrid()
+							action.execute()
+							actionSuccess = True
+							getChatbot().clearActionVotes()
+							break
+					#Invalid action chosen, check next
+					getChatbot().sendMessage(f"Top voted action \"{request}\" was invalid. Attempting next winner.")
+					retry = False
+					invalid = True
+					getChatbot().removeVotedAction(request)
+				

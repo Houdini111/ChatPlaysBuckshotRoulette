@@ -7,7 +7,7 @@ import math
 
 from .util import resizePointFrom1440p
 
-#TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?
+#TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?, countdown (including clock?) for voting time
 
 class Overlay():
 	def __init__(self):
