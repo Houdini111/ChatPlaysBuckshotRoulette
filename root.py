@@ -6,6 +6,7 @@ from scripts.bathroom import throughToGameRoom
 from scripts.waiver import waive
 from scripts.gameRunner import GameRunner
 from scripts.log import log
+from bot.chatbot import Chatbot, getChatbot
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -18,11 +19,13 @@ logging.basicConfig(
     ]
 )
 
-
 def startGame(name: str) -> None:
 	chatOverlay: Overlay = Overlay()
-	thread = Thread(target = runGame, args = [name])
-	thread.start()
+	bot: Chatbot = getChatbot()
+	gameThread = Thread(target = runGame, args = [name])
+	botThread = Thread(target = bot.run)
+	gameThread.start()
+	botThread.start()
 	chatOverlay.run()
 
 def runGame(name: str) -> None:
@@ -34,4 +37,5 @@ def runGame(name: str) -> None:
 		runner.go()
 		#If it gets back here then it means the player died, so go through the whole process again. 
 
-startGame('Chat')
+if __name__ == '__main__':
+	startGame('Chat')

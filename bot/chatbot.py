@@ -1,17 +1,24 @@
 from typing import Any
-from twitchio import Message, Chatter, PartialChatter
+from twitchio import Message, Chatter, PartialChatter, Channel
 from twitchio.ext import commands
 import logging
 import json
 import random
+import asyncio
 
-from bot.secrets import getSecrets
+from .secrets import getSecrets
 from scripts.config import getChannels, getDefaultName
 
-logger = logging.getLogger(__name__ + '.bot')
+logger = logging.getLogger(__name__ + 'bot.chatbot')
 
 class Chatbot(commands.Bot):
 	def __init__(self):
+		pass
+	
+	async def init(self):
+		global bot
+		bot = self
+
 		self.useNames = ["use", "item", "consume", "take"]
 		self.shootNames = ["shoot", "shot", "attack", "hit", "target"]
 		self.dealerNames = ["dealer", "them", "guy", "other"]
@@ -25,6 +32,8 @@ class Chatbot(commands.Bot):
 		
 		self.awaitingActionInputs = False
 
+		await getSecrets().refresh_tokens_and_save()
+		self.channels: dict[str, Channel] = {}
 		super().__init__(
 			token = getSecrets().getAccessToken(), 
 			client_secret = getSecrets().getSecret(),
@@ -33,6 +42,9 @@ class Chatbot(commands.Bot):
 			case_insensitive = True
 		)
 	
+	#######
+	## "Public" methods
+	#######
 	def awaitActionInputs(self) -> None:
 		self.awaitingActionInputs = True
 	
@@ -42,8 +54,6 @@ class Chatbot(commands.Bot):
 		self.actionVotesByUser.clear()
 
 	def getVotedName(self) -> str:
-		if len(self.nameVotesByName) < 1:
-			return getDefaultName()
 		highestNames: list[str] = [ getDefaultName() ]
 		highestCount: int = -1
 		for name in self.nameVotesByName:
@@ -54,15 +64,43 @@ class Chatbot(commands.Bot):
 			elif self.nameVotesByName[name] == highestCount:
 				highestNames.append(name)
 		self.clearNameVotes()
-		if len(highestNames) > 1:
+		
+		winningName: str = ""
+		if highestCount == -1:
+			winningName = getDefaultName()
+			self.sendMessage(f"No votes gathered. Winning name by default: \"{winningName}\"")
+		elif len(highestNames) > 1:
 			#Tie breaker, choose random
-			return random.choice(highestNames)
-		return highestNames[0]
+			winningName = random.choice(highestNames)
+			self.sendMessage(f"{len(highestNames)} names tied with {highestCount} votes. Winning name chosen randomly: \"{winningName}\"")
+		else:
+			winningName = highestNames[0]
+			self.sendMessage(f"Winning name chosen with {highestCount}: \"{winningName}\"")
+		return winningName
 
 	def clearNameVotes(self) -> None:
 		self.nameVotesByName.clear()
 		self.nameVotesByUser.clear()
+	
+	def sendMessage(self, message: str) -> None:
+		if len(self.channels) > 1:
+			raise Exception("Chatbot#sendMessage cannot yet handle multiple channels")
+		if len(self.channels) < 1:
+			raise Exception("Chatbot#sendMessage has no channel to send the message to")
+		channel: Channel = list(self.channels.values())[0]
+		loop = asyncio.get_event_loop()
+		loop.run_until_complete(channel.send(message))
 
+
+
+	#######
+	## "Private" methods
+	#######
+	async def event_channel_joined(self, channel: Channel):
+		logger.info(f"Joined channel {channel.name}")
+		if channel.name not in self.channels:
+			self.channels[channel.name] = channel
+			self.sendMessage("Now accepting votes for the next name")
 
 	async def event_ready(self):
 		logger.info(f"Logged in as {self.nick}")
@@ -157,8 +195,12 @@ class Chatbot(commands.Bot):
 		if argLen > 1:
 			normalizedArgs += " " + args[1]
 		return f"{self.useNames[0]} {normalizedArgs}"
-		
 
-if __name__ == '__main__':
-	bot = Chatbot()
-	bot.run()
+bot: Chatbot | None = None
+def getChatbot() -> Chatbot:
+	global bot
+	if bot is None:
+		bot = Chatbot()
+		loop = asyncio.get_event_loop()
+		loop.run_until_complete(bot.init())
+	return bot
