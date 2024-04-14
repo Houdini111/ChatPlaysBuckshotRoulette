@@ -10,7 +10,7 @@ import asyncio
 from bot.vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from scripts.overlay import getOverlay
 
-from scripts.util import get_event_loop
+from scripts.util import add_async_task, get_event_loop
 
 from .secrets import getSecrets
 from scripts.config import getChannels, getDefaultName
@@ -118,8 +118,9 @@ class Chatbot(commands.Bot):
 		if len(self.channels) < 1:
 			raise Exception("Chatbot#sendMessage has no channel to send the message to")
 		channel: Channel = list(self.channels.values())[0]
+		
 		loop = get_event_loop()
-		loop.run_until_complete(self.sendMessageToChannel(channel, message))
+		loop.create_task(self.sendMessageToChannel(channel, message))
 
 	async def sendMessageToChannel(self, channel: Channel, message: str) -> None:
 		await channel.send(message)
