@@ -10,8 +10,8 @@ from .playerActions import Action, parseAction
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
 from shared.log import log
-from .overlay import Overlay, getOverlay
-from .status import status
+from overlay.overlay import Overlay, getOverlay
+from overlay.status import status
 
 #TODO: 
 #  Item place logic sometimes skipping squares

@@ -2,7 +2,7 @@ from time import sleep
 from typing import Optional
 from ctypes import wintypes, windll, create_unicode_buffer
 
-from .status import removeTempStatus, tempStatus
+from overlay.status import removeTempStatus, tempStatus
 
 def buckshotRouletteFocused() -> bool:
 	windowName = getForegroundWindowTitle()

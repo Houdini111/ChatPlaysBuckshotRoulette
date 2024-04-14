@@ -3,7 +3,7 @@ import logging
 from time import sleep
 
 from shared.log import log
-from game.overlay import Overlay, getOverlay
+from overlay.overlay import Overlay, getOverlay
 from game.bathroom import throughToGameRoom
 from game.waiver import waive
 from game.gameRunner import GameRunner

@@ -3,7 +3,7 @@ from time import sleep
 
 from .items import itemAtPosition, getPlayerItemDirections, getDealerItemDirections, removeItem
 from .basicActions import up, down, confirm, enterDirections
-from .status import status
+from overlay.status import status
 from shared.log import log
 from shared.consts import Target, getDealerNames, getPlayerNames, getShootNames, getUseNames
 from shared.util import safeInt

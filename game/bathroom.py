@@ -1,12 +1,12 @@
 from time import sleep
 
-from .overlay import getOverlay
 from .screenColors import valueOverAmountInArea, valueUnderAmountInArea
 from .basicActions import up, right, left, confirm, anyUse
 from .focus import waitForFocus
-from .status import status
 from shared.util import waitForFalse, waitForTrue
 from shared.log import log
+from overlay.overlay import getOverlay
+from overlay.status import status
 
 def throughToGameRoom() -> None:
 	getOverlay().clearOldNameLeaderboard()

@@ -3,8 +3,8 @@ import json
 
 from .basicActions import enterDirections, confirm, up
 from .screenColors import valueOverAmountInArea
-from .status import removeAllTempStatus, status, tempStatus
 from shared.log import log
+from overlay.status import removeAllTempStatus, status, tempStatus
 
 currentItemPositions: list[int]		= []
 

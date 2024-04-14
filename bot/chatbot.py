@@ -12,10 +12,10 @@ from game.playerActions import Action, ShootAction, UseItemAction
 from shared.consts import getShootNames, getUseNames
 
 from .secrets import getSecrets
-from bot.vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
-from game.overlay import getOverlay
-from game.config import getChannels, getDefaultName
 from shared.util import get_event_loop
+from overlay.overlay import getOverlay
+from bot.vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
+from game.config import getChannels, getDefaultName
 
 logger = logging.getLogger(__name__ + 'bot.chatbot')
 
