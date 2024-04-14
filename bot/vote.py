@@ -164,8 +164,10 @@ class VotingTallyEntry():
 		return f"{self.percentageRound}%"
 
 class VotingTallyEntryList():
-	def __init__(self, tallyVoteCountToContain: int, tallies: list[VotingTallyEntry] = []):
+	def __init__(self, tallyVoteCountToContain: int, tallies: list[VotingTallyEntry] | None = None):
 		self.tallyVoteCountToContain = tallyVoteCountToContain
+		if tallies is None:
+			tallies = []
 		self.tallies = tallies
 		self.chosenRandomly: bool = False
 		random.shuffle(self.tallies)
