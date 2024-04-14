@@ -1,3 +1,5 @@
+from threading import Thread
+from time import sleep
 from typing import Any
 from twitchio import Message, Chatter, PartialChatter, Channel
 from twitchio.ext import commands
@@ -36,6 +38,9 @@ class Chatbot(commands.Bot):
 		self.talliedActions: VotingTally
 		
 		self.awaitingActionInputs = False
+		
+		self.updateLeaderboardsThread = Thread(target = self.updateLeaderboards)
+		self.updateLeaderboardsThread.start()
 		
 		#await getSecrets().refresh_tokens_and_save() #Don't bother until twitch stops giving me 400s
 		self.channels: dict[str, Channel] = {}
@@ -178,10 +183,6 @@ class Chatbot(commands.Bot):
 		
 		self.nameVotesByName.addAVote(name)
 		self.nameVotesByUser[authorName] = name
-		tally: VotingTally = tallyVotes(self.nameVotesByName)
-		getOverlay().clearOldNameLeaderboard()
-		getOverlay().drawNameVoteLeaderboard(tally.topNValues(5))
-		
 
 	def removeExistingVote(self, nameDict: dict[str, str], votes: RunningVote, authorName: str) -> None:
 		if authorName in nameDict:
@@ -233,6 +234,17 @@ class Chatbot(commands.Bot):
 		if argLen > 1:
 			normalizedArgs += " " + args[1]
 		return f"{self.useNames[0]} {normalizedArgs}"
+	
+	def updateLeaderboards(self) -> None:
+		while (True):
+			if len(self.nameVotesByName) < 1:
+				getOverlay().clearOldNameLeaderboard()
+			else:
+				tally: VotingTally = tallyVotes(self.nameVotesByName)
+				getOverlay().clearOldNameLeaderboard()
+				getOverlay().drawNameVoteLeaderboard(tally.topNValues(5))
+			
+			sleep(3) #TODO: configurable wait
 
 
 bot: Chatbot | None = None

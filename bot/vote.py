@@ -69,6 +69,9 @@ class RunningVote():
 			self.sort()
 		return iter(self.votes)
 	
+	def __len__(self):
+		return len(self.votes)
+	
 	def items(self):
 		return self.votes.items()
 
