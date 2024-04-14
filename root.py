@@ -23,9 +23,9 @@ logging.basicConfig(
 def startGame() -> None:
 	chatOverlay: Overlay = Overlay()
 	bot: Chatbot = getChatbot()
-	#gameThread = Thread(target = runGame)
+	gameThread = Thread(target = runGame)
 	botThread = Thread(target = bot.run)
-	#gameThread.start()
+	gameThread.start()
 	botThread.start()
 	#Required to be on main thread becauase they say so...
 	chatOverlay.run()
