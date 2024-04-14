@@ -104,7 +104,10 @@ class RunningVote():
 		self.totalVotes -= 1
 		voteVal: str = self.getVoteVal(vote)
 		if voteVal in self.votes:
-			self.votes[voteVal].removeAVote()
+			newCount: int = self.votes[voteVal].removeAVote()
+			#Don't leave old votes with no one voting for them around to clog things up
+			if newCount < 1:
+				self.removeVote(voteVal)
 		self.sorted = False
 	
 	#To be used if vote is invalid
