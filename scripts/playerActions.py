@@ -1,27 +1,12 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from time import sleep
 
 from .items import itemAtPosition, getPlayerItemDirections, getDealerItemDirections, removeItem
-from .util import safeInt
 from .basicActions import up, down, confirm, enterDirections
-from .log import log
 from .status import status
-
-class Target(Enum):
-	INVALID = -1
-	SELF = 1
-	DEALER = 2
-
-#Since python is dumb and won't let me return an instance of the class from a static method belonging to the class, this no longer lives in the Target Enum
-def parseTarget(target: str) -> Target:
-	target = target.lower()
-	if target == "self" or target == "player" or target == "me":
-		return Target.SELF
-	elif target == "dealer" or target == "them" or target == "him" :
-		return Target.DEALER
-	log(f"UNRECOGNIZED TARGET: \"{target}\". GIVING INVALID SO INPUT CAN BE IGNORED.")
-	return Target.INVALID
+from shared.log import log
+from shared.consts import Target, getDealerNames, getPlayerNames, getShootNames, getUseNames
+from shared.util import safeInt
 
 class Action(ABC):
 	@abstractmethod
@@ -34,9 +19,11 @@ class Action(ABC):
 
 class ShootAction(Action):
 	def __init__(self, target: str | Target):
+		self.target: Target
 		if type(target) is str:
-			target = parseTarget(target)
-		self.target = target
+			self.target = parseTarget(target)
+		elif type(target) is Target:
+			self.target = target
 	
 	def valid(self) -> bool:
 		return self.target != Target.INVALID
@@ -53,6 +40,9 @@ class ShootAction(Action):
 		elif self.target == Target.DEALER:
 			chooseDealer()
 		return True
+	
+	def __str__(self):
+		return f"shoot {self.target.value}"
 
 class UseItemAction(Action):
 	def __init__(self, itemNum: str | int, adrenalineItemNum: str | int | None = None):
@@ -80,26 +70,6 @@ class UseItemAction(Action):
 			sleep(1.5)
 			useDealerItem(self.adrenalineItemNum)
 		return True
-
-def parseAction(userInput: str) -> Action | None:
-	userInput = userInput.lower().strip()
-	splitInput = userInput.split(' ')
-	action = splitInput[0]
-	param = ""
-	extraParam = ""
-	if len(splitInput) > 1:
-		param = splitInput[1]
-	if len(splitInput) > 2:
-		extraParam = splitInput[2]
-	if action == 'shoot' or action == 'shot' or action == 'gun' or action == 'shotgun':
-		return ShootAction(param)
-	elif action == 'use' or action == 'item' or action == 'consume':
-		return UseItemAction(param, extraParam)
-	else:
-		log(f"UNRECOGNIZED ACTION [param, extraParam]: \"{action}\" [\"{param}\", \"{extraParam}\"]")
-		return None
-
-
 
 def cursorGun():
 	up()
@@ -136,3 +106,32 @@ def chooseDealer():
 def chooseSelf():
 	down()
 	confirm()
+	
+
+#Since python is dumb and won't let me return an instance of the class from a static method belonging to the class, this no longer lives in the Target Enum
+def parseTarget(target: str) -> Target:
+	target = target.lower()
+	if target in getPlayerNames():
+		return Target.SELF
+	elif target in getDealerNames():
+		return Target.DEALER
+	log(f"UNRECOGNIZED TARGET: \"{target}\". GIVING INVALID SO INPUT CAN BE IGNORED.")
+	return Target.INVALID
+
+def parseAction(userInput: str) -> Action | None:
+	userInput = userInput.lower().strip()
+	splitInput = userInput.split(' ')
+	action = splitInput[0]
+	param = ""
+	extraParam = ""
+	if len(splitInput) > 1:
+		param = splitInput[1]
+	if len(splitInput) > 2:
+		extraParam = splitInput[2]
+	if action in getShootNames():
+		return ShootAction(param)
+	elif action in getUseNames():
+		return UseItemAction(param, extraParam)
+	else:
+		log(f"UNRECOGNIZED ACTION [param, extraParam]: \"{action}\" [\"{param}\", \"{extraParam}\"]")
+		return None

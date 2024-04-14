@@ -1,5 +1,5 @@
 from .overlay import getOverlay
-from .log import log
+from shared.log import log
 
 
 statusStack = []

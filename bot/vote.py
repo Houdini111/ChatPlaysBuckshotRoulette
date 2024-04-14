@@ -3,14 +3,18 @@ import json
 import logging
 from os import remove
 import random
-from typing import OrderedDict
+from typing import Generic, OrderedDict, TypeVar, Type
 from copy import copy, deepcopy
+from enum import Enum
 
 logger = logging.getLogger(__name__ + 'bot.vote')
 
-class Vote(dict): #Inherit dict so it'll be json serializable
-	def __init__(self, vote: str, numVotes: int):
-		self.vote = vote
+VoteType = TypeVar('VoteType')
+
+class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
+	def __init__(self, vote: VoteType, numVotes: int):
+		self.voteType: Type[VoteType] = type(vote)
+		self.vote: VoteType = vote
 		self.numVotes = numVotes
 	
 	def __lt__(self, other):
@@ -23,10 +27,13 @@ class Vote(dict): #Inherit dict so it'll be json serializable
 		return Vote(self.vote, self.numVotes)
 	
 	def __str__(self):
-		return "Vote{vote:\"" + self.vote + "\", numVotes: " + str(self.numVotes) + "}"
+		return "Vote{vote:\"" + str(self.vote) + "\", numVotes: " + str(self.numVotes) + "}"
 	
-	def getVote(self) -> str:
-		return self.vote
+	def __eq__(self, other):
+		return str(self.vote) == str(other)
+	
+	def getVote(self) -> VoteType:
+		return self.voteType(self.vote)
 	
 	def getNumVotes(self) -> int:
 		return self.numVotes
@@ -51,7 +58,7 @@ class RunningVote():
 			for vote in votes:
 				self.totalVotes += vote.getNumVotes()
 			for vote in votes:
-				self.votes[vote.getVote()] = vote
+				self.votes[str(vote.getVote())] = vote
 		self.sort()	
 		
 	def __copy__(self):
@@ -94,39 +101,36 @@ class RunningVote():
 					self.votes.move_to_end(voteVal)
 		self.sorted = True
 
-	def addAVote(self, vote: str | Vote) -> None:
+	def addAVote(self, vote: VoteType | Vote) -> None:
 		self.totalVotes += 1
-		voteVal: str = self.getVoteVal(vote)
-		if voteVal in self.votes:
-			self.votes[voteVal].addAVote()
+		voteStr: str = str(vote)
+		if voteStr in self.votes:
+			self.votes[voteStr].addAVote()
 		else: 
-			self.votes[voteVal] = Vote(voteVal, 1)
+			if type(vote) is str:
+				self.votes[voteStr] = Vote(vote, 1)
+			elif type(vote) is Vote:
+				vote.numVotes = 1
+				self.votes[voteStr] = vote
 		self.sorted = False
 	
-	def removeAVote(self, vote: str | Vote) -> None:
+	def removeAVote(self, vote: VoteType | Vote) -> None:
 		self.totalVotes -= 1
-		voteVal: str = self.getVoteVal(vote)
-		if voteVal in self.votes:
-			newCount: int = self.votes[voteVal].removeAVote()
+		voteStr: str = str(vote)
+		if voteStr in self.votes:
+			newCount: int = self.votes[voteStr].removeAVote()
 			#Don't leave old votes with no one voting for them around to clog things up
 			if newCount < 1:
-				self.removeVote(voteVal)
+				self.removeVote(voteStr)
 		self.sorted = False
 	
 	#To be used if vote is invalid
-	def removeVote(self, vote: str | Vote) -> None:
-		voteVal: str = self.getVoteVal(vote)
-		if voteVal in self.votes:
-			voteFound: Vote = self.votes.pop(voteVal)
+	def removeVote(self, vote: str | VoteType | Vote) -> None:
+		voteStr: str = str(vote)
+		if voteStr in self.votes:
+			voteFound: Vote = self.votes.pop(voteStr)
 			self.totalVotes -= voteFound.getNumVotes()
 			#NOT setting sorted flag to false. Since this is just removing something from the list, an already sorted one should stay sorted
-	
-	def getVoteVal(self, vote: str | Vote) -> str:
-		if type(vote) is str:
-			return vote
-		elif type(vote) is Vote:
-			return vote.getVote()
-		return ""
 	
 	def getTotalVotes(self) -> int:
 		return self.totalVotes
@@ -163,8 +167,11 @@ class VotingTallyEntry():
 	def getVoteObj(self) -> Vote:
 		return self.vote
 	
-	def getVote(self) -> str:
-		return self.vote.getVote()
+	def getVote(self) -> Vote:
+		return self.vote
+
+	def getVoteStr(self) -> str:
+		return str(self.vote.getVote())
 	
 	def getNumVotes(self) -> int:
 		return self.vote.getNumVotes()
@@ -237,7 +244,7 @@ class VotingTallyEntryList():
 		tallyEntry: VotingTallyEntry
 		found: bool = False
 		for i, tallyEntry in enumerate(self.tallies):
-			if tallyEntry.getVote == voteToRemove:
+			if tallyEntry.getVoteStr == voteToRemove:
 				found = True
 				break
 		if found:
@@ -264,7 +271,6 @@ class VotingTally():
 			entryList.add(tallyEntry)
 		self.tallies.sort(reverse = True)
 		
-
 		self.talliesIter = None
 		self.currentTallyList: VotingTallyEntryList
 		if len(self.tallies) > 0:

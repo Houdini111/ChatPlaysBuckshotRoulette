@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 from .image import scoreboardText
 from .screenColors import valuesInRangeInRect
-from .util import Rectangle
-from .log import log
+from shared.util import Rectangle
+from shared.log import log
 
 class Checker(ABC):
 	@abstractmethod

@@ -26,7 +26,7 @@ class Config():
 			return None
 		if type(val) is expectedType:
 			return val
-		raise ValueError(f"Val: |{val}| was not None or expected type {expectedType} but was of type {type(val)}")
+		return expectedType(val)
 
 config: Config = Config()
 

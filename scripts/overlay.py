@@ -8,13 +8,29 @@ import math
 from operator import itemgetter
 import logging
 
-from bot.vote import VotingTallyEntry
-
-from .util import resizePointFrom1440p
+from bot.vote import VotingTally, VotingTallyEntry
+from shared.util import resizePointFrom1440p
+from shared.log import log
 
 #TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?, countdown (including clock?) for voting time
 
 logger = logging.getLogger(__name__ + 'scripts.overlay')
+
+class ActionVote():
+	def __init__(self, x1440: int, y1440: int, fontSize: int, draw_text_1440, canvas: tk.Canvas):
+		self.x1440 = x1440
+		self.y1440 = y1440
+		self.fontSize = fontSize
+		self.canvas = canvas
+		self.mainTextId = draw_text_1440("", x1440, y1440, self.fontSize, textTags = ["numberGrid"])
+		self.statsTextId = draw_text_1440("", x1440, y1440 - int(fontSize * 1.5), textTags = ["numberGrid"])
+	
+	def displayNumber(self, num: str) -> None:
+		self.canvas.itemconfig(self.mainTextId, text=str(num))
+
+	def displayVote(self, voteEntry: VotingTallyEntry) -> None:
+		statsText = f"[{voteEntry.getNumVotes()}] ({voteEntry.getPercentageStr()})"
+		self.canvas.itemconfig(self.statsTextId, text=statsText)
 
 class Overlay():
 	def __init__(self):
@@ -45,10 +61,9 @@ class Overlay():
 		self.numberGridTextIds: list[int] = []
 		self.voteList: list[int] = []
 		
-		self.voteLeaderboardY = 400
-		self.draw_text_1440("Chat Overlay Active", 12, 10, 40)
-		self.statusText = self.draw_text_1440("", 0, 0, 0)
-		self.nameHeader = self.draw_text_1440("Top Names", 12, self.voteLeaderboardY, 40)
+		self.voteLeaderboardY = 500
+		self.draw_text_1440("Chat Overlay Active", 12, 10, 50)
+		self.statusText = self.draw_text_1440("", 12, 10 + int(1.25 * self.optionsFontSize), 40)
 		self.initNameLeaderboard()
 		self.initNumberGrid()
 	
@@ -66,8 +81,7 @@ class Overlay():
 		return self.canvas.create_text(realX, realY, text = text, fill = "white", font = font, anchor = "nw", tags = textTags)
 
 	def updateStatusText(self, text: str) -> None:
-		self.canvas.delete(self.statusText)
-		self.statusText = self.draw_text_1440(text, 12, 70, 40)
+		self.canvas.itemconfigure(self.statusText, text=text)
 		
 	def clearNumberGrid(self) -> None:
 		self.canvas.itemconfigure("numberGrid", state="hidden")
@@ -80,18 +94,22 @@ class Overlay():
 			numberId: int = self.numberGridTextIds[i - 1]
 			self.canvas.itemconfigure(numberId, state="normal")
 	
+	def drawActionVotes(self, actionVotes: list[VotingTallyEntry]) -> None:
+		pass
+	
 	def clearOldNameLeaderboard(self) -> None:
 		self.canvas.itemconfig("nameLeaderboard", text="")
 
 	def drawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
 		self.clearOldNameLeaderboard()
 		for textId, vote in zip(self.voteList, votes):
-			voteStr = f"{vote.getVote()} [{vote.getNumVotes()}] ({vote.getPercentageStr()})"
+			voteStr = f"{vote.getVoteStr()} [{vote.getNumVotes()}] ({vote.getPercentageStr()})"
 			self.canvas.itemconfig(textId, text = voteStr)
 			
 	def initNameLeaderboard(self) -> None:
+		self.nameHeader = self.draw_text_1440("Top Names", 12, self.voteLeaderboardY, 40)
 		#TODO: Scale positions
-		y = self.voteLeaderboardY + int(40 * 1.65) #Offset + fontsize
+		y = self.voteLeaderboardY + int(40 * 2.5) #Offset + fontsize
 		for i in range(5):
 			voteId: int = self.draw_text_1440("", 12, y, 20)
 			self.voteList.append(voteId)
@@ -104,7 +122,7 @@ class Overlay():
 			pos = self.playerNumGridPositions[i]
 			textId: int = self.draw_text_1440(str(i), pos[0], pos[1], self.optionsFontSize, textTags = ["numberGrid"])
 			self.numberGridTextIds.append(textId)
-		self.clearNumberGrid()
+		#self.clearNumberGrid()
 
 overlay: Overlay
 def getOverlay() -> Overlay:

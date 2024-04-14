@@ -3,7 +3,7 @@ import sys
 import traceback
 from itertools import count
 
-logger = logging.getLogger(__name__ + 'scripts.log')
+logger = logging.getLogger(__name__ + 'shared.log')
 
 tabSize = 2
 

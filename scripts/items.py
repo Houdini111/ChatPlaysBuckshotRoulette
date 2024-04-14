@@ -3,10 +3,10 @@ import json
 
 from .basicActions import enterDirections, confirm, up
 from .screenColors import valueOverAmountInArea
-from .log import log
 from .status import removeAllTempStatus, status, tempStatus
+from shared.log import log
 
-currentItemPositions: list[int] = []
+currentItemPositions: list[int]		= []
 
 def getAllCurrentItemPositions() -> list[int]:
 	return currentItemPositions

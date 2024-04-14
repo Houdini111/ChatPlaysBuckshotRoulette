@@ -2,10 +2,11 @@ import asyncio
 from time import sleep
 from typing import Callable
 import math
-
 import pyautogui
 
-from .log import log
+from .consts import ActionEnum, Target, getDealerNames, getPlayerNames, getShootNames
+from shared.log import log
+
 
 class Rectangle():
 	def __init__(self, x: int, y: int, w: int, h: int):
@@ -35,6 +36,16 @@ def waitForTrue(checker: Callable[[], bool]) -> None:
 		log(f"Waiting for method to return true. Attempts: {i}")
 		sleep(0.1)
 
+def resizeXFrom1440p(x1440: int) -> int:
+	xPercent = x1440/2560
+	displayW, displayH = pyautogui.size()
+	return int(math.ceil(xPercent * displayW))
+
+def resizeYFrom1440p(y1440: int) -> int:
+	yPercent = y1440/1440
+	displayW, displayH = pyautogui.size()
+	return int(math.ceil(yPercent * displayH))
+	
 def safeInt(inVal: str | int | None, defaultValue: int) -> int:
 	if type(inVal) is int:
 		return inVal
@@ -43,12 +54,7 @@ def safeInt(inVal: str | int | None, defaultValue: int) -> int:
 	return defaultValue
 
 def resizePointFrom1440p(x1440: int, y1440: int) -> list[int]:
-	xPercent = x1440/2560
-	yPercent = y1440/1440
-	displayW, displayH = pyautogui.size()
-	realX = int(math.ceil(xPercent * displayW))
-	realY = int(math.ceil(yPercent * displayH))
-	return [realX, realY]
+	return [resizeXFrom1440p(x1440), resizeYFrom1440p(y1440)]
 
 def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[int]:
 	wPercent = w1440/2560

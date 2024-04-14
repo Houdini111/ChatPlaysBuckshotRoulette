@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 
 from .config import getTesseractPath
-from .log import log
+from shared.log import log
 
 def scoreboardText() -> str:
 	log("Fetching scoreboard text. Starting by grabbing image.")

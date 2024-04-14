@@ -9,7 +9,7 @@ from .items import getAllCurrentItemPositions, itemBoxCursorVisible, grabItems, 
 from .playerActions import Action, parseAction
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
-from .log import log
+from shared.log import log
 from .overlay import Overlay, getOverlay
 from .status import status
 

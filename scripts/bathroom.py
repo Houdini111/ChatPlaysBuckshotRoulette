@@ -5,9 +5,9 @@ from scripts.overlay import getOverlay
 from .screenColors import valueOverAmountInArea, valueUnderAmountInArea
 from .basicActions import up, right, left, confirm, anyUse
 from .focus import waitForFocus
-from .util import waitForFalse, waitForTrue
-from .log import log
 from .status import status
+from shared.util import waitForFalse, waitForTrue
+from shared.log import log
 
 def throughToGameRoom() -> None:
 	getOverlay().clearOldNameLeaderboard()

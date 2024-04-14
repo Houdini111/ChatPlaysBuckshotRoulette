@@ -1,9 +1,9 @@
 from time import sleep
 
-from bot.chatbot import getChatbot
 from .basicActions import up, down, left, right, confirm, anyUse
-from .log import log
 from .status import status
+from bot.chatbot import getChatbot
+from shared.log import log
 
 playerName = ""
 def getPlayerName() -> str:

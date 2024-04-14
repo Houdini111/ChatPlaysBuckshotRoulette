@@ -2,11 +2,11 @@ from threading import Thread
 import logging
 from time import sleep
 
+from shared.log import log
 from scripts.overlay import Overlay, getOverlay
 from scripts.bathroom import throughToGameRoom
 from scripts.waiver import waive
 from scripts.gameRunner import GameRunner
-from scripts.log import log
 from bot.chatbot import Chatbot, getChatbot
 
 logging.basicConfig(

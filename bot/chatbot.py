@@ -7,13 +7,15 @@ import logging
 import json
 import random
 import asyncio
-from bot.vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
-from scripts.overlay import getOverlay
+from scripts.playerActions import Action, ShootAction, UseItemAction
 
-from scripts.util import add_async_task, get_event_loop
+from shared.consts import getShootNames, getUseNames
 
 from .secrets import getSecrets
+from bot.vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
+from scripts.overlay import getOverlay
 from scripts.config import getChannels, getDefaultName
+from shared.util import get_event_loop
 
 logger = logging.getLogger(__name__ + 'bot.chatbot')
 
@@ -25,15 +27,10 @@ class Chatbot(commands.Bot):
 		global bot
 		bot = self
 
-		self.useNames = ["use", "item", "consume", "take"]
-		self.shootNames = ["shoot", "shot", "attack", "hit", "target"]
-		self.dealerNames = ["dealer", "them", "guy", "other"]
-		self.playerNames = ["self", "me", "player", "i", "myself"]
-
 		self.nameVotesByUser: dict[str, str] = {}
 		self.nameVotesByName: RunningVote = RunningVote()
 		
-		self.actionVotesByUser: dict[str, str] = {}
+		self.actionVotesByUser: dict[str, Action] = {}
 		self.actionVotesByAction: RunningVote = RunningVote()
 		self.talliedActions: VotingTally
 		
@@ -81,8 +78,8 @@ class Chatbot(commands.Bot):
 		winningVote: VotingTallyEntry | None = self.talliedActions.getWinner()
 		if winningVote is None:
 			return "" #Don't allow tiebreakers in action votes. Wait longer.
-		self.sendMessage(f"Winning action of {winningVote.getVote()} won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()})")
-		return winningVote.getVote()
+		self.sendMessage(f"Winning action of {winningVote.getVoteStr()} won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()})")
+		return winningVote.getVoteStr()
 		#Do not clear votes immediately, as it might not be valid. 
 	
 	def removeVotedAction(self, actionToRemove: str) -> None:
@@ -100,7 +97,7 @@ class Chatbot(commands.Bot):
 			self.sendMessage(f"No votes gathered. Winning name by default: \"{getDefaultName()}\"")
 			return getDefaultName()
 		chosenRandomly: bool = talliedNames.chosenRandomly()
-		winningName: str = winner.getVote()
+		winningName: str = winner.getVoteStr()
 		if chosenRandomly:
 			self.sendMessage(f"{talliedNames.numNamesTied()} names tied with {winner.getNumVotes()} votes ({winner.getPercentageStr()}). Winning name chosen randomly: \"{winningName}\"")
 		else:
@@ -153,8 +150,8 @@ class Chatbot(commands.Bot):
 		messageSplit = messageBody.split(' ')
 		if len(messageSplit) < 2:
 			return
-		command = messageSplit[0].lower()
-		commandArgs = messageSplit[1: 3]
+		command: str = messageSplit[0].lower()
+		commandArgs: list[str] = messageSplit[1: 3]
 		authorName: str | None = None
 		if type(author) is Chatter:
 			authorName = author.name
@@ -166,9 +163,9 @@ class Chatbot(commands.Bot):
 		if command == "name":
 			self.nameVote(authorName, messageSplit[1])
 		elif self.awaitingActionInputs:
-			if command in self.useNames:
+			if command in getUseNames():
 				self.useVote(authorName, commandArgs)
-			elif command in self.shootNames:
+			elif command in getShootNames():
 				self.shootVote(authorName, commandArgs)
 	
 	def nameVote(self, authorName: str, name: str) -> None:
@@ -185,56 +182,54 @@ class Chatbot(commands.Bot):
 		self.nameVotesByName.addAVote(name)
 		self.nameVotesByUser[authorName] = name
 
-	def removeExistingVote(self, nameDict: dict[str, str], votes: RunningVote, authorName: str) -> None:
+	def removeExistingVote(self, nameDict: dict[str, Any], votes: RunningVote, authorName: str) -> None:
 		if authorName in nameDict:
 			oldVote: str = nameDict[authorName]
 			votes.removeAVote(oldVote)
 
-	def addActionVote(self, authorName: str, vote: str) -> None:
+	def addActionVote(self, authorName: str, vote: Action) -> None:
 		self.actionVotesByUser[authorName] = vote
 		self.actionVotesByAction.addAVote(vote)
 
 	def shootVote(self, authorName: str, args: list[str]) -> None:
-		normalizedShootVote: str | None = self.normalizeShootVote(args)
+		normalizedShootVote: ShootAction | None = self.normalizeShootVote(args)
 		if normalizedShootVote is None:
 			return
 		self.removeExistingVote(self.actionVotesByUser, self.actionVotesByAction, authorName)
 		self.addActionVote(authorName, normalizedShootVote)
 		
 	def useVote(self, authorName: str, args: list[str]) -> None:
-		normalizedUseVote: str | None = self.normalizeUseVote(args)
+		normalizedUseVote: UseItemAction | None = self.normalizeUseVote(args)
 		if normalizedUseVote is None:
 			return
 		self.removeExistingVote(self.actionVotesByUser, self.actionVotesByAction, authorName)
 		self.addActionVote(authorName, normalizedUseVote)
 
-	def normalizeShootVote(self, args: list[str]) -> str | None:
+	def normalizeShootVote(self, args: list[str]) -> ShootAction | None:
 		if len(args) <= 0:
 			return None
 		target = args[0]
-		if target in self.dealerNames:
-			return f"{self.shootNames[0]} {self.dealerNames[0]}"
-		elif target in self.playerNames:
-			return f"{self.shootNames[0]} {self.playerNames[0]}"
+		action: ShootAction = ShootAction(target)
+		if action.valid():
+			return action
 		return None
 
-	def normalizeUseVote(self, args: list[str]) -> str | None:
+	def normalizeUseVote(self, args: list[str]) -> UseItemAction | None:
 		argLen: int = len(args)
 		if argLen <= 0:
 			return None
 		elif argLen > 2:
 			args = args[0:2]
 		
-		for arg in args:
-			if not arg.isdigit():
-				return None
-			parsedArg = int(arg)
-			if parsedArg < 0 or parsedArg > 8:
-				return None
-		normalizedArgs = args[0]
-		if argLen > 1:
-			normalizedArgs += " " + args[1]
-		return f"{self.useNames[0]} {normalizedArgs}"
+		arg1 = args[0]
+		arg2 = ""
+		if len(args) > 1:
+			arg2 = args[1]
+
+		useItem: UseItemAction = UseItemAction(arg1, arg2)
+		if useItem.valid():
+			return useItem
+		return None
 	
 	def updateLeaderboards(self) -> None:
 		while (True):
@@ -244,7 +239,6 @@ class Chatbot(commands.Bot):
 				tally: VotingTally = tallyVotes(self.nameVotesByName)
 				getOverlay().clearOldNameLeaderboard()
 				getOverlay().drawNameVoteLeaderboard(tally.topNValues(5))
-			
 			sleep(3) #TODO: configurable wait
 
 
