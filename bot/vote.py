@@ -210,7 +210,7 @@ class VotingTallyEntryList():
 	def getRandomWinner(self) -> VotingTallyEntry | None:
 		if len(self.tallies) < 1:
 			return None
-		if len(self.tallies) > 0:
+		if len(self.tallies) > 1:
 			self.chosenRandomly = True
 		return next(self.winnerIter, None)
 
