@@ -1,4 +1,5 @@
 from collections import defaultdict
+import json
 import logging
 from os import remove
 import random
@@ -7,7 +8,7 @@ from copy import copy, deepcopy
 
 logger = logging.getLogger(__name__ + 'bot.vote')
 
-class Vote():
+class Vote(dict): #Inherit dict so it'll be json serializable
 	def __init__(self, vote: str, numVotes: int):
 		self.vote = vote
 		self.numVotes = numVotes
@@ -74,18 +75,18 @@ class RunningVote():
 	def sort(self) -> None:
 		if self.sorted:
 			return
-		voteCountList: list[int] = []
+		voteCountSet: set[int] = set()
 		vote: Vote
 		for vote in self.votes.values():
-			voteCountList.append(vote.getNumVotes())
-		voteCountList.sort()
-		voteCountSet: set[int] = set(voteCountList)
+			voteCountSet.add(vote.getNumVotes())
+		voteCountList: list[int] = list(voteCountSet)
+		voteCountList.sort(reverse = True)
 		
-		oldDict: OrderedDict[str, Vote] = self.votes.copy()
+		beforeSort: OrderedDict[str, Vote] = self.votes.copy()
 
 		voteVal: str
-		for nextVoteCount in iter(voteCountSet):
-			for voteVal, vote in oldDict.items():
+		for nextVoteCount in iter(voteCountList):
+			for voteVal, vote in beforeSort.items():
 				if vote.getNumVotes() == nextVoteCount:
 					self.votes.move_to_end(voteVal)
 		self.sorted = True
@@ -182,7 +183,7 @@ class VotingTallyEntryList():
 		self.winnerIter = iter(self.tallies)
 		
 	def __lt__(self, other):
-		return self.getTallyVoteCountToContain < other.getTallyVoteCountToContain()
+		return self.getTallyVoteCountToContain() < other.getTallyVoteCountToContain()
 	
 	def __copy__(self):
 		return self.__deepcopy__()
@@ -255,7 +256,7 @@ class VotingTally():
 			tallyEntry: VotingTallyEntry = VotingTallyEntry(voteObj, self.totalVotes)
 			entryList: VotingTallyEntryList = self.getTalleyListForVoteCount(voteObj.getNumVotes())
 			entryList.add(tallyEntry)
-		self.tallies.sort()
+		self.tallies.sort(reverse = True)
 		
 
 		self.talliesIter = None
@@ -281,6 +282,7 @@ class VotingTally():
 		return len(self.tallies) > 0
 
 	def topNValues(self, n: int) -> list[VotingTallyEntry]:
+		logger.info("Getting top votes")
 		vals: list[VotingTallyEntry] = []
 		for i in range(n):
 			nextWinner: VotingTallyEntry | None = self.iterateWinner()
