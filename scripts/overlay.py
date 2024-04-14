@@ -1,17 +1,20 @@
 import json
 import tkinter as tk
 from PIL import ImageTk, Image
-import pyautogui
+import pyautogui	
 from time import sleep
 from threading import Thread
 import math
 from operator import itemgetter
+import logging
+
+from bot.vote import VotingTallyEntry
 
 from .util import resizePointFrom1440p
 
 #TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?, countdown (including clock?) for voting time
 
-
+logger = logging.getLogger(__name__ + 'scripts.overlay')
 
 class Overlay():
 	def __init__(self):
@@ -39,13 +42,14 @@ class Overlay():
 			8: [1950, 750]
 		}
 		
-		self.numberGridTextIds = []
-		self.voteList = []
+		self.numberGridTextIds: list[int] = []
+		self.voteList: list[int] = []
 		
 		self.voteLeaderboardY = 400
 		self.draw_text_1440("Chat Overlay Active", 12, 10, 40)
 		self.statusText = self.draw_text_1440("", 0, 0, 0)
-		self.nameHeader = self.draw_text_1440("Top names", 12, self.voteLeaderboardY, 40)
+		self.nameHeader = self.draw_text_1440("Top Names", 12, self.voteLeaderboardY, 40)
+		self.initNameLeaderboard()
 	
 	def run(self) -> None:
 		tk.mainloop()
@@ -53,12 +57,12 @@ class Overlay():
 	def stop(self) -> None:
 		self.root.destroy()
 
-	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, bold: bool = True) -> int:
+	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, bold: bool = True, textTags: list[str] = []) -> int:
 		realX, realY = resizePointFrom1440p(x1440, y1440)
 		font = ("Arial", fontSize)
 		if bold:
 			font += ("bold", )
-		return self.canvas.create_text(realX, realY, text = text, fill = "white", font = font, anchor = "nw")
+		return self.canvas.create_text(realX, realY, text = text, fill = "white", font = font, anchor = "nw", tags = textTags)
 
 	def updateStatusText(self, text: str) -> None:
 		self.canvas.delete(self.statusText)
@@ -76,27 +80,26 @@ class Overlay():
 			if i < 1 or i > 8:
 				continue
 			pos = self.playerNumGridPositions[i]
-			textId = self.draw_text_1440(str(i), pos[0], pos[1], self.optionsFontSize)
+			textId: int = self.draw_text_1440(str(i), pos[0], pos[1], self.optionsFontSize)
 			self.numberGridTextIds.append(textId)
 	
 	def clearOldNameLeaderboard(self) -> None:
-		for oldVote in self.voteList:
-			self.canvas.delete(oldVote)
-		self.voteList.clear()
-		
-	def 
+		self.canvas.itemconfig("nameLeaderboard", text="")
 
-	def drawNameVoteLeaderboard(self, votes: dict[str, int]) -> None:
+	def drawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
 		self.clearOldNameLeaderboard()
-		sortedVotes = sorted(votes.items(), key=lambda kv: kv[1])
-		print(f"Sorted votes: {json.dumps(sortedVotes)}")
-		y = self.voteLeaderboardY + 40 #Offset + fontsize
-		for vote in sortedVotes:
-			voteId = self.draw_text_1440(, 12, y, 20)
+		for textId, vote in zip(self.voteList, votes):
+			voteStr = f"{vote.getVote()} [{vote.getNumVotes()}] ({vote.getPercentageStr()})"
+			self.canvas.itemconfig(textId, text = voteStr)
+			
+	def initNameLeaderboard(self) -> None:
+		#TODO: Scale positions
+		y = self.voteLeaderboardY + int(40 * 1.65) #Offset + fontsize
+		for i in range(5):
+			voteId: int = self.draw_text_1440("", 12, y, 20)
 			self.voteList.append(voteId)
-			y += 40
+			y += 45
 
 overlay: Overlay
-
 def getOverlay() -> Overlay:
 	return overlay

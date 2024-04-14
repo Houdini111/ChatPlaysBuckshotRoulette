@@ -1,9 +1,11 @@
 from collections import defaultdict
+import logging
 from os import remove
 import random
 from typing import OrderedDict
 from copy import copy, deepcopy
 
+logger = logging.getLogger(__name__ + 'bot.vote')
 
 class Vote():
 	def __init__(self, vote: str, numVotes: int):
@@ -19,6 +21,9 @@ class Vote():
 	def __deepcopy__(self):
 		return Vote(self.vote, self.numVotes)
 	
+	def __str__(self):
+		return "Vote{vote:\"" + self.vote + "\", numVotes: " + str(self.numVotes) + "}"
+	
 	def getVote(self) -> str:
 		return self.vote
 	
@@ -32,6 +37,7 @@ class Vote():
 	def removeAVote(self) -> int:
 		self.numVotes -= 1
 		return self.numVotes
+
 
 class RunningVote():
 	def __init__(self, votes: list[Vote] | None = None):
@@ -89,6 +95,8 @@ class RunningVote():
 		voteVal: str = self.getVoteVal(vote)
 		if voteVal in self.votes:
 			self.votes[voteVal].addAVote()
+		else: 
+			self.votes[voteVal] = Vote(voteVal, 1)
 		self.sorted = False
 	
 	def removeAVote(self, vote: str | Vote) -> None:
@@ -178,7 +186,7 @@ class VotingTallyEntryList():
 	
 	def __copy__(self):
 		return self.__deepcopy__()
-	
+
 	def __deepcopy__(self):
 		copiedList: list[VotingTallyEntry] = []
 		entry: VotingTallyEntry
@@ -249,6 +257,7 @@ class VotingTally():
 			entryList.add(tallyEntry)
 		self.tallies.sort()
 		
+
 		self.talliesIter = None
 		self.currentTallyList: VotingTallyEntryList
 		if len(self.tallies) > 0:
@@ -270,6 +279,15 @@ class VotingTally():
 
 	def hasTallies(self) -> bool:
 		return len(self.tallies) > 0
+
+	def topNValues(self, n: int) -> list[VotingTallyEntry]:
+		vals: list[VotingTallyEntry] = []
+		for i in range(n):
+			nextWinner: VotingTallyEntry | None = self.iterateWinner()
+			if nextWinner is None:
+				return vals
+			vals.append(nextWinner)
+		return vals
 
 	def iterateWinner(self) -> VotingTallyEntry | None:
 		#Check if anything to iterate through
@@ -296,7 +314,7 @@ class VotingTally():
 		for entryList in self.tallies:
 			if entryList.getTallyVoteCountToContain() == voteCount:
 				return entryList
-		entryList = VotingTallyEntryList(voteCount)
+		entryList = VotingTallyEntryList(voteCount, [])
 		self.tallies.append(entryList)
 		return entryList
 	

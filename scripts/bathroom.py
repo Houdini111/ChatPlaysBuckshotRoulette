@@ -10,6 +10,7 @@ from .log import log
 from .status import status
 
 def throughToGameRoom() -> None:
+	getOverlay().clearOldNameLeaderboard()
 	enableEndless()
 	exitBathroom()
 	enterGameRoom()

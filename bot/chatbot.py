@@ -5,7 +5,7 @@ import logging
 import json
 import random
 import asyncio
-from bot.vote import RunningVote, VotingTally, VotingTallyEntry, tallyVotes
+from bot.vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from scripts.overlay import getOverlay
 
 from scripts.util import get_event_loop
@@ -36,7 +36,7 @@ class Chatbot(commands.Bot):
 		self.talliedActions: VotingTally
 		
 		self.awaitingActionInputs = False
-
+		
 		#await getSecrets().refresh_tokens_and_save() #Don't bother until twitch stops giving me 400s
 		self.channels: dict[str, Channel] = {}
 		super().__init__(
@@ -141,13 +141,22 @@ class Chatbot(commands.Bot):
 			#Self messages? Or just messages that they failed to send?
 			return
 
-		messageBody = message.content
+		messageBody: str | None = message.content
+		if messageBody is None:
+			return
 		messageSplit = messageBody.split(' ')
 		if len(messageSplit) < 2:
 			return
 		command = messageSplit[0].lower()
 		commandArgs = messageSplit[1: 3]
-		authorName: str = author.name
+		authorName: str | None = None
+		if type(author) is Chatter:
+			authorName = author.name
+		elif type(author) is PartialChatter:
+			authorName = author.name
+		if authorName is None:
+			return
+		
 		if command == "name":
 			self.nameVote(authorName, messageSplit[1])
 		elif self.awaitingActionInputs:
@@ -165,45 +174,36 @@ class Chatbot(commands.Bot):
 
 		#TODO: Ignore names the game won't allow ("GOD", "DEALER")
 
-		if authorName in self.nameVotesByUser:
-			previousVote = self.nameVotesByUser[authorName]
-			self.nameVotesByName[previousVote] -= 1
+		self.removeExistingVote(self.nameVotesByUser, self.nameVotesByName, name)
 		
-		self.vote(self.nameVotesByName, name)
+		self.nameVotesByName.addAVote(name)
 		self.nameVotesByUser[authorName] = name
-		getOverlay().drawNameVoteLeaderboard(self.nameVotesByName);
-		#print(f"Name Votes By User: {json.dumps(self.nameVotesByUser)}")
-		#print(f"Name Votes By Name: {json.dumps(self.nameVotesByName)}")
-	
-	def vote(self, dictToVoteOn: dict[str, int], vote: str) -> None:
-		if vote in dictToVoteOn:
-			dictToVoteOn[vote] += 1
-		else:
-			dictToVoteOn[vote] = 1
-		#print(f"Action Votes By User: {json.dumps(self.actionVotesByUser)}")
-		#print(f"Action Votes By Action: {json.dumps(self.actionVotesByAction)}")
+		tally: VotingTally = tallyVotes(self.nameVotesByName)
+		getOverlay().clearOldNameLeaderboard()
+		getOverlay().drawNameVoteLeaderboard(tally.topNValues(5))
+		
 
-	def removeExistingVote(self, authorName: str) -> None:
-		if authorName in self.actionVotesByUser:
-			oldVote: str = self.actionVotesByUser[authorName]
-			self.actionVotesByAction[oldVote] -= 1
+	def removeExistingVote(self, nameDict: dict[str, str], votes: RunningVote, authorName: str) -> None:
+		if authorName in nameDict:
+			oldVote: str = nameDict[authorName]
+			votes.removeAVote(oldVote)
 
 	def addActionVote(self, authorName: str, vote: str) -> None:
 		self.actionVotesByUser[authorName] = vote
-		self.vote(self.actionVotesByAction, vote)
+		self.actionVotesByAction.addAVote(vote)
 
 	def shootVote(self, authorName: str, args: list[str]) -> None:
 		normalizedShootVote: str | None = self.normalizeShootVote(args)
 		if normalizedShootVote is None:
 			return
-		self.removeExistingVote(authorName)
+		self.removeExistingVote(self.actionVotesByUser, self.actionVotesByAction, authorName)
 		self.addActionVote(authorName, normalizedShootVote)
 		
 	def useVote(self, authorName: str, args: list[str]) -> None:
 		normalizedUseVote: str | None = self.normalizeUseVote(args)
 		if normalizedUseVote is None:
 			return
-		self.removeExistingVote(authorName)
+		self.removeExistingVote(self.actionVotesByUser, self.actionVotesByAction, authorName)
 		self.addActionVote(authorName, normalizedUseVote)
 
 	def normalizeShootVote(self, args: list[str]) -> str | None:

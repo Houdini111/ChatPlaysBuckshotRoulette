@@ -1,7 +1,8 @@
 from threading import Thread
 import logging
+from time import sleep
 
-from scripts.overlay import Overlay
+from scripts.overlay import Overlay, getOverlay
 from scripts.bathroom import throughToGameRoom
 from scripts.waiver import waive
 from scripts.gameRunner import GameRunner
@@ -12,7 +13,7 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     encoding="UTF-8", 
-    level=logging.DEBUG, 
+    level=logging.INFO, 
     handlers=[
         logging.FileHandler("LOG.log"),
         logging.StreamHandler()
@@ -22,10 +23,11 @@ logging.basicConfig(
 def startGame() -> None:
 	chatOverlay: Overlay = Overlay()
 	bot: Chatbot = getChatbot()
-	gameThread = Thread(target = runGame)
+	#gameThread = Thread(target = runGame)
 	botThread = Thread(target = bot.run)
-	gameThread.start()
+	#gameThread.start()
 	botThread.start()
+	#Required to be on main thread becauase they say so...
 	chatOverlay.run()
 
 def runGame() -> None:
