@@ -50,6 +50,7 @@ class Overlay():
 		self.statusText = self.draw_text_1440("", 0, 0, 0)
 		self.nameHeader = self.draw_text_1440("Top Names", 12, self.voteLeaderboardY, 40)
 		self.initNameLeaderboard()
+		self.initNumberGrid()
 	
 	def run(self) -> None:
 		tk.mainloop()
@@ -69,19 +70,15 @@ class Overlay():
 		self.statusText = self.draw_text_1440(text, 12, 70, 40)
 		
 	def clearNumberGrid(self) -> None:
-		if len(self.numberGridTextIds) == 0:
-			return
-		for textId in self.numberGridTextIds:
-			self.canvas.delete(textId)
+		self.canvas.itemconfigure("numberGrid", state="hidden")
 
 	def drawNumberGrid(self, numbersToDraw: list[int]) -> None:
 		self.clearNumberGrid()
 		for i in numbersToDraw:
 			if i < 1 or i > 8:
 				continue
-			pos = self.playerNumGridPositions[i]
-			textId: int = self.draw_text_1440(str(i), pos[0], pos[1], self.optionsFontSize)
-			self.numberGridTextIds.append(textId)
+			numberId: int = self.numberGridTextIds[i - 1]
+			self.canvas.itemconfigure(numberId, state="normal")
 	
 	def clearOldNameLeaderboard(self) -> None:
 		self.canvas.itemconfig("nameLeaderboard", text="")
@@ -99,6 +96,15 @@ class Overlay():
 			voteId: int = self.draw_text_1440("", 12, y, 20)
 			self.voteList.append(voteId)
 			y += 45
+	
+	def initNumberGrid(self) -> None:
+		for i in range(1, 9): #[1, 9)
+			if i < 1 or i > 8:
+				continue
+			pos = self.playerNumGridPositions[i]
+			textId: int = self.draw_text_1440(str(i), pos[0], pos[1], self.optionsFontSize, textTags = ["numberGrid"])
+			self.numberGridTextIds.append(textId)
+		self.clearNumberGrid()
 
 overlay: Overlay
 def getOverlay() -> Overlay:
