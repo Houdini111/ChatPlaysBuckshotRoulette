@@ -1,14 +1,17 @@
+import logging
 import sys
 import traceback
 from itertools import count
 
+logger = logging.getLogger(__name__ + 'scripts.log')
+
 tabSize = 2
 
-def log(toPrint: str) -> None:
-	logWithLevel(toPrint, stack_size() - 1)
+def log(toPrint: str, logLevel: int = logging.INFO) -> None:
+	logWithIndentation(toPrint, stack_size() - 1, logLevel)
 
-def logWithLevel(toPrint: str, indentLevel: int) -> None:
-	print(" "*tabSize*indentLevel + toPrint)
+def logWithIndentation(toPrint: str, indentLevel: int, logLevel: int = logging.INFO) -> None:
+	logger.info(" "*tabSize*indentLevel + toPrint)
 
 def stack_size(size:int = 2) -> int:
 	frame = sys._getframe(size)
