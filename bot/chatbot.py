@@ -174,7 +174,7 @@ class Chatbot(commands.Bot):
 
 		#TODO: Ignore names the game won't allow ("GOD", "DEALER")
 
-		self.removeExistingVote(self.nameVotesByUser, self.nameVotesByName, name)
+		self.removeExistingVote(self.nameVotesByUser, self.nameVotesByName, authorName)
 		
 		self.nameVotesByName.addAVote(name)
 		self.nameVotesByUser[authorName] = name
