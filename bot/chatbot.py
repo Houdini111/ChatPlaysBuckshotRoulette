@@ -7,14 +7,14 @@ import logging
 import json
 import random
 import asyncio
-from scripts.playerActions import Action, ShootAction, UseItemAction
+from game.playerActions import Action, ShootAction, UseItemAction
 
 from shared.consts import getShootNames, getUseNames
 
 from .secrets import getSecrets
 from bot.vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
-from scripts.overlay import getOverlay
-from scripts.config import getChannels, getDefaultName
+from game.overlay import getOverlay
+from game.config import getChannels, getDefaultName
 from shared.util import get_event_loop
 
 logger = logging.getLogger(__name__ + 'bot.chatbot')

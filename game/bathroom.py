@@ -1,7 +1,6 @@
 from time import sleep
 
-from scripts.overlay import getOverlay
-
+from .overlay import getOverlay
 from .screenColors import valueOverAmountInArea, valueUnderAmountInArea
 from .basicActions import up, right, left, confirm, anyUse
 from .focus import waitForFocus

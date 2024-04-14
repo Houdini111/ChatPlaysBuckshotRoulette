@@ -3,10 +3,10 @@ import logging
 from time import sleep
 
 from shared.log import log
-from scripts.overlay import Overlay, getOverlay
-from scripts.bathroom import throughToGameRoom
-from scripts.waiver import waive
-from scripts.gameRunner import GameRunner
+from game.overlay import Overlay, getOverlay
+from game.bathroom import throughToGameRoom
+from game.waiver import waive
+from game.gameRunner import GameRunner
 from bot.chatbot import Chatbot, getChatbot
 
 logging.basicConfig(
