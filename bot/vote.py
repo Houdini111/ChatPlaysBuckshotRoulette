@@ -47,7 +47,7 @@ class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
 		return self.numVotes
 
 
-class RunningVote():
+class RunningVote(dict):
 	def __init__(self, votes: list[Vote] | None = None):
 		self.votes: OrderedDict[str, Vote] = OrderedDict()
 		self.totalVotes = 0
@@ -293,7 +293,17 @@ class VotingTally():
 	def hasTallies(self) -> bool:
 		return len(self.tallies) > 0
 
-	def topNValues(self, n: int) -> list[VotingTallyEntry]:
+	def allVotes(self) -> list[VotingTallyEntry]:
+		logger.info(f"allVotes start")
+		allVotes: list[VotingTallyEntry] = []
+		nextVote: VotingTallyEntry | None = self.iterateWinner()
+		while nextVote is not None:
+			logger.info(f"allVotes Added vote")
+			allVotes.append(nextVote)
+			nextVote = self.iterateWinner()
+		return allVotes
+
+	def topNVotes(self, n: int) -> list[VotingTallyEntry]:
 		logger.info("Getting top votes")
 		vals: list[VotingTallyEntry] = []
 		for i in range(n):

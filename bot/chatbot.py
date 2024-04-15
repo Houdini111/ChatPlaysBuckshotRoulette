@@ -7,14 +7,15 @@ import logging
 import json
 import random
 import asyncio
-from game.playerActions import Action, ShootAction, UseItemAction
 
 from shared.consts import getShootNames, getUseNames
 
 from .secrets import getSecrets
+from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from shared.util import get_event_loop
+from shared.actions import Action, ShootAction, UseItemAction
+from shared.log import log
 from overlay.overlay import getOverlay
-from bot.vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from game.config import getChannels, getDefaultName
 
 logger = logging.getLogger(__name__ + 'bot.chatbot')
@@ -36,7 +37,7 @@ class Chatbot(commands.Bot):
 		
 		self.awaitingActionInputs = False
 		
-		self.updateLeaderboardsThread = Thread(target = self.updateLeaderboards)
+		self.updateLeaderboardsThread = Thread(target = self.updateVoteCounts)
 		self.updateLeaderboardsThread.start()
 		
 		#await getSecrets().refresh_tokens_and_save() #Don't bother until twitch stops giving me 400s
@@ -56,6 +57,7 @@ class Chatbot(commands.Bot):
 	#TODO: Consolidate messages. For example "After ignoring invalid votes, the winner is"
 	def openActionInputVoting(self, retrying: bool) -> None:
 		self.awaitingActionInputs = True
+		log(f"chatbot awaitingActionInputs: {self.awaitingActionInputs}. ID: {id(self)}")
 		if not retrying:
 			self.sendMessage("Voting for action now open.")
 		else:
@@ -231,15 +233,28 @@ class Chatbot(commands.Bot):
 			return useItem
 		return None
 	
-	def updateLeaderboards(self) -> None:
+	def updateVoteCounts(self) -> None:
 		while (True):
-			if len(self.nameVotesByName) < 1:
-				getOverlay().clearOldNameLeaderboard()
-			else:
-				tally: VotingTally = tallyVotes(self.nameVotesByName)
-				getOverlay().clearOldNameLeaderboard()
-				getOverlay().drawNameVoteLeaderboard(tally.topNValues(5))
+			self.updateNameLeaderboardDisplay()
+			self.updateActionVotesDisplay()
 			sleep(3) #TODO: configurable wait
+	
+	def updateNameLeaderboardDisplay(self) -> None:
+		log(f"updateNameLeaderboardDisplay -> {json.dumps(self.nameVotesByName)}")
+		getOverlay().clearOldNameLeaderboard()
+		if len(self.nameVotesByName) < 1:
+			return
+		tally: VotingTally = tallyVotes(self.nameVotesByName)
+		getOverlay().drawNameVoteLeaderboard(tally.topNVotes(5))
+			
+	def updateActionVotesDisplay(self) -> None:
+		getOverlay().clearActionVotes()
+		if not self.awaitingActionInputs:
+			return
+		tally: VotingTally = tallyVotes(self.actionVotesByAction)
+		getOverlay().drawActionVotes(tally.allVotes())
+			
+		
 
 
 bot: Chatbot | None = None

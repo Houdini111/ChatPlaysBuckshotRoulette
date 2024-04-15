@@ -9,7 +9,6 @@ from overlay.overlay import getOverlay
 from overlay.status import status
 
 def throughToGameRoom() -> None:
-	getOverlay().clearOldNameLeaderboard()
 	enableEndless()
 	exitBathroom()
 	enterGameRoom()
@@ -43,6 +42,9 @@ def moveCursorToBathroomDoor() -> None:
 	raise RuntimeError("Couldn't locate door cursor")
 
 def enableEndless() -> None:
+	status("Waiting to be in starting bathroom")
+	while not inStartingBathroom():
+		sleep(1)
 	status("Enabling endless")
 	moveCursorToBathroomDoor()
 	left()
@@ -70,6 +72,7 @@ def enterGameRoom() -> None:
 def inStartingBathroom() -> bool:
 	#TODO: Is this reliable enough of a check? All the swaying and grays makes it really hard to tell...
 	#TODO: Convert to Peepers
+	waitForFocus()
 	log("Checking for if the player is in the bathroom.")
 	monitorHoleBlack = valueUnderAmountInArea(1, 342, 497, 50, 50)
 	if not monitorHoleBlack:

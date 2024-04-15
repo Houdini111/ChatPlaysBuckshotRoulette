@@ -1,6 +1,8 @@
 from time import sleep
 import json
 
+from shared.actions import setItemAtPositionFunc
+
 from .basicActions import enterDirections, confirm, up
 from .screenColors import valueOverAmountInArea
 from shared.log import log
@@ -149,3 +151,6 @@ def getDealerItemDirections(num: int) -> list[str]:
 	directions = horizontalOffset + verticalOffset
 	log(f"Dealer item directions for {num} -> {directions}")
 	return directions
+
+#To avoid a circular import, lazy load this method
+setItemAtPositionFunc(itemAtPosition)

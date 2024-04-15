@@ -1,12 +1,13 @@
 from time import sleep
 
 from bot.chatbot import getChatbot
+from shared.actions import parseAction
 
 
 from .basicActions import up
 from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, RangePeep
 from .items import getAllCurrentItemPositions, itemBoxCursorVisible, grabItems, clearItems
-from .playerActions import Action, parseAction
+from .playerActions import Action, execute
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
 from shared.log import log
@@ -133,11 +134,16 @@ class GameRunner():
 			actionSuccess: bool = False
 			retry: bool = False
 			invalid: bool = False
+			log("Starting input loop")
 			while not actionSuccess:
 				if not invalid:
+					log("Not invalid user input, opening chat voting")
 					getChatbot().openActionInputVoting(retry)
+					log("Action voting opened. Waiting for input")
 					sleep(15) #TODO: Configurable voting time. When implemented, add time to open voting message.
+					log("Waiting for input over. Closing action voting")
 					getChatbot().closeActionInputVoting(retry)
+					log("Action voting closed")
 				while (True):
 					#request = input("Next? ")
 					request = getChatbot().getVotedAction()
@@ -148,10 +154,9 @@ class GameRunner():
 					action: Action | None = parseAction(request)
 					if action is not None:
 						if action.valid():
-							getOverlay().clearNumberGrid()
-							action.execute()
+							getOverlay().clearActionOverlay()
+							execute(action)
 							actionSuccess = True
-							getChatbot().clearActionVotes()
 							break
 					#Invalid action chosen, check next
 					getChatbot().sendMessage(f"Top voted action \"{request}\" was invalid. Attempting next winner.")
