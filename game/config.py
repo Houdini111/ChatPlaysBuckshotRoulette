@@ -34,7 +34,7 @@ def getTesseractPath() -> str:
 	return config.getKeyOrDefault("tesseractPath", str, r"C:\Program Files\Tesseract-OCR\tesseract")
 
 def getChannels() -> list[str]:
-	return config.getKeyOrDefault("channels", list, [])
+	return config.getKeyOrDefault("channels", list, list[str]())
 
 def getDefaultName() -> str:
 	return config.getKeyOrDefault("defaultName", str, "CHAT")

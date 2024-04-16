@@ -13,14 +13,17 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     encoding="UTF-8", 
-    level=logging.INFO, 
+    level=logging.DEBUG, 
     handlers=[
         logging.FileHandler("LOG.log"),
         logging.StreamHandler()
     ]
 )
 
+logger = logging.getLogger(__name__ + 'root')
+
 def startGame() -> None:
+	logger.info("Booting bot")
 	chatOverlay: Overlay = Overlay()
 	bot: Chatbot = getChatbot()
 	gameThread = Thread(target = runGame)
@@ -31,7 +34,7 @@ def startGame() -> None:
 	chatOverlay.run()
 
 def runGame() -> None:
-	log("Starting game bot.")
+	logger.info("Starting game bot.")
 	while(True):
 		throughToGameRoom()
 		waive()

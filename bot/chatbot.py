@@ -8,13 +8,12 @@ import json
 import random
 import asyncio
 
-from shared.consts import getShootNames, getUseNames
-
 from .secrets import getSecrets
 from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from shared.util import get_event_loop
 from shared.actions import Action, ShootAction, UseItemAction
 from shared.log import log
+from shared.consts import getShootNames, getUseNames
 from overlay.overlay import getOverlay
 from game.config import getChannels, getDefaultName
 
@@ -28,11 +27,11 @@ class Chatbot(commands.Bot):
 		global bot
 		bot = self
 
-		self.nameVotesByUser: dict[str, str] = {}
-		self.nameVotesByName: RunningVote = RunningVote()
+		self.nameVotesByUser: dict[str, str] = dict[str, str]()
+		self.nameVotesByName: RunningVote[str] = RunningVote[str]()
 		
-		self.actionVotesByUser: dict[str, Action] = {}
-		self.actionVotesByAction: RunningVote = RunningVote()
+		self.actionVotesByUser: dict[str, Action] = dict[str, Action]()
+		self.actionVotesByAction: RunningVote[Action] = RunningVote[Action]()
 		self.talliedActions: VotingTally
 		
 		self.awaitingActionInputs = False
@@ -41,7 +40,7 @@ class Chatbot(commands.Bot):
 		self.updateLeaderboardsThread.start()
 		
 		await getSecrets().refresh_tokens_and_save() #Don't bother until twitch stops giving me 400s
-		self.channels: dict[str, Channel] = {}
+		self.channels: dict[str, Channel] = dict[str, Channel]()
 		super().__init__(
 			token = getSecrets().getAccessToken(), 
 			client_secret = getSecrets().getSecret(),
@@ -71,20 +70,20 @@ class Chatbot(commands.Bot):
 		else:
 			self.sendMessage("Voting has re-closed. Deciding on winner again.")
 	
-	def getVotedAction(self) -> str:
+	def getVotedAction(self) -> Action | None:
 		self.awaitingActionInputs = False
 		#Actions will require an actual winner. No tie breaker or win by default
 		if not self.actionVotesByAction.hasVotes():
-			return "" #No action can be taken yet because no one voted. Wait longer.
+			return None #No action can be taken yet because no one voted. Wait longer.
 		self.talliedActions = tallyVotes(self.actionVotesByAction)
 		winningVote: VotingTallyEntry | None = self.talliedActions.getWinner()
 		if winningVote is None:
-			return "" #Don't allow tiebreakers in action votes. Wait longer.
+			return None #Don't allow tiebreakers in action votes. Wait longer.
 		self.sendMessage(f"Winning action of {winningVote.getVoteStr()} won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()})")
-		return winningVote.getVoteStr()
+		return winningVote.getVoteObj().getVote()
 		#Do not clear votes immediately, as it might not be valid. 
 	
-	def removeVotedAction(self, actionToRemove: str) -> None:
+	def removeVotedAction(self, actionToRemove: str | Action) -> None:
 		self.actionVotesByAction.removeVote(actionToRemove)
 		self.talliedActions.removeVote(actionToRemove)
 
@@ -163,11 +162,14 @@ class Chatbot(commands.Bot):
 			return
 		
 		if command == "name":
+			logger.debug(f"Got name vote command: \"{command} {messageSplit[1]}\"")
 			self.nameVote(authorName, messageSplit[1])
 		elif self.awaitingActionInputs:
 			if command in getUseNames():
+				logger.debug(f"Got use vote command: \"{command} {commandArgs}\"")
 				self.useVote(authorName, commandArgs)
 			elif command in getShootNames():
+				logger.debug(f"Got shoot vote command: \"{command} {commandArgs}\"")
 				self.shootVote(authorName, commandArgs)
 	
 	def nameVote(self, authorName: str, name: str) -> None:
@@ -181,6 +183,7 @@ class Chatbot(commands.Bot):
 
 		self.removeExistingVote(self.nameVotesByUser, self.nameVotesByName, authorName)
 		
+		logger.debug(f"Adding name vote: {name}")
 		self.nameVotesByName.addAVote(name)
 		self.nameVotesByUser[authorName] = name
 
@@ -190,12 +193,14 @@ class Chatbot(commands.Bot):
 			votes.removeAVote(oldVote)
 
 	def addActionVote(self, authorName: str, vote: Action) -> None:
+		logger.debug(f"Adding action vote: {vote}")
 		self.actionVotesByUser[authorName] = vote
 		self.actionVotesByAction.addAVote(vote)
 
 	def shootVote(self, authorName: str, args: list[str]) -> None:
 		normalizedShootVote: ShootAction | None = self.normalizeShootVote(args)
 		if normalizedShootVote is None:
+			logger.debug(f"Ignoring shoot command as it could not be normalized. Args: {args}")
 			return
 		self.removeExistingVote(self.actionVotesByUser, self.actionVotesByAction, authorName)
 		self.addActionVote(authorName, normalizedShootVote)
@@ -240,17 +245,19 @@ class Chatbot(commands.Bot):
 			sleep(3) #TODO: configurable wait
 	
 	def updateNameLeaderboardDisplay(self) -> None:
-		log(f"updateNameLeaderboardDisplay -> {json.dumps(self.nameVotesByName)}")
+		log(f"updateNameLeaderboardDisplay -> {self.nameVotesByName}")
 		getOverlay().clearOldNameLeaderboard()
 		if len(self.nameVotesByName) < 1:
 			return
 		tally: VotingTally = tallyVotes(self.nameVotesByName)
-		getOverlay().drawNameVoteLeaderboard(tally.topNVotes(5))
+		getOverlay().drawNameVoteLeaderboard(tally.topNVotes(3))
 			
 	def updateActionVotesDisplay(self) -> None:
 		getOverlay().clearActionVotes()
 		if not self.awaitingActionInputs:
+			logger.debug("Not displaying action votes as the bot isn't looking for inputs")
 			return
+		logger.debug(f"Tallying action votes. Action votes len: {len(self.actionVotesByAction)}")
 		tally: VotingTally = tallyVotes(self.actionVotesByAction)
 		getOverlay().drawActionVotes(tally.allVotes())
 			

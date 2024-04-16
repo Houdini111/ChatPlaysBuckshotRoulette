@@ -5,7 +5,7 @@ import math
 import pyautogui
 
 from .consts import ActionEnum, Target, getDealerNames, getPlayerNames, getShootNames
-from shared.log import log
+from .log import log
 
 
 class Rectangle():

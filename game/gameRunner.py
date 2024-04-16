@@ -1,18 +1,16 @@
 from time import sleep
 
-from bot.chatbot import getChatbot
-from shared.actions import parseAction
-
-
+from .items import getItemManager
 from .basicActions import up
 from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, RangePeep
-from .items import getAllCurrentItemPositions, itemBoxCursorVisible, grabItems, clearItems
 from .playerActions import Action, execute
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
+from shared.actions import parseAction
 from shared.log import log
 from overlay.overlay import Overlay, getOverlay
 from overlay.status import status
+from bot.chatbot import getChatbot
 
 #TODO: 
 #  Item place logic sometimes skipping squares
@@ -107,7 +105,7 @@ class GameRunner():
 
 			#Do NOT clear items
 		else:
-			clearItems()
+			getItemManager().clearItems()
 		sleep(4) #Wait for extra to make sure round wins don't get counted multiple times
 
 	def hasPlayerLost(self) -> bool:
@@ -117,20 +115,20 @@ class GameRunner():
 		while(True):
 			status("Waiting for player turn")
 			while not self.playerTurn():
-				if itemBoxCursorVisible():
+				if getItemManager().itemBoxCursorVisible():
 					log("While waiting for the player's turn the item box was found to be open. Grabbing items.")
-					grabItems()
+					getItemManager().grabItems()
 					continue
 				self.checkForClearingItems()
 				self.checkForRoundIsWon()
 				if self.hasPlayerLost():
 					log("Player found to have lost. Returning to bathroom logic.")
-					clearItems()
+					getItemManager().clearItems()
 					return
 				sleep(0.5)
 			log("Should be player turn now.")
 			status("Awaiting player input")
-			getOverlay().drawNumberGrid(getAllCurrentItemPositions())
+			getOverlay().drawNumberGrid(getItemManager().getAllCurrentItemPositions())
 			actionSuccess: bool = False
 			retry: bool = False
 			invalid: bool = False
@@ -146,21 +144,19 @@ class GameRunner():
 					log("Action voting closed")
 				while (True):
 					#request = input("Next? ")
-					request = getChatbot().getVotedAction()
-					if request == "": #Tie or something. Re-open votes
+					action: Action | None = getChatbot().getVotedAction()
+					if action is None: #Tie or something. Re-open votes
 						retry = True
 						invalid = False
 						break
-					action: Action | None = parseAction(request)
-					if action is not None:
-						if action.valid():
-							getOverlay().clearActionOverlay()
-							execute(action)
-							actionSuccess = True
-							break
+					if action.valid():
+						getOverlay().clearActionOverlay()
+						execute(action)
+						actionSuccess = True
+						break
 					#Invalid action chosen, check next
-					getChatbot().sendMessage(f"Top voted action \"{request}\" was invalid. Attempting next winner.")
+					getChatbot().sendMessage(f"Top voted action \"{action}\" was invalid. Attempting next winner.")
 					retry = False
 					invalid = True
-					getChatbot().removeVotedAction(request)
+					getChatbot().removeVotedAction(action)
 				

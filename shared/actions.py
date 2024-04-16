@@ -5,12 +5,10 @@ from .consts import Target, getDealerNames, getPlayerNames, getShootNames, getUs
 from .log import log
 from .util import safeInt
 
-#To avoid a circular import, lazy load this method
 itemAtPosition: Callable
-def setItemAtPositionFunc(func: Callable) -> None:
+def setItemAtPositionFunc(itemAtPositionFunc: Callable):
 	global itemAtPosition
-	itemAtPosition = func
-
+	itemAtPosition = itemAtPositionFunc
 
 class Action(ABC):
 	@abstractmethod
@@ -24,21 +22,27 @@ class ShootAction(Action):
 			self.target = parseTarget(target)
 		elif type(target) is Target:
 			self.target = target
+			
+	def __str__(self):
+		return f"shoot {self.target.value}"
 	
 	def getTarget(self) -> Target:
 		return self.target
 
 	def valid(self) -> bool:
 		return self.target != Target.INVALID
-	
-	def __str__(self):
-		return f"shoot {self.target.value}"
 
 class UseItemAction(Action):
 	def __init__(self, itemNum: str | int, adrenalineItemNum: str | int | None = None):
 		self.itemNum = safeInt(itemNum, 0)
 		#TODO: Check if adrenaline number needed
 		self.adrenalineItemNum = safeInt(adrenalineItemNum, 0)
+	
+	def __str__(self):
+		adrenalineNumStr = ""
+		if self.adrenalineItemNum > 1:
+			adrenalineNumStr = f" {self.adrenalineItemNum}"
+		return f"use {self.itemNum}{adrenalineNumStr}"
 	
 	def getItemNum(self) -> int:
 		return self.itemNum

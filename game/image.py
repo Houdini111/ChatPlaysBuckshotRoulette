@@ -32,7 +32,7 @@ def prepareImageForOCR(img: Image) -> Image:
 	dst_points = np.float32([[10, 10], [370, 10], [370, 60], [8, 60]])
 	matrix = cv2.getPerspectiveTransform(src_points, dst_points)
 	rotatedArray = np.asarray(rotated)
-	skewedArray = []
+	skewedArray = list()
 	skewedArray = cv2.warpPerspective(rotatedArray, matrix, (480, 95))
 	skewed = Image.fromarray(skewedArray)
 	#skewed.save('temp_2.png')

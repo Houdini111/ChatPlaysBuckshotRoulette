@@ -1,15 +1,13 @@
-from collections import defaultdict
-import json
 import logging
-from os import remove
 import random
-from typing import Generic, OrderedDict, TypeVar, Type
-from copy import copy, deepcopy
-from enum import Enum
+from typing import Generic, Iterator, OrderedDict, TypeVar, Type
+from copy import copy
+
+from shared.actions import Action
 
 logger = logging.getLogger(__name__ + 'bot.vote')
 
-VoteType = TypeVar('VoteType')
+VoteType = TypeVar("VoteType", str, Action)
 
 class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
 	def __init__(self, vote: VoteType, numVotes: int):
@@ -21,7 +19,7 @@ class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
 		return self.numVotes < other.numVotes
 	
 	def __copy__(self):
-		return self.__deepcopy__()
+		return self.__deepcopy__() 
 	
 	def __deepcopy__(self):
 		return Vote(self.vote, self.numVotes)
@@ -33,7 +31,7 @@ class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
 		return str(self.vote) == str(other)
 	
 	def getVote(self) -> VoteType:
-		return self.voteType(self.vote)
+		return self.vote
 	
 	def getNumVotes(self) -> int:
 		return self.numVotes
@@ -47,9 +45,10 @@ class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
 		return self.numVotes
 
 
-class RunningVote(dict):
-	def __init__(self, votes: list[Vote] | None = None):
-		self.votes: OrderedDict[str, Vote] = OrderedDict()
+class RunningVote(Generic[VoteType]):
+	def __init__(self, votes: list[Vote[VoteType]] | None = None):
+		self.voteType: TypeVar = VoteType
+		self.votes: OrderedDict[str, Vote[VoteType]] = OrderedDict()
 		self.totalVotes = 0
 		self.sorted = True
 
@@ -65,7 +64,7 @@ class RunningVote(dict):
 		return self.__deepcopy__()
 	
 	def __deepcopy__(self):
-		copyList: list[Vote] = []
+		copyList: list[Vote[VoteType]] = list[Vote[VoteType]]()
 		vote: Vote
 		for vote in self.votes.values():
 			copyList.append(copy(vote))
@@ -101,20 +100,23 @@ class RunningVote(dict):
 					self.votes.move_to_end(voteVal)
 		self.sorted = True
 
-	def addAVote(self, vote: VoteType | Vote) -> None:
+	def addAVote(self, vote: VoteType | Vote[VoteType]) -> None:
 		self.totalVotes += 1
 		voteStr: str = str(vote)
 		if voteStr in self.votes:
 			self.votes[voteStr].addAVote()
-		else: 
+		else:
 			if type(vote) is str:
-				self.votes[voteStr] = Vote(vote, 1)
-			elif type(vote) is Vote:
+				self.votes[voteStr] = Vote[VoteType](vote, 1)
+			elif type(vote) is Vote[VoteType]:
 				vote.numVotes = 1
 				self.votes[voteStr] = vote
+			elif issubclass(type(vote), VoteType.__constraints__):
+				newVote: Vote[VoteType] = Vote[VoteType](vote, 1) # type: ignore   At this point I know it's a VoteType but python doesn't realize it, and doesn't allow me to cast to tell it it's fine
+				self.votes[voteStr] = newVote
 		self.sorted = False
 	
-	def removeAVote(self, vote: VoteType | Vote) -> None:
+	def removeAVote(self, vote: VoteType | Vote[VoteType]) -> None:
 		self.totalVotes -= 1
 		voteStr: str = str(vote)
 		if voteStr in self.votes:
@@ -125,7 +127,7 @@ class RunningVote(dict):
 		self.sorted = False
 	
 	#To be used if vote is invalid
-	def removeVote(self, vote: str | VoteType | Vote) -> None:
+	def removeVote(self, vote: str | VoteType | Vote[VoteType]) -> None:
 		voteStr: str = str(vote)
 		if voteStr in self.votes:
 			voteFound: Vote = self.votes.pop(voteStr)
@@ -143,8 +145,8 @@ class RunningVote(dict):
 	def hasVotes(self) -> bool:
 		return self.totalVotes > 0
 
-class VotingTallyEntry():
-	def __init__(self, vote: Vote, totalVotes: int):
+class VotingTallyEntry(Generic[VoteType]):
+	def __init__(self, vote: Vote[VoteType], totalVotes: int):
 		self.vote = vote
 		self.totalVotes: int = totalVotes #Used only for copy
 		self.percentageRaw: float = float(vote.getNumVotes())*100/totalVotes
@@ -164,10 +166,7 @@ class VotingTallyEntry():
 		self.percentageRaw = float(self.vote.getNumVotes())*100/self.totalVotes
 		self.percentageRound = round(self.percentageRaw)
 
-	def getVoteObj(self) -> Vote:
-		return self.vote
-	
-	def getVote(self) -> Vote:
+	def getVoteObj(self) -> Vote[VoteType]:
 		return self.vote
 
 	def getVoteStr(self) -> str:
@@ -185,12 +184,12 @@ class VotingTallyEntry():
 	def getPercentageStr(self) -> str:
 		return f"{self.percentageRound}%"
 
-class VotingTallyEntryList():
-	def __init__(self, tallyVoteCountToContain: int, tallies: list[VotingTallyEntry] | None = None):
+class VotingTallyEntryList(Generic[VoteType]):
+	def __init__(self, tallyVoteCountToContain: int, tallies: list[VotingTallyEntry[VoteType]] | None = None):
 		self.tallyVoteCountToContain = tallyVoteCountToContain
 		if tallies is None:
-			tallies = []
-		self.tallies = tallies
+			tallies = list[Vote[VoteType]]()
+		self.tallies: list[VotingTallyEntry[VoteType]] = tallies
 		self.chosenRandomly: bool = False
 		random.shuffle(self.tallies)
 		self.winnerIter = iter(self.tallies)
@@ -202,19 +201,19 @@ class VotingTallyEntryList():
 		return self.__deepcopy__()
 
 	def __deepcopy__(self):
-		copiedList: list[VotingTallyEntry] = []
+		copiedList: list[VotingTallyEntry] = list[VotingTallyEntry]()
 		entry: VotingTallyEntry
 		for entry in self.tallies:
 			copiedList.append(copy(entry))
 		return VotingTallyEntryList(self.tallyVoteCountToContain, copiedList)
 	
 	#TODO: There should probably be two kinds of EntryList. Those that can choose randomly and those that can't
-	def getWinner(self) -> VotingTallyEntry | None:
+	def getWinner(self) -> VotingTallyEntry[VoteType] | None:
 		if not self.hasSingleWinner(): #Not allowed to break ties for this method, and obviously no winner if no tallies
 			return None
 		return self.tallies[0]
 
-	def getRandomWinner(self) -> VotingTallyEntry | None:
+	def getRandomWinner(self) -> VotingTallyEntry[VoteType] | None:
 		if len(self.tallies) < 1:
 			return None
 		if len(self.tallies) > 1:
@@ -224,7 +223,7 @@ class VotingTallyEntryList():
 	def getTallyVoteCountToContain(self) -> int:
 		return self.tallyVoteCountToContain
 
-	def add(self, tallyEntry: VotingTallyEntry) -> bool:
+	def add(self, tallyEntry: VotingTallyEntry[VoteType]) -> bool:
 		if tallyEntry.getNumVotes() != self.tallyVoteCountToContain:
 			return False
 		self.tallies.append(tallyEntry)
@@ -239,12 +238,17 @@ class VotingTallyEntryList():
 	def tie(self) -> bool:
 		return len(self.tallies) > 1
 	
-	def removeVote(self, voteToRemove: str) -> int:
+	def removeVote(self, voteToRemove: str | VoteType) -> int:
+		voteToRemoveStr: str = ""
+		if type(voteToRemove) is str:
+			voteToRemoveStr = voteToRemove
+		else:
+			voteToRemoveStr = str(voteToRemove)
 		i: int = 0
 		tallyEntry: VotingTallyEntry
 		found: bool = False
 		for i, tallyEntry in enumerate(self.tallies):
-			if tallyEntry.getVoteStr == voteToRemove:
+			if tallyEntry.getVoteStr == voteToRemoveStr:
 				found = True
 				break
 		if found:
@@ -258,26 +262,31 @@ class VotingTallyEntryList():
 	def chosenRanomly(self) -> bool:
 		return self.chosenRandomly
 
-class VotingTally():
-	def __init__(self, runningVote: RunningVote):
+class VotingTally(Generic[VoteType]):
+	def __init__(self, runningVote: RunningVote[VoteType]):
 		runningVote.sort()
 		self.totalVotes = runningVote.getTotalVotes()
-		self.tallies: list[VotingTallyEntryList] = []
+		logger.debug(f"VotingTally.__init__, provided runningVote had {self.totalVotes} total votes")
+		self.tallies: list[VotingTallyEntryList] = list[VotingTallyEntryList]()
 		voteVal: str
 		voteObj: Vote
 		for voteVal, voteObj in runningVote.items():
-			tallyEntry: VotingTallyEntry = VotingTallyEntry(voteObj, self.totalVotes)
-			entryList: VotingTallyEntryList = self.getTalleyListForVoteCount(voteObj.getNumVotes())
+			tallyEntry: VotingTallyEntry[VoteType] = VotingTallyEntry[VoteType](voteObj, self.totalVotes)
+			entryList: VotingTallyEntryList[VoteType] = self.getTalleyListForVoteCount(voteObj.getNumVotes())
 			entryList.add(tallyEntry)
+			logger.debug(f"Created vote talley entry: {tallyEntry}")
 		self.tallies.sort(reverse = True)
 		
-		self.talliesIter = None
-		self.currentTallyList: VotingTallyEntryList
+		self.talliesIter : Iterator[VotingTallyEntryList[VoteType]] | None = None
+		self.currentTallyList: VotingTallyEntryList[VoteType] | None
 		if len(self.tallies) > 0:
+			logger.debug("Found tallies in VotingTally, creating iterators")
 			self.talliesIter = iter(self.tallies)
-			self.currentTallyList = next(self.talliesIter)
+			self.currentTallyList = next(self.talliesIter, None)
+		else: 
+			logger.debug("No tallies in VotingTally, so no iterators")
 	
-	def getWinner(self) -> VotingTallyEntry | None:
+	def getWinner(self) -> VotingTallyEntry[VoteType] | None:
 		if not self.hasTallies():
 			return None
 		first: VotingTallyEntryList = self.tallies[0]
@@ -285,7 +294,7 @@ class VotingTally():
 			return first.getWinner()
 		return None
 		
-	def getNextWinner(self) -> VotingTallyEntry | None:
+	def getNextWinner(self) -> VotingTallyEntry[VoteType] | None:
 		if not self.hasTallies():
 			return None
 		return self.iterateWinner()
@@ -293,9 +302,9 @@ class VotingTally():
 	def hasTallies(self) -> bool:
 		return len(self.tallies) > 0
 
-	def allVotes(self) -> list[VotingTallyEntry]:
+	def allVotes(self) -> list[VotingTallyEntry[VoteType]]:
 		logger.info(f"allVotes start")
-		allVotes: list[VotingTallyEntry] = []
+		allVotes: list[VotingTallyEntry] = list[VotingTallyEntry]()
 		nextVote: VotingTallyEntry | None = self.iterateWinner()
 		while nextVote is not None:
 			logger.info(f"allVotes Added vote")
@@ -303,9 +312,9 @@ class VotingTally():
 			nextVote = self.iterateWinner()
 		return allVotes
 
-	def topNVotes(self, n: int) -> list[VotingTallyEntry]:
+	def topNVotes(self, n: int) -> list[VotingTallyEntry[VoteType]]:
 		logger.info("Getting top votes")
-		vals: list[VotingTallyEntry] = []
+		vals: list[VotingTallyEntry] = list[VotingTallyEntry]()
 		for i in range(n):
 			nextWinner: VotingTallyEntry | None = self.iterateWinner()
 			if nextWinner is None:
@@ -313,24 +322,30 @@ class VotingTally():
 			vals.append(nextWinner)
 		return vals
 
-	def iterateWinner(self) -> VotingTallyEntry | None:
+	def iterateWinner(self) -> VotingTallyEntry[VoteType] | None:
 		#Check if anything to iterate through
 		if self.talliesIter is None:
+			logger.info("Cannot iterate winner. talliesIter is None")
 			return None
+		nextWinner: VotingTallyEntry[VoteType] | None = None 
 		#Check if current entryList empty
-		nextWinner: VotingTallyEntry | None = self.currentTallyList.getRandomWinner()
+		if self.currentTallyList is not None:
+			nextWinner = self.currentTallyList.getRandomWinner()
+		logger.debug(f"iterateWinner nextWinner at first check is {nextWinner}")
 		if nextWinner is None:
 			#If it returned None then it's empty, move to the next entry list
-			nextTallyList: VotingTallyEntryList | None = next(self.talliesIter, None)
-			if nextTallyList is None:
+			self.currentTallyList = next(self.talliesIter, None)
+			logger.debug(f"iterateWinner because nextWinner was None at first check, go to next tally entry list, which was {self.currentTallyList}")
+			if self.currentTallyList is None:
 				#Out of winners, set iter to None as an easy marker for next time
 				self.talliesIter = None
+				logger.debug("No next tally list, thus no more winners. Returning None.")
 				return None
-			#Otherwise, if it found a new list, use that for the next attempt
-			self.currentTallyList = nextTallyList
 			#Call recursively to check for a winner in this list
+			logger.debug("Found new tally entry list. Recursing to iterateWinner.")
 			return self.iterateWinner()
 		#If it did find a winner in this list, return them
+		logger.debug(f"Found a winner. nextWinner: {nextWinner}")
 		return nextWinner
 
 	def getTalleyListForVoteCount(self, voteCount: int) -> VotingTallyEntryList:
@@ -338,12 +353,12 @@ class VotingTally():
 		for entryList in self.tallies:
 			if entryList.getTallyVoteCountToContain() == voteCount:
 				return entryList
-		entryList = VotingTallyEntryList(voteCount, [])
+		entryList = VotingTallyEntryList(voteCount, list[VotingTallyEntry]())
 		self.tallies.append(entryList)
 		return entryList
 	
-	def removeVote(self, voteToRemove: str) -> None:
-		entryList: VotingTallyEntryList
+	def removeVote(self, voteToRemove: str | VoteType) -> None:
+		entryList: VotingTallyEntryList[VoteType]
 		removedCount: int = 0
 		for entryList in self.tallies:
 			removedCount = entryList.removeVote(voteToRemove)

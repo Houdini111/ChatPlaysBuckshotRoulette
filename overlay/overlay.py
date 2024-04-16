@@ -1,6 +1,6 @@
 import json
 import tkinter as tk
-from typing import Callable
+from typing import Callable, Literal
 from PIL import ImageTk, Image
 import pyautogui	
 from time import sleep
@@ -11,8 +11,8 @@ import logging
 
 from shared.util import resizePointFrom1440p
 from shared.log import log
-from bot.vote import Vote, VotingTally, VotingTallyEntry
 from shared.actions import Action, ShootAction, UseItemAction
+from bot.vote import Vote, VotingTally, VotingTallyEntry
 
 #TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?, countdown (including clock?) for voting time
 
@@ -25,15 +25,15 @@ class ActionVoteDisplay():
 		self.y1440: int = y1440
 		self.fontSize: int = fontSize
 		self.canvas: tk.Canvas = canvas
-		self.mainTextId: int = draw_text_1440(str(number), x1440, y1440, self.fontSize, textTags = ["actionOverlay"])
-		self.statsTextId: int = draw_text_1440("", x1440, y1440 - int(fontSize * 1.5), int(self.fontSize * 0.5), textTags = ["actionOverlay", "voteStats"])
+		self.mainTextId: int = draw_text_1440(str(number), x1440, y1440, self.fontSize, textTags = ["actionOverlay"], anchor = "center")
+		self.statsTextId: int = draw_text_1440("", x1440, y1440 - int(fontSize * 1.5), int(self.fontSize * 0.5), textTags = ["actionOverlay", "voteStats"], anchor = "center")
 	
 	def displayNumber(self) -> None:
 		self.canvas.itemconfig(self.mainTextId, state="normal")
 
 	def displayVote(self, voteEntry: VotingTallyEntry | None) -> None:
 		numVotesStr: str = "0"
-		percentStr: str = "  0%"
+		percentStr: str = "0%"
 		if voteEntry is not None:
 			numVotesStr = str(voteEntry.getNumVotes())
 			percentStr = voteEntry.getPercentageStr()
@@ -57,21 +57,22 @@ class Overlay():
 		self.optionsFontSize = math.ceil(80 * (float(self.displayH) / 1440)) #80 is the size I want at 1440p
 		
 		self.playerNumGridPositions = {
-			1: [650, 500],	
-			2: [875, 500],
-			3: [1600, 500],
-			4: [1825, 500],
-			5: [525, 750],
-			6: [825, 750],
-			7: [1675, 750],
-			8: [1950, 750]
+			1: [725, 550],	
+			2: [925, 550],
+			3: [1625, 550],
+			4: [1850, 550],
+			5: [550, 900],
+			6: [850, 900],
+			7: [1700, 900],
+			8: [1975, 900]
 		}
 		
 		self.voteList: list[int] = []
 		
-		self.voteLeaderboardY = 500
-		self.draw_text_1440("Chat Overlay Active", 12, 10, 50)
-		self.statusText = self.draw_text_1440("", 12, 10 + int(1.25 * self.optionsFontSize), 40)
+		self.voteLeaderboardY = 1000
+		#self.draw_text_1440("Chat Overlay Active", 12, 10, 50)
+		#self.statusText = self.draw_text_1440("", 12, 10 + int(1.25 * self.optionsFontSize), 40)
+		self.statusText = self.draw_text_1440("", 20, 20, 50)
 		self.initNameLeaderboard()
 		self.initActionVotesDisplay()
 	
@@ -81,12 +82,12 @@ class Overlay():
 	def stop(self) -> None:
 		self.root.destroy()
 
-	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, bold: bool = True, textTags: list[str] = []) -> int:
+	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, bold: bool = True, textTags: list[str] = [], anchor: str = "nw") -> int:
 		realX, realY = resizePointFrom1440p(x1440, y1440)
 		font = ("Arial", fontSize)
 		if bold:
 			font += ("bold", )
-		return self.canvas.create_text(realX, realY, text = text, fill = "white", font = font, anchor = "nw", tags = textTags)
+		return self.canvas.create_text(realX, realY, text = text, fill = "white", font = font, anchor = anchor, tags = textTags) # type: ignore (doesn't like the anchor parameter)
 
 	def updateStatusText(self, text: str) -> None:
 		self.canvas.itemconfigure(self.statusText, text=text)
@@ -102,24 +103,22 @@ class Overlay():
 			self.canvas.itemconfig(textId, text = voteStr)
 			
 	def initNameLeaderboard(self) -> None:
-		self.nameHeader = self.draw_text_1440("Next Name Ranking", 12, self.voteLeaderboardY, 60)
+		self.nameHeader = self.draw_text_1440("Next Name Ranking", 20, self.voteLeaderboardY, 60)
 		#TODO: Scale positions
-		y = self.voteLeaderboardY + int(60 * 2.5) #Offset + fontsize
+		y = self.voteLeaderboardY + int(60 * 1.75) #Offset + fontsize
 		for i in range(5):
-			voteId: int = self.draw_text_1440("", 12, y, 30)
+			voteId: int = self.draw_text_1440("", 20, y, 35, textTags = ["nameLeaderboard"])
 			self.voteList.append(voteId)
-			y += 60
+			y += 65
 	
 	def initActionVotesDisplay(self) -> None:
-		self.actionVotesDisplays: dict[int, ActionVoteDisplay] = {}
-		self.lastDrawnActionNumbers: list[int] = []
+		self.actionVotesDisplays: dict[int, ActionVoteDisplay] = dict[int, ActionVoteDisplay]()
+		self.lastDrawnActionNumbers: list[int] = list[int]()
 		for i in range(1, 9): #[1, 9)
 			if i < 1 or i > 8:
 				continue
 			pos = self.playerNumGridPositions[i]
-			#textId: int = self.draw_text_1440(str(i), pos[0], pos[1], self.optionsFontSize, textTags = ["actionOverlay"])
-			#self.numberGridTextIds.append(textId)
-			voteDisplay: ActionVoteDisplay = ActionVoteDisplay(i, pos[0], pos[1], self.optionsFontSize, self.draw_text_1440, self.canvas)
+			voteDisplay: ActionVoteDisplay = ActionVoteDisplay(i, pos[0], pos[1], int(self.optionsFontSize*1.2), self.draw_text_1440, self.canvas)
 			self.actionVotesDisplays[i] = voteDisplay
 		self.clearActionOverlay()
 		
@@ -134,7 +133,7 @@ class Overlay():
 			voteDisplay.displayNumber()
 			
 	def drawActionVotes(self, actionVotes: list[VotingTallyEntry]) -> None:
-		log(f"drawActionVotes. lastDrawnActionNumbers -> {self.lastDrawnActionNumbers}")
+		log(f"drawActionVotes. lastDrawnActionNumbers -> {self.lastDrawnActionNumbers}, len actionVotes: {len(actionVotes)}", logLevel= logging.DEBUG)
 		unvotedActions: list[int] = list(range(1, 9)) #[1, 9)
 		tallyEntry: VotingTallyEntry
 		for tallyEntry in actionVotes:
@@ -151,14 +150,16 @@ class Overlay():
 		log(f"Unvoted for: {unvotedActions}")
 		for unvotedAction in unvotedActions:
 			if unvotedAction not in self.lastDrawnActionNumbers:
-				log(f"Skipping unvoted action {unvotedAction} because it was not drawn previously")
+				log(f"Skipping unvoted action {unvotedAction} because it was not drawn previously", logLevel= logging.DEBUG)
 				continue
 			voteDisplay: ActionVoteDisplay = self.actionVotesDisplays[unvotedAction]
 			voteDisplay.displayVote(None)
 			
 	def clearActionOverlay(self) -> None:
 		self.canvas.itemconfigure("actionOverlay", state="hidden")
-		self.lastDrawnActionNumbers.clear()
+		self.lastDrawnActionNumbers = list[int]()
+		#self.lastDrawnActionNumbers.clear()
+		pass
 		
 	def clearActionVotes(self) -> None:
 		self.canvas.itemconfigure("voteStats", text="")

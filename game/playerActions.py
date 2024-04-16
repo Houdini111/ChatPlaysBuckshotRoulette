@@ -2,7 +2,7 @@ from time import sleep
 
 from shared.actions import Action, ShootAction, UseItemAction
 
-from .items import itemAtPosition, getPlayerItemDirections, getDealerItemDirections, removeItem
+from .items import getItemManager, getPlayerItemDirections, getDealerItemDirections
 from .basicActions import up, down, confirm, enterDirections
 from shared.log import log
 from shared.consts import Target, getDealerNames, getPlayerNames, getShootNames, getUseNames
@@ -25,7 +25,7 @@ def usePersonalItem(num):
 	global currentItemPositions
 	cursorItem(num)
 	confirm()
-	removeItem(num)
+	getItemManager().removeItem(num)
 	status("Waiting for item use animation")
 	#Is there a good way to check for which item it is to only wait as long as needed? 
 	#This long of a wait might conflict with adrenaline
