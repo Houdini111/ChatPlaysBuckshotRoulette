@@ -7,8 +7,14 @@ logger = logging.getLogger(__name__ + '.bot.auth')
 
 async def make_refresh_call(refresh_token: str, client_id: str, client_secret: str) -> dict[str, Any] | None:
 	logger.debug("make_refresh_call called")
+	encodedRefreshToken: str = urllib.parse.quote_plus(refresh_token)
 	url = "https://id.twitch.tv/oauth2/token"
-	form_data = f"grant_type=refresh_token&refresh_token={urllib.parse.quote_plus(refresh_token)}&client_id={client_id}&client_secret={client_secret}"
+	form_data: aiohttp.FormData = aiohttp.FormData(quote_fields= True, fields = {
+			"client_id": client_id, 
+			"client_secret": client_secret,
+			"grant_type": "refresh_token", 
+			"refresh_token": encodedRefreshToken
+	})
 	headers = {"content-type":"application/x-www-form-urlencoded"}
 	logger.debug("Data prepared for refresh call, starting http session")
 	async with aiohttp.ClientSession() as session:
@@ -25,5 +31,5 @@ async def make_refresh_call(refresh_token: str, client_id: str, client_secret: s
 			if response.status == 200:
 				return body
 			else:
-				logger.error(f"Bad response. RESEPONSE: [[{response}]] BODY: [[{body}]]")
+				logger.error(f"Bad response. Response CODE: {response.status} RESEPONSE: [[{response}]] BODY: [[{body}]]")
 				return None
