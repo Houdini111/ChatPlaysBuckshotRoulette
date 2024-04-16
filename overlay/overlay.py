@@ -26,7 +26,15 @@ class ActionVoteDisplay():
 		self.fontSize: int = fontSize
 		self.canvas: tk.Canvas = canvas
 		self.mainTextId: int = draw_text_1440(str(number), x1440, y1440, self.fontSize, textTags = ["actionOverlay"], anchor = "center")
-		self.statsTextId: int = draw_text_1440("", x1440, y1440 - int(fontSize * 1.5), int(self.fontSize * 0.5), textTags = ["actionOverlay", "voteStats"], anchor = "center")
+		horizontalOffset: int 
+		anchor: str 
+		if number % 2 == 0: #Even goes right, so anchor left
+			anchor = "w"
+			horizontalOffset = -60 #Also move the top numbers closer, so they're not quite so far off their root number
+		else: #Odd goes left, so anchor right
+			anchor = "e"
+			horizontalOffset = 60 
+		self.statsTextId: int = draw_text_1440("", x1440 + horizontalOffset, y1440 - int(fontSize * 1.5), int(self.fontSize * 0.5), textTags = ["actionOverlay", "voteStats"], anchor = anchor)
 	
 	def displayNumber(self) -> None:
 		self.canvas.itemconfig(self.mainTextId, state="normal")
