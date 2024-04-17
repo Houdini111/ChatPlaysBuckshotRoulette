@@ -1,6 +1,7 @@
+from abc import abstractmethod
 import json
 import tkinter as tk
-from typing import Callable, Literal
+from typing import Callable, Generic, Literal, TypeVar
 from PIL import ImageTk, Image
 import pyautogui	
 from time import sleep
@@ -8,6 +9,7 @@ from threading import Thread
 import math
 from operator import itemgetter
 import logging
+from shared.consts import Target
 
 from shared.util import resizePointFrom1440p
 from shared.log import log
@@ -18,28 +20,43 @@ from bot.vote import Vote, VotingTally, VotingTallyEntry
 
 logger = logging.getLogger(__name__ + 'overlay.overlay')
 
-class ActionVoteDisplay():
-	def __init__(self, number: int, x1440: int, y1440: int, fontSize: int, draw_text_1440: Callable, canvas: tk.Canvas):
-		self.number: int = number
+ActionVoteType = TypeVar("ActionVoteType", int, Target)
+
+class ActionVoteDisplay(Generic[ActionVoteType]):
+	def __init__(self, actionGuide: ActionVoteType, x1440: int, y1440: int, fontSize: int, draw_text_1440: Callable, canvas: tk.Canvas):
+		self.actionGuide: ActionVoteType = actionGuide
 		self.x1440: int = x1440
 		self.y1440: int = y1440
 		self.fontSize: int = fontSize
 		self.canvas: tk.Canvas = canvas
-		self.mainTextId: int = draw_text_1440(str(number), x1440, y1440, self.fontSize, textTags = ["actionOverlay"], anchor = "center")
-		horizontalOffset: int 
-		anchor: str 
-		if number % 2 == 0: #Even goes right, so anchor left
-			anchor = "w"
-			horizontalOffset = -60 #Also move the top numbers closer, so they're not quite so far off their root number
-		else: #Odd goes left, so anchor right
-			anchor = "e"
-			horizontalOffset = 60 
-		self.statsTextId: int = draw_text_1440("", x1440 + horizontalOffset, y1440 - int(fontSize * 1.5), int(self.fontSize * 0.5), textTags = ["actionOverlay", "voteStats"], anchor = anchor)
+		self.mainTextId: int = draw_text_1440(str(actionGuide), x1440, y1440, self.fontSize, textTags = ["actionOverlay"], anchor = "center")
+		verticalOffset: int = int(fontSize * 1.1)
+		horizontalOffset: int = 0 #These default values are for str actionGuides (shoot type)
+		anchor: str = "center"
+		if type(actionGuide) is int:
+			if actionGuide % 2 == 0: #Even goes right, so anchor left
+				anchor = "w"
+				horizontalOffset = -60 #Also move the top numbers closer, so they're not quite so far off their root number
+			else: #Odd goes left, so anchor right
+				anchor = "e"
+				horizontalOffset = 60 
+		if type(actionGuide) is Target:
+			logger.debug("Action guide is for Targets")
+			if actionGuide == Target.DEALER:
+				logger.debug("Action guide is for Target DEALER")
+				verticalOffset = verticalOffset * -1
+		logger.debug(f"Vertical offset for actionGuide: {actionGuide} is {verticalOffset}")
+		self.statsTextId: int = draw_text_1440("", x1440 + horizontalOffset, y1440 - verticalOffset, int(self.fontSize * 0.5), textTags = ["actionOverlay", "voteStats"], anchor = anchor)
 	
-	def displayNumber(self) -> None:
+	def getActionGuide(self) -> ActionVoteType:
+		return self.actionGuide
+
+	def displayVoteGuide(self) -> None:
+		logger.debug(f"Displaying vote guide for {self.actionGuide}")
 		self.canvas.itemconfig(self.mainTextId, state="normal")
 
 	def displayVote(self, voteEntry: VotingTallyEntry | None) -> None:
+		logger.debug(f"Displaying vote for vote guide {self.actionGuide}. Vote: {voteEntry}")
 		numVotesStr: str = "0"
 		percentStr: str = "0%"
 		if voteEntry is not None:
@@ -48,6 +65,12 @@ class ActionVoteDisplay():
 		statsText = f"{numVotesStr} ({percentStr})"
 		self.canvas.itemconfig(self.statsTextId, text=statsText)
 		self.canvas.itemconfig(self.statsTextId, state="normal")
+		
+class ItemActionVoteDisplay(ActionVoteDisplay):
+	pass
+
+class ShootActionVoteDisplay(ActionVoteDisplay):
+	pass
 
 class Overlay():
 	def __init__(self):
@@ -62,18 +85,7 @@ class Overlay():
 		self.canvas = tk.Canvas(width = self.displayW, height = self.displayH, bg="green")
 		self.canvas.pack(expand=tk.YES, fill=tk.BOTH)
 		
-		self.optionsFontSize = math.ceil(80 * (float(self.displayH) / 1440)) #80 is the size I want at 1440p
-		
-		self.playerNumGridPositions = {
-			1: [725, 550],	
-			2: [925, 550],
-			3: [1625, 550],
-			4: [1850, 550],
-			5: [550, 900],
-			6: [850, 900],
-			7: [1700, 900],
-			8: [1975, 900]
-		}
+		self.baseFontSize = math.ceil(80 * (float(self.displayH) / 1440)) #80 is the size I want at 1440p
 		
 		self.voteList: list[int] = []
 		
@@ -83,6 +95,7 @@ class Overlay():
 		self.statusText = self.draw_text_1440("", 20, 20, 50)
 		self.initNameLeaderboard()
 		self.initActionVotesDisplay()
+		self.canvas.itemconfigure("nameLeaderboard", state="hidden")
 	
 	def run(self) -> None:
 		tk.mainloop()
@@ -120,29 +133,60 @@ class Overlay():
 			y += 65
 	
 	def initActionVotesDisplay(self) -> None:
-		self.actionVotesDisplays: dict[int, ActionVoteDisplay] = dict[int, ActionVoteDisplay]()
+		self.itemActionVoteDisplays: dict[int, ItemActionVoteDisplay] = dict[int, ItemActionVoteDisplay]()
 		self.lastDrawnActionNumbers: list[int] = list[int]()
+		numberFontSize: int =  int(self.baseFontSize*1.2)
+		voteDisplay: ActionVoteDisplay
+		playerNumGridPositions = {
+			1: [725, 550],	
+			2: [925, 550],
+			3: [1625, 550],
+			4: [1850, 550],
+			5: [550, 900],
+			6: [850, 900],
+			7: [1700, 900],
+			8: [1975, 900]
+		}
 		for i in range(1, 9): #[1, 9)
 			if i < 1 or i > 8:
 				continue
-			pos = self.playerNumGridPositions[i]
-			voteDisplay: ActionVoteDisplay = ActionVoteDisplay(i, pos[0], pos[1], int(self.optionsFontSize*1.2), self.draw_text_1440, self.canvas)
-			self.actionVotesDisplays[i] = voteDisplay
+			pos = playerNumGridPositions[i]
+			voteDisplay = ItemActionVoteDisplay(i, pos[0], pos[1], numberFontSize, self.draw_text_1440, self.canvas)
+			self.itemActionVoteDisplays[i] = voteDisplay
+		self.shootActionVoteDisplays: dict[Target, ShootActionVoteDisplay] =  dict[Target, ShootActionVoteDisplay]()
+		voteDisplay = ShootActionVoteDisplay(Target.DEALER, int(2560/2), self.baseFontSize, self.baseFontSize, self.draw_text_1440, self.canvas)
+		self.shootActionVoteDisplays[Target.DEALER] = voteDisplay
+		voteDisplay = ShootActionVoteDisplay(Target.SELF, int(2560/2), 1440 - self.baseFontSize, self.baseFontSize, self.draw_text_1440, self.canvas)
+		self.shootActionVoteDisplays[Target.SELF] = voteDisplay
 		self.clearActionOverlay()
 		
-	def drawNumberGrid(self, numbersToDraw: list[int]) -> None:
-		log("drawNumberGrid")
+	def showActionVotes(self, numbersToDraw: list[int]) -> None:
+		log(f"showActionVotes numbersToDraw: {numbersToDraw}")
 		self.clearActionOverlay()
+		self.displayItemActionGuides(numbersToDraw)
+			
+	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
+		log(f"displayItemActionGuides numbersToDraw: {numbersToDraw}")
 		self.lastDrawnActionNumbers = numbersToDraw
+		voteDisplay: ActionVoteDisplay
 		for i in numbersToDraw:
 			if i < 1 or i > 8:	
 				continue
-			voteDisplay: ActionVoteDisplay = self.actionVotesDisplays[i]
-			voteDisplay.displayNumber()
-			
+			voteDisplay = self.itemActionVoteDisplays[i]
+			voteDisplay.displayVoteGuide()
+	
+	def displayShootActionGuides(self) -> None:
+		log("displayShootActionGuides")
+		voteDisplay: ActionVoteDisplay
+		for voteDisplay in self.shootActionVoteDisplays.values():
+			voteDisplay.displayVoteGuide()
+
 	def drawActionVotes(self, actionVotes: list[VotingTallyEntry]) -> None:
 		log(f"drawActionVotes. lastDrawnActionNumbers -> {self.lastDrawnActionNumbers}, len actionVotes: {len(actionVotes)}", logLevel= logging.DEBUG)
-		unvotedActions: list[int] = list(range(1, 9)) #[1, 9)
+		noVoteDisplays: list[ActionVoteDisplay] = list[ActionVoteDisplay]()
+		noVoteDisplays.extend(list(self.itemActionVoteDisplays.values()))
+		noVoteDisplays.extend(list(self.shootActionVoteDisplays.values()))
+		
 		tallyEntry: VotingTallyEntry
 		for tallyEntry in actionVotes:
 			voteObj: Vote = tallyEntry.getVoteObj()
@@ -150,18 +194,21 @@ class Overlay():
 			if type(vote) is UseItemAction:
 				if vote.getItemNum() not in self.lastDrawnActionNumbers:
 					continue
-				voteDisplay: ActionVoteDisplay = self.actionVotesDisplays[vote.getItemNum()]
+				voteDisplay: ActionVoteDisplay = self.itemActionVoteDisplays[vote.getItemNum()]
 				voteDisplay.displayVote(tallyEntry)
-				unvotedActions.remove(vote.getItemNum())
+				noVoteDisplays.remove(voteDisplay)
 			elif type(vote) is ShootAction:
-				pass #TODO: 
-		log(f"Unvoted for: {unvotedActions}")
-		for unvotedAction in unvotedActions:
-			if unvotedAction not in self.lastDrawnActionNumbers:
-				log(f"Skipping unvoted action {unvotedAction} because it was not drawn previously", logLevel= logging.DEBUG)
-				continue
-			voteDisplay: ActionVoteDisplay = self.actionVotesDisplays[unvotedAction]
-			voteDisplay.displayVote(None)
+				voteDisplay: ActionVoteDisplay = self.shootActionVoteDisplays[vote.getTarget()]
+				voteDisplay.displayVote(tallyEntry)
+				noVoteDisplays.remove(voteDisplay)
+		log(f"Unvoted for: {noVoteDisplays}")
+		noVoteDisplay: ActionVoteDisplay
+		for noVoteDisplay in noVoteDisplays:
+			if type(noVoteDisplay) is ItemActionVoteDisplay:
+				if noVoteDisplay.getActionGuide() not in self.lastDrawnActionNumbers:
+					log(f"Skipping unvoted action {noVoteDisplay.getActionGuide()} because it was not drawn previously", logLevel= logging.DEBUG)
+					continue
+			noVoteDisplay.displayVote(None)
 			
 	def clearActionOverlay(self) -> None:
 		self.canvas.itemconfigure("actionOverlay", state="hidden")

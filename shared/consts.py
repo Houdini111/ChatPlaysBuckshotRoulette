@@ -5,15 +5,19 @@ shootNames = ["shoot", "shot", "attack", "hit", "target"]
 dealerNames = ["dealer", "them", "guy", "other"]
 playerNames = ["self", "me", "player", "i", "myself"]
 
-class ActionEnum(Enum):
-	INVALID = -1
-	SHOOT = 1
-	USE = 2
+class StrEnum(Enum):
+	def __str__(self):
+		return self.value
 
-class Target(Enum):
-	INVALID = -1
-	SELF = 1
-	DEALER = 2
+class ActionEnum(StrEnum):
+	INVALID = "INVALID"
+	SHOOT = "Shoot"
+	USE = "Use"
+
+class Target(StrEnum):
+	INVALID = "INVALID"
+	SELF = "Player"
+	DEALER = "Dealer"
 	
 def getShootNames():
 	return shootNames

@@ -188,7 +188,7 @@ class VotingTallyEntryList(Generic[VoteType]):
 	def __init__(self, tallyVoteCountToContain: int, tallies: list[VotingTallyEntry[VoteType]] | None = None):
 		self.tallyVoteCountToContain = tallyVoteCountToContain
 		if tallies is None:
-			tallies = list[Vote[VoteType]]()
+			tallies = list[VotingTallyEntry[VoteType]]()
 		self.tallies: list[VotingTallyEntry[VoteType]] = tallies
 		self.chosenRandomly: bool = False
 		random.shuffle(self.tallies)

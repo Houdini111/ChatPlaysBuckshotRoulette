@@ -128,7 +128,7 @@ class GameRunner():
 				sleep(0.5)
 			log("Should be player turn now.")
 			status("Awaiting player input")
-			getOverlay().drawNumberGrid(getItemManager().getAllCurrentItemPositions())
+			getOverlay().showActionVotes(getItemManager().getAllCurrentItemPositions())
 			actionSuccess: bool = False
 			retry: bool = False
 			invalid: bool = False
