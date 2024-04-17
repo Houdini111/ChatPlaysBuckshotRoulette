@@ -36,9 +36,9 @@ class Secrets():
 		if response is None:
 			logger.warn("Refresh call returned None")
 			return
-		logger.debug(F"Refresh call response: {json.dumps(response)}")
-		new_access_token = response["access_token"]
-		new_refresh_token = response["refresh_token"]
+		#logger.debug(F"Refresh call response: {json.dumps(response)}")
+		self.secrets["accessToken"] = response["access_token"]
+		self.secrets["refreshToken"] = response["refresh_token"]
 		self.save_secrets()
 		
 secrets: Secrets | None = None

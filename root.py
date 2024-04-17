@@ -22,6 +22,12 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__ + 'root')
 
+#TODO: 
+#  Handle adrenaline (display don't show numbers for close but show them far?)
+#  Handle shoot votes
+#  End of round 
+#  Fix not all messages sending (action ones)
+
 def startGame() -> None:
 	logger.info("Booting bot")
 	chatOverlay: Overlay = Overlay()

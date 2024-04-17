@@ -39,7 +39,7 @@ class Chatbot(commands.Bot):
 		self.updateLeaderboardsThread = Thread(target = self.updateVoteCounts)
 		self.updateLeaderboardsThread.start()
 		
-		await getSecrets().refresh_tokens_and_save() #Don't bother until twitch stops giving me 400s
+		await getSecrets().refresh_tokens_and_save() 
 		self.channels: dict[str, Channel] = dict[str, Channel]()
 		super().__init__(
 			token = getSecrets().getAccessToken(), 
