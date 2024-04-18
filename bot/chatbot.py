@@ -10,7 +10,7 @@ import asyncio
 
 from .secrets import getSecrets
 from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
-from shared.util import get_event_loop, run_task
+from shared.util import run_task
 from shared.actions import Action, ShootAction, UseItemAction
 from shared.consts import getShootNames, getUseNames
 from overlay.overlay import getOverlay
