@@ -26,9 +26,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 #TODO: 
-#  Handle adrenaline (display don't show numbers for close but show them far?)
-#  End of round 
-#  Fix not all messages sending (action ones)
+#  Handle adrenaline
+#      - Combine votes for adrenaline items (by checking if they have multiple parameters)
+#      - Display votes for dealer items? Or just say which one won afterwards?
+#  End of double or nothing set
 
 def initAsyncio():
 	if platform.system() == "Windows":

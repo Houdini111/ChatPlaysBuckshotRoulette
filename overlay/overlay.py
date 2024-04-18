@@ -129,7 +129,6 @@ class Overlay():
 	def initNameLeaderboard(self) -> None:
 		headerFontSize = int(self.baseFontSize/4)
 		self.nameHeader = self.draw_text_1440("Next Name Ranking", 10, self.voteLeaderboardY, 60, anchor = "sw")
-		#TODO: Scale positions
 		nameLeaderboardItemFontSize = int(self.baseFontSize*45/80)
 		y = self.voteLeaderboardY + int(headerFontSize * .1)
 		yInc = int(nameLeaderboardItemFontSize * 1.75)
