@@ -11,6 +11,7 @@ $defaultConfig = [PSCustomObject]@{
   channels=@('')
   defaultName='CHAT'
   actionVotePeriod=15
+  outputOcrImages=$false
 } 
 $config = $defaultConfig.PsObject.Copy()
 

@@ -31,6 +31,7 @@ class Config():
 			return val
 		return expectedType(val)
 
+
 config: Config = Config()
 
 def getTesseractPath() -> str:
@@ -44,3 +45,6 @@ def getDefaultName() -> str:
 
 def getActionVotePeriod() -> int:
 	return config.getKeyOrDefault("actionVotePeriod", int, 15)
+
+def getOutputOcrImages() -> int:
+	return config.getKeyOrDefault("outputOcrImages", bool, False)
