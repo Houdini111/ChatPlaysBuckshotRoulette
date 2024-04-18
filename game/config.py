@@ -16,8 +16,8 @@ class Config():
 		with open("config.json", "r", encoding="utf-16") as file:
 			self.innerDict = json.load(file)
 	
-	def getKeyOrDefault(self, key: str, defaultValue: T) -> T:
-		val = self.getKey(key, T)
+	def getKeyOrDefault(self, key: str, expectedType: type, defaultValue: T) -> T:
+		val = self.getKey(key, expectedType)
 		if val is None:
 			return defaultValue
 		else:
@@ -34,13 +34,13 @@ class Config():
 config: Config = Config()
 
 def getTesseractPath() -> str:
-	return config.getKeyOrDefault("tesseractPath", r"C:\Program Files\Tesseract-OCR\tesseract")
+	return config.getKeyOrDefault("tesseractPath", str, r"C:\Program Files\Tesseract-OCR\tesseract")
 
 def getChannels() -> list[str]:
-	return config.getKeyOrDefault("channels", list[str]())
+	return config.getKeyOrDefault("channels", list, list[str]())
 
 def getDefaultName() -> str:
-	return config.getKeyOrDefault("defaultName", "CHAT")
+	return config.getKeyOrDefault("defaultName", str, "CHAT")
 
 def getActionVotePeriod() -> int:
-	return config.getKeyOrDefault("actionVotePeriod", 15)
+	return config.getKeyOrDefault("actionVotePeriod", int, 15)
