@@ -103,7 +103,8 @@ class Overlay():
 
 	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, bold: bool = True, textTags: list[str] = [], anchor: str = "nw") -> int:
 		realX, realY = resizePointFrom1440p(x1440, y1440)
-		font = ("Arial", fontSize)
+		#font = ("Arial", fontSize)
+		font = ("Lucida Console", fontSize) #I really want a cleaner monospace font included in windows...
 		if bold:
 			font += ("bold", )
 		logger.debug(f"Drawing text [[{text}]] at 1440 coordinates [{x1440}, {y1440}] with the font {font}, the tags {textTags} and the anchor {anchor}")
@@ -119,7 +120,9 @@ class Overlay():
 	def drawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
 		self.clearOldNameLeaderboard()
 		for textId, vote in zip(self.voteList, votes):
-			voteStr = f"{vote.getVoteStr()} [{vote.getNumVotes()}] ({vote.getPercentageStr()})"
+			namePadding = " " * (5 - len(vote.getVoteStr()))
+			numPadding = " " * (3 - len(str(vote.getNumVotes()))) #I doubt this bot is ever going to see >999. If it does then it'll screw up the spacing. Oh no. 
+			voteStr = f"{vote.getVoteStr()}{namePadding} {numPadding}[{vote.getNumVotes()}] ({vote.getPercentageStr()})"
 			logger.debug(f"Drawing leaderboard name:  {voteStr}")
 			self.canvas.itemconfig(textId, text = voteStr)
 			
