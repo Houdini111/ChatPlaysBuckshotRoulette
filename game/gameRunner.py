@@ -53,7 +53,7 @@ class GameRunner():
 			AnyWhitePeep("bulletSquareWhite", 675, 1246, 72, 72),
 			AnyWhitePeep("dealerItemSquare8White", 303, 962, 65, 65),
 			AllBlackPeep("blackAboveScoreboard", 615, 120, 31, 69),
-			OCRScoreboardPeep("OCRScoreboardPlayerWins", f"{getPlayerName()} WINS!")
+			OCRScoreboardPeep("OCRScoreboardPlayerWins", f"WINS!", exact = False)
 		)
 		
 	def noDialogueTextBoxVisible(self) -> bool:

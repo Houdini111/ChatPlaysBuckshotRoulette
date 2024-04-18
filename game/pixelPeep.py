@@ -79,14 +79,18 @@ class AllBlackPeep(RangePeep):
 
 
 class OCRScoreboardPeep(Peep):
-	def __init__(self, name: str, expectedText: str):
+	def __init__(self, name: str, expectedText: str, exact: bool = False):
 		self.name = name
 		self.expectedText = expectedText.upper().strip()
 		self.ocrTextFound = ""
+		self.exact = exact
 	
 	def passes(self) -> bool:
 		self.ocrTextFound = scoreboardText().upper().strip()
-		return self.ocrTextFound == self.expectedText
+		if self.exact:  
+			return self.ocrTextFound == self.expectedText
+		else:
+			return self.expectedText in self.ocrTextFound
 
 	def getName(self) -> str:
 		return self.name
