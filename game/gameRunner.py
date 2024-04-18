@@ -1,3 +1,4 @@
+import logging
 from time import sleep
 
 from .items import getItemManager
@@ -7,10 +8,11 @@ from .playerActions import Action, execute
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
 from shared.actions import parseAction
-from shared.log import log
 from overlay.overlay import Overlay, getOverlay
 from overlay.status import status
 from bot.chatbot import getChatbot
+
+logger = logging.getLogger(__name__)
 
 #TODO: 
 #  Item place logic sometimes skipping squares
@@ -66,22 +68,22 @@ class GameRunner():
 		return self.clearingItemsPeeper.passes()
 
 	def playerTurn(self) -> bool:
-		log("Beginning player turn check")
+		logger.info("Beginning player turn check")
 		if not self.staticBoard():
-			log("Failed player turn check on first static board check")
+			logger.debug("Failed player turn check on first static board check")
 			return False
 		up()
 		if not self.gunCursorVisible():
-			log("Failed player turn  check on first gun cursor check")
+			logger.debug("Failed player turn  check on first gun cursor check")
 			return False
 		sleep(0.1)
 		#Double check to try to avoid coincidences
 		if not self.staticBoard():
-			log("Failed player turn check on second static board check")
+			logger.debug("Failed player turn check on second static board check")
 			return False
 		up()
 		if not self.gunCursorVisible():
-			log("Failed player turn  check on second gun cursor check")
+			logger.debug("Failed player turn  check on second gun cursor check")
 			return False
 		return True
 	
@@ -93,13 +95,13 @@ class GameRunner():
 
 	def winRound(self):
 		self.roundsCleared += 1
-		log("################")
-		log(f"## Rounds cleared: {self.roundsCleared}")
-		log("################")
+		logger.info("################")
+		logger.info(f"## Rounds cleared: {self.roundsCleared}")
+		logger.info("################")
 		if self.roundsCleared == 3:
-			log("################")
-			log("## Double or Nothing set cleared!")
-			log("################")
+			logger.info("################")
+			logger.info("## Double or Nothing set cleared!")
+			logger.info("################")
 			self.roundsCleared = 0
 			#TODO: Choose to begin a new double or nothing set
 
@@ -116,32 +118,32 @@ class GameRunner():
 			status("Waiting for player turn")
 			while not self.playerTurn():
 				if getItemManager().itemBoxCursorVisible():
-					log("While waiting for the player's turn the item box was found to be open. Grabbing items.")
+					logger.info("While waiting for the player's turn the item box was found to be open. Grabbing items.")
 					getItemManager().grabItems()
 					continue
 				self.checkForClearingItems()
 				self.checkForRoundIsWon()
 				if self.hasPlayerLost():
-					log("Player found to have lost. Returning to bathroom logic.")
+					logger.info("Player found to have lost. Returning to bathroom logic.")
 					getItemManager().clearItems()
 					return
 				sleep(0.5)
-			log("Should be player turn now.")
+			logger.info("Should be player turn now.")
 			status("Awaiting player input")
 			getOverlay().showActionVotes(getItemManager().getAllCurrentItemPositions())
 			actionSuccess: bool = False
 			retry: bool = False
 			invalid: bool = False
-			log("Starting input loop")
+			logger.info("Starting input loop")
 			while not actionSuccess:
 				if not invalid:
-					log("Not invalid user input, opening chat voting")
+					logger.debug("Not invalid user input (which would be a retry), opening chat voting")
 					getChatbot().openActionInputVoting(retry)
-					log("Action voting opened. Waiting for input")
+					logger.debug("Action voting opened. Waiting for input")
 					sleep(15) #TODO: Configurable voting time. When implemented, add time to open voting message.
-					log("Waiting for input over. Closing action voting")
+					logger.debug("Waiting for input over. Closing action voting")
 					getChatbot().closeActionInputVoting(retry)
-					log("Action voting closed")
+					logger.debug("Action voting closed")
 				while (True):
 					#request = input("Next? ")
 					action: Action | None = getChatbot().getVotedAction()

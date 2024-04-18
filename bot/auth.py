@@ -3,7 +3,7 @@ import aiohttp
 import logging
 import urllib
 
-logger = logging.getLogger(__name__ + '.bot.auth')
+logger = logging.getLogger(__name__)
 
 async def make_refresh_call(refresh_token: str, client_id: str, client_secret: str) -> dict[str, Any] | None:
 	logger.debug("make_refresh_call called")

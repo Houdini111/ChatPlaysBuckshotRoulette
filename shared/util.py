@@ -1,12 +1,13 @@
 import asyncio
+import logging
 from time import sleep
 from typing import Callable
 import math
 import pyautogui
 
 from .consts import ActionEnum, Target, getDealerNames, getPlayerNames, getShootNames
-from .log import log
 
+logger = logging.getLogger(__name__)
 
 class Rectangle():
 	def __init__(self, x: int, y: int, w: int, h: int):
@@ -19,21 +20,21 @@ class Rectangle():
 		return "{" + f"x: {self.x}, y: {self.y}, w: {self.w}, y: {self.h}" + "}"
 
 def waitForFalse(checker: Callable[[], bool]) -> None:
-	log("Waiting for method to return false")
+	logger.info("Waiting for method to return false")
 	i = 0
 	while checker():
 		i += 1
-		#log(f"Waiting for method to return false. Attempts: {i}", end='\r')
-		log(f"Waiting for method to return false. Attempts: {i}")
+		logger.debug(f"Waiting for method to return false. Attempts: {i}", end='\r')
+		logger.debug(f"Waiting for method to return false. Attempts: {i}")
 		sleep(0.1)
 
 def waitForTrue(checker: Callable[[], bool]) -> None:
-	log("Waiting for method to return true")
+	logger.info("Waiting for method to return true")
 	i = 0
 	while not checker():
 		i += 1
-		#log(f"Waiting for method to return true. Attempts: {i}", end='\r')
-		log(f"Waiting for method to return true. Attempts: {i}")
+		logger.debug(f"Waiting for method to return true. Attempts: {i}", end='\r')
+		logger.debug(f"Waiting for method to return true. Attempts: {i}")
 		sleep(0.1)
 
 def resizeXFrom1440p(x1440: int) -> int:

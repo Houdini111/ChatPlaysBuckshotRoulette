@@ -5,7 +5,7 @@ from copy import copy
 
 from shared.actions import Action
 
-logger = logging.getLogger(__name__ + 'bot.vote')
+logger = logging.getLogger(__name__)
 
 VoteType = TypeVar("VoteType", str, Action)
 

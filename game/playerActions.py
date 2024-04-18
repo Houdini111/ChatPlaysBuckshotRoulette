@@ -1,13 +1,15 @@
+import logging
 from time import sleep
 
 from shared.actions import Action, ShootAction, UseItemAction
 
 from .items import getItemManager, getPlayerItemDirections, getDealerItemDirections
 from .basicActions import up, down, confirm, enterDirections
-from shared.log import log
 from shared.consts import Target, getDealerNames, getPlayerNames, getShootNames, getUseNames
 from shared.util import safeInt
 from overlay.status import status
+
+logger = logging.getLogger(__name__)
 
 def cursorGun():
 	up()
@@ -30,7 +32,7 @@ def usePersonalItem(num):
 	#Is there a good way to check for which item it is to only wait as long as needed? 
 	#This long of a wait might conflict with adrenaline
 	sleep(6) #Has to be extra long for phone. 
-	log("Item use animation should be over")
+	logger.info("Item use animation should be over")
 
 def useDealerItem(num):
 	down() #Move to ensure cursor is active
@@ -60,7 +62,7 @@ def executeItemAction(itemAction: UseItemAction) -> bool:
 	#TODO: Check if dealer has item at location (difficult because I have to do pixel peeping that can vary based on the item it is and the item possibly in front)
 	usePersonalItem(itemAction.getItemNum())
 	if itemAction.getAdrenalineItemNum() != 0:
-		log("Extra param given (presumably for adrenaline). Wait for adrenaline usage and movement.")
+		logger.debug("Extra param given (presumably for adrenaline). Wait for adrenaline usage and movement.")
 		sleep(1.5)
 		useDealerItem(itemAction.getAdrenalineItemNum())
 	return True

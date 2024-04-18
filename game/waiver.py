@@ -1,9 +1,11 @@
+import logging
 from time import sleep
 
 from .basicActions import up, down, left, right, confirm, anyUse
-from shared.log import log
 from overlay.status import status
 from bot.chatbot import getChatbot
+
+logger = logging.getLogger(__name__)
 
 playerName = ""
 def getPlayerName() -> str:
@@ -57,9 +59,9 @@ def enterName(name: str) -> None:
 		'Z': [2, 7]
 	}
 	for char in name:
-		log(f"Attempting to enter char {char}")
+		logger.info(f"Attempting to enter char {char}")
 		if char == 'A' and cursorX == 0 and cursorY == 0:
-			log("Navigating to char A (Special case)")
+			logger.debug("Navigating to char A (Special case)")
 			#Because char A is the starting, and the entering only works if there is a cursor
 			#  We need to move it off and back on to ensure it's selected
 			right()
@@ -67,15 +69,16 @@ def enterName(name: str) -> None:
 			confirm()
 		else:
 			goalX, goalY = charMap[char]
-			log(f"Navigating to char {char}")
+			logger.debug(f"Navigating to char {char}")
 			navToChar(cursorX, cursorY, goalX, goalY)
 			cursorX = goalX
 			cursorY = goalY
 			confirm()
-		log(f"Should have entered char {char}")
+		logger.debug(f"Should have entered char {char}")
 	submitName(cursorX, cursorY) 
 		
 def navToChar(startX: int, startY: int, goalX: int, goalY: int) -> None:
+	logger.info(f"Navigating to char with positions [{startX}, {startY}] -> [{goalX}, {goalY}]")
 	x = startX
 	y = startY
 	#Avoid traversing columns 3 and 4, as backspace and enter make that unreliable.
@@ -83,7 +86,7 @@ def navToChar(startX: int, startY: int, goalX: int, goalY: int) -> None:
 	tempGoalX = goalX
 	if goalX >= 2:
 		tempGoalX = 1
-	#log(f"current: [{x}, {y}] goal: [{goalX}, {goalY}] tempGoalX: {tempGoalX}")
+	logger.debug(f"current: [{x}, {y}] goal: [{goalX}, {goalY}] tempGoalX: {tempGoalX}")
 	x = navToColumn(x, tempGoalX)
 	y = navToRow(y, goalY)
 	x = navToColumn(x, goalX)

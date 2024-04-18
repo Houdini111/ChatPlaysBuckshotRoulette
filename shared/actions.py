@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
+import logging
 from typing import Callable
 
 from .consts import Target, getDealerNames, getPlayerNames, getShootNames, getUseNames
-from .log import log
 from .util import safeInt
+
+logger = logging.getLogger(__name__)
 
 itemAtPosition: Callable
 def setItemAtPositionFunc(itemAtPositionFunc: Callable):
@@ -64,7 +66,7 @@ def parseTarget(target: str) -> Target:
 		return Target.SELF
 	elif target in getDealerNames():
 		return Target.DEALER
-	log(f"UNRECOGNIZED TARGET: \"{target}\". GIVING INVALID SO INPUT CAN BE IGNORED.")
+	logger.warn(f"UNRECOGNIZED TARGET: \"{target}\". GIVING INVALID SO INPUT CAN BE IGNORED.")
 	return Target.INVALID
 
 def parseAction(userInput: str) -> Action | None:
@@ -82,5 +84,5 @@ def parseAction(userInput: str) -> Action | None:
 	elif action in getUseNames():
 		return UseItemAction(param, extraParam)
 	else:
-		log(f"UNRECOGNIZED ACTION [param, extraParam]: \"{action}\" [\"{param}\", \"{extraParam}\"]")
+		logger.warn(f"UNRECOGNIZED ACTION [param, extraParam]: \"{action}\" [\"{param}\", \"{extraParam}\"]")
 		return None

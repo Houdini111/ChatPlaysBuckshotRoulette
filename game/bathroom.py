@@ -1,12 +1,14 @@
+import logging
 from time import sleep
 
 from .screenColors import valueOverAmountInArea, valueUnderAmountInArea
 from .basicActions import up, right, left, confirm, anyUse
 from .focus import waitForFocus
 from shared.util import waitForFalse, waitForTrue
-from shared.log import log
 from overlay.overlay import getOverlay
 from overlay.status import status
+
+logger = logging.getLogger(__name__)
 
 def throughToGameRoom() -> None:
 	enableEndless()
@@ -27,17 +29,19 @@ def moveCursorToBathroomDoor() -> None:
 	status("Moving cursor to bathroom door")
 	waitForFocus()
 	up() #Make cursor show without changing selection
+	cyclesBeforeGivingUp: int = 10
+	cycleLength: int = 3
 	movements: int = 0
-	for movements in range(20): #Tries before movement
+	for movements in range(cycleLength * cyclesBeforeGivingUp):
 		#Give each section 5 tries, in case the check missed
 		i: int = 0
-		for i in range(1): 
+		for i in range(1):  #Tries before movement
 			#Targeting bottom left of cursor. This should be a large enough area to see it, even with the swaying.
 			#valueOverAmount = valueOverAmountInArea(50, 1432, 712, 40, 1)
 			if cursorOnBathroomDoor():
 				return
 			sleep(0.1)
-		log(f"Didn't find cursor on door. Moving cursor and trying again. Momvent: {movements}")
+		logger.info(f"Didn't find cursor on door. Moving cursor and trying again. Momvent: {movements}")
 		right()
 	raise RuntimeError("Couldn't locate door cursor")
 
@@ -73,26 +77,26 @@ def inStartingBathroom() -> bool:
 	#TODO: Is this reliable enough of a check? All the swaying and grays makes it really hard to tell...
 	#TODO: Convert to Peepers
 	waitForFocus()
-	log("Checking for if the player is in the bathroom.")
+	logger.debug("Checking for if the player is in the bathroom.")
 	monitorHoleBlack = valueUnderAmountInArea(1, 342, 497, 50, 50)
 	if not monitorHoleBlack:
-		log("Found to not be in the starting bathroom because of monitorHoleBlack")
+		logger.debug("Found to not be in the starting bathroom because of monitorHoleBlack")
 		return False
 	monitorScreenBlack = valueUnderAmountInArea(1, 533, 781, 50, 50)
 	if not monitorScreenBlack:
-		log("Found to not be in the starting bathroom because of monitorScreenBlack")
+		logger.debug("Found to not be in the starting bathroom because of monitorScreenBlack")
 		return False
 	mirrorOffWhite1 = valueOverAmountInArea(80, 246, 290, 35, 35)
 	if not mirrorOffWhite1:
-		log("Found to not be in the starting bathroom because of mirrorOffWhite1")
+		logger.debug("Found to not be in the starting bathroom because of mirrorOffWhite1")
 		return False
 	mirrorOffWhite2 = valueOverAmountInArea(80, 444, 315, 35, 35)
 	if not mirrorOffWhite2:
-		log("Found to not be in the starting bathroom because of mirrorOffWhite2")
+		logger.debug("Found to not be in the starting bathroom because of mirrorOffWhite2")
 		return False
 	mirrorOffWhite3 = valueOverAmountInArea(80, 113, 278, 35, 35)
 	if not mirrorOffWhite3:
-		log("Found to not be in the starting bathroom because of mirrorOffWhite3")
+		logger.debug("Found to not be in the starting bathroom because of mirrorOffWhite3")
 		return False
 	#tilesAboveDoorGray = valueOverAmountInArea
 	return True

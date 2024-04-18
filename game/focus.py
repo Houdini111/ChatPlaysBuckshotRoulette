@@ -1,8 +1,11 @@
+import logging
 from time import sleep
 from typing import Optional
 from ctypes import wintypes, windll, create_unicode_buffer
 
 from overlay.status import removeTempStatus, tempStatus
+
+logger = logging.getLogger(__name__)
 
 def buckshotRouletteFocused() -> bool:
 	windowName = getForegroundWindowTitle()

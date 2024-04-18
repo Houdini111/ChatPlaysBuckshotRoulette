@@ -12,12 +12,11 @@ from .secrets import getSecrets
 from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from shared.util import get_event_loop
 from shared.actions import Action, ShootAction, UseItemAction
-from shared.log import log
 from shared.consts import getShootNames, getUseNames
 from overlay.overlay import getOverlay
 from game.config import getChannels, getDefaultName
 
-logger = logging.getLogger(__name__ + 'bot.chatbot')
+logger = logging.getLogger(__name__)
 
 class Chatbot(commands.Bot):
 	def __init__(self):
@@ -56,7 +55,7 @@ class Chatbot(commands.Bot):
 	#TODO: Consolidate messages. For example "After ignoring invalid votes, the winner is"
 	def openActionInputVoting(self, retrying: bool) -> None:
 		self.awaitingActionInputs = True
-		log(f"chatbot awaitingActionInputs: {self.awaitingActionInputs}. ID: {id(self)}")
+		logger.debug(f"chatbot awaitingActionInputs: {self.awaitingActionInputs}. ID: {id(self)}")
 		if not retrying:
 			self.sendMessage("Voting for action now open.")
 		else:
@@ -245,7 +244,7 @@ class Chatbot(commands.Bot):
 			sleep(3) #TODO: configurable wait
 	
 	def updateNameLeaderboardDisplay(self) -> None:
-		log(f"updateNameLeaderboardDisplay -> {self.nameVotesByName}")
+		logger.debug(f"updateNameLeaderboardDisplay -> {self.nameVotesByName}")
 		getOverlay().clearOldNameLeaderboard()
 		if len(self.nameVotesByName) < 1:
 			return

@@ -4,7 +4,7 @@ from typing import Any
 
 from .auth import make_refresh_call
 
-logger = logging.getLogger(__name__ + '.bot.secrets')
+logger = logging.getLogger(__name__)
 
 class Secrets():
 	def __init__(self):

@@ -12,13 +12,12 @@ import logging
 from shared.consts import Target
 
 from shared.util import resizePointFrom1440p
-from shared.log import log
 from shared.actions import Action, ShootAction, UseItemAction
 from bot.vote import Vote, VotingTally, VotingTallyEntry
 
 #TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?, countdown (including clock?) for voting time
 
-logger = logging.getLogger(__name__ + 'overlay.overlay')
+logger = logging.getLogger(__name__)
 
 ActionVoteType = TypeVar("ActionVoteType", int, Target)
 
@@ -114,7 +113,7 @@ class Overlay():
 		self.canvas.itemconfigure(self.statusText, text=text)
 	
 	def clearOldNameLeaderboard(self) -> None:
-		log("Clearing old name leaderboard")
+		logger.info("Clearing old name leaderboard")
 		self.canvas.itemconfig("nameLeaderboard", text="")
 
 	def drawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
@@ -161,12 +160,12 @@ class Overlay():
 		self.clearActionOverlay()
 		
 	def showActionVotes(self, numbersToDraw: list[int]) -> None:
-		log(f"showActionVotes numbersToDraw: {numbersToDraw}")
+		logger.info(f"showActionVotes numbersToDraw: {numbersToDraw}")
 		self.clearActionOverlay()
 		self.displayItemActionGuides(numbersToDraw)
 			
 	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
-		log(f"displayItemActionGuides numbersToDraw: {numbersToDraw}")
+		logger.info(f"displayItemActionGuides numbersToDraw: {numbersToDraw}")
 		self.lastDrawnActionNumbers = numbersToDraw
 		voteDisplay: ActionVoteDisplay
 		for i in numbersToDraw:
@@ -176,13 +175,13 @@ class Overlay():
 			voteDisplay.displayVoteGuide()
 	
 	def displayShootActionGuides(self) -> None:
-		log("displayShootActionGuides")
+		logger.info("displayShootActionGuides")
 		voteDisplay: ActionVoteDisplay
 		for voteDisplay in self.shootActionVoteDisplays.values():
 			voteDisplay.displayVoteGuide()
 
 	def drawActionVotes(self, actionVotes: list[VotingTallyEntry]) -> None:
-		log(f"drawActionVotes. lastDrawnActionNumbers -> {self.lastDrawnActionNumbers}, len actionVotes: {len(actionVotes)}", logLevel= logging.DEBUG)
+		logger.info(f"drawActionVotes. lastDrawnActionNumbers -> {self.lastDrawnActionNumbers}, len actionVotes: {len(actionVotes)}")
 		noVoteDisplays: list[ActionVoteDisplay] = list[ActionVoteDisplay]()
 		noVoteDisplays.extend(list(self.itemActionVoteDisplays.values()))
 		noVoteDisplays.extend(list(self.shootActionVoteDisplays.values()))
@@ -201,12 +200,12 @@ class Overlay():
 				voteDisplay: ActionVoteDisplay = self.shootActionVoteDisplays[vote.getTarget()]
 				voteDisplay.displayVote(tallyEntry)
 				noVoteDisplays.remove(voteDisplay)
-		log(f"Unvoted for: {noVoteDisplays}")
+		logger.debug(f"Unvoted for: {noVoteDisplays}")
 		noVoteDisplay: ActionVoteDisplay
 		for noVoteDisplay in noVoteDisplays:
 			if type(noVoteDisplay) is ItemActionVoteDisplay:
 				if noVoteDisplay.getActionGuide() not in self.lastDrawnActionNumbers:
-					log(f"Skipping unvoted action {noVoteDisplay.getActionGuide()} because it was not drawn previously", logLevel= logging.DEBUG)
+					logger.debug(f"Skipping unvoted action {noVoteDisplay.getActionGuide()} because it was not drawn previously")
 					continue
 			noVoteDisplay.displayVote(None)
 			

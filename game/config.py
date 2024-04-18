@@ -1,7 +1,10 @@
 import json
+import logging
 import os
 from typing import TypeVar
 from typing_extensions import TypeAlias
+
+logging.getLogger(__name__)
 
 T = TypeVar("T")
 

@@ -1,4 +1,7 @@
 from enum import Enum
+import logging
+
+logging.getLogger(__name__)
 
 useNames = ["use", "item", "consume", "take"]
 shootNames = ["shoot", "shot", "attack", "hit", "target"]

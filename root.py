@@ -1,35 +1,35 @@
 from threading import Thread
 import logging
+import logging.handlers
 from time import sleep
 
-from shared.log import log
 from overlay.overlay import Overlay, getOverlay
 from game.bathroom import throughToGameRoom
 from game.waiver import waive
 from game.gameRunner import GameRunner
 from bot.chatbot import Chatbot, getChatbot
 
+fileHandler: logging.handlers.RotatingFileHandler = logging.handlers.RotatingFileHandler("LOG.log", backupCount=3)
+fileHandler.setLevel(logging.DEBUG)
+consoleHandler: logging.StreamHandler = logging.StreamHandler()
+consoleHandler.setLevel(logging.INFO)
 logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
+    format='%(asctime)s   %(levelname)-8s %(filename)15s->%(funcName)-30s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    encoding="UTF-8", 
-    level=logging.DEBUG, 
-    handlers=[
-        logging.FileHandler("LOG.log"),
-        logging.StreamHandler()
-    ]
+    encoding="UTF-8",
+	level=logging.NOTSET, #So it doesn't override the logger's levels
+	handlers=[fileHandler, consoleHandler]
 )
 
-logger = logging.getLogger(__name__ + 'root')
+logger = logging.getLogger(__name__)
 
 #TODO: 
 #  Handle adrenaline (display don't show numbers for close but show them far?)
-#  Handle shoot votes
 #  End of round 
 #  Fix not all messages sending (action ones)
 
 def startGame() -> None:
-	logger.info("Booting bot")
+	logger.info("Starting all processes")
 	chatOverlay: Overlay = Overlay()
 	bot: Chatbot = getChatbot()
 	gameThread = Thread(target = runGame)

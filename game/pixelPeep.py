@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
+import logging
 
 from .image import scoreboardText
 from .screenColors import valuesInRangeInRect
 from shared.util import Rectangle
-from shared.log import log
+
+logger = logging.getLogger(__name__)
 
 class Checker(ABC):
 	@abstractmethod
@@ -49,6 +51,7 @@ class RangePeep(Peep):
 		return f"Range [{self.lowPercent}, {self.highPercent}]%"
 	
 	def validateRect(self, rect: Rectangle) -> bool:
+		logger.debug(f"Validating rect: {rect}")
 		if rect.x < 0 or rect.x > 2560:
 			raise ValueError(f"X COORDINATE ({rect.y}) INVALID")
 		if rect.y < 0 or rect.y > 1440:
@@ -110,6 +113,6 @@ class Peeper(Checker):
 		for checker in self.checkers:
 			if not checker.passes():
 				self.failedChecker = checker
-				log(self.failureMessage())
+				logger.info(self.failureMessage())
 				return False
 		return True

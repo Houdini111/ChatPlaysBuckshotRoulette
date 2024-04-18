@@ -1,3 +1,4 @@
+import logging
 import os
 from PIL import Image, ImageGrab, ImageTransform, ImageEnhance
 import pytesseract
@@ -5,14 +6,15 @@ import numpy as np
 import cv2
 
 from .config import getTesseractPath
-from shared.log import log
+
+logger = logging.getLogger(__name__)
 
 def scoreboardText() -> str:
-	log("Fetching scoreboard text. Starting by grabbing image.")
+	logger.debug("Fetching scoreboard text. Starting by grabbing image.")
 	img = grabScoreBoardImage()
-	log("Scoreboard image grabbed. Preparing image for OCR.")
+	logger.debug("Scoreboard image grabbed. Preparing image for OCR.")
 	img = prepareImageForOCR(img)
-	log("Scoreboard image prepared. Sending to OCR.")
+	logger.debug("Scoreboard image prepared. Sending to OCR.")
 	return OCR(img)
 
 def grabScoreBoardImage() -> Image:
@@ -45,5 +47,5 @@ def prepareImageForOCR(img: Image) -> Image:
 def OCR(img: Image) -> str:
 	pytesseract.pytesseract.tesseract_cmd = getTesseractPath()
 	out = pytesseract.image_to_string(img, lang='eng', config=r'--psm 7')
-	log(f"OCR RESULT: {out}")
+	logger.info(f"OCR RESULT: {out}")
 	return out
