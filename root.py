@@ -1,13 +1,15 @@
+import asyncio
+import platform
 from threading import Thread
 import logging
 import logging.handlers
 from time import sleep
 
-from overlay.overlay import Overlay, getOverlay
+from overlay.overlay import Overlay
 from game.bathroom import throughToGameRoom
 from game.waiver import waive
 from game.gameRunner import GameRunner
-from bot.chatbot import Chatbot, getChatbot
+from bot.chatbot import createAndStartChatbot, createAndStartChatbotThread
 
 fileHandler: logging.handlers.RotatingFileHandler = logging.handlers.RotatingFileHandler("LOG.log", backupCount=3)
 fileHandler.setLevel(logging.DEBUG)
@@ -28,15 +30,25 @@ logger = logging.getLogger(__name__)
 #  End of round 
 #  Fix not all messages sending (action ones)
 
+def initAsyncio():
+	if platform.system() == "Windows":
+		asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 def startGame() -> None:
 	logger.info("Starting all processes")
+	initAsyncio()
+
 	chatOverlay: Overlay = Overlay()
-	bot: Chatbot = getChatbot()
+	
+	createAndStartChatbotThread()
+	#createAndStartChatbot() #For running just the bot. Be sure to remove the overlay connections.
+	
 	gameThread = Thread(target = runGame)
-	botThread = Thread(target = bot.run)
 	gameThread.start()
-	botThread.start()
-	#Required to be on main thread becauase they say so...
+	
+	# And similar to TwithcIO, Tkinter has its own requirement. 
+	# It literally just refuses to run if it's not on the main thread.
+	# At least TwitchIO tries... 
 	chatOverlay.run()
 
 def runGame() -> None:

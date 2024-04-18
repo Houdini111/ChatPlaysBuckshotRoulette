@@ -10,7 +10,7 @@ import asyncio
 
 from .secrets import getSecrets
 from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
-from shared.util import get_event_loop
+from shared.util import get_event_loop, run_task
 from shared.actions import Action, ShootAction, UseItemAction
 from shared.consts import getShootNames, getUseNames
 from overlay.overlay import getOverlay
@@ -20,12 +20,10 @@ logger = logging.getLogger(__name__)
 
 class Chatbot(commands.Bot):
 	def __init__(self):
-		pass
-	
-	async def init(self):
+		print("Running with init")
 		global bot
 		bot = self
-
+		
 		self.nameVotesByUser: dict[str, str] = dict[str, str]()
 		self.nameVotesByName: RunningVote[str] = RunningVote[str]()
 		
@@ -38,14 +36,13 @@ class Chatbot(commands.Bot):
 		self.updateLeaderboardsThread = Thread(target = self.updateVoteCounts)
 		self.updateLeaderboardsThread.start()
 		
-		await getSecrets().refresh_tokens_and_save() 
 		self.channels: dict[str, Channel] = dict[str, Channel]()
 		super().__init__(
 			token = getSecrets().getAccessToken(), 
 			client_secret = getSecrets().getSecret(),
 			prefix='#', #Unused. Listens to raw messages, not commands
 			initial_channels = getChannels(),
-			case_insensitive = True
+			case_insensitive = True,
 		)
 	
 	#######
@@ -116,10 +113,13 @@ class Chatbot(commands.Bot):
 			raise Exception("Chatbot#sendMessage has no channel to send the message to")
 		channel: Channel = list(self.channels.values())[0]
 		
-		loop = get_event_loop()
-		loop.create_task(self.sendMessageToChannel(channel, message))
+		logger.debug(f"Creating event loop task to send a chatbot message to channel \"{channel.name}\": ||{message}||")
+		logger.debug(f"Getting an event loop to send message to channel \"{channel.name}\": ||{message}||")
+		
+		run_task(lambda: self.sendMessageToChannel(channel, message))
 
 	async def sendMessageToChannel(self, channel: Channel, message: str) -> None:
+		logger.debug(f"Sending message to channel \"{channel.name}\": ||{message}||")
 		await channel.send(message)
 
 
@@ -259,15 +259,25 @@ class Chatbot(commands.Bot):
 		logger.debug(f"Tallying action votes. Action votes len: {len(self.actionVotesByAction)}")
 		tally: VotingTally = tallyVotes(self.actionVotesByAction)
 		getOverlay().drawActionVotes(tally.allVotes())
-			
-		
-
 
 bot: Chatbot | None = None
 def getChatbot() -> Chatbot:
 	global bot
 	if bot is None:
 		bot = Chatbot()
-		loop = get_event_loop()
-		loop.run_until_complete(bot.init())
 	return bot
+
+def createAndStartChatbot():
+	#asyncio.run destroys the loop after
+	asyncio.run(getSecrets().refresh_tokens_and_save())
+	
+	#TwitchIO bots expect get_event_loop to succeed, so I need to prepare for that. 
+	loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
+	asyncio.set_event_loop(loop)
+	getChatbot()
+	getChatbot().run()
+
+#TwitchIO REALLY doesn't like being run in asyncio. It expects free access to its own asyncio loop, so it needs to be in its own thread
+def createAndStartChatbotThread():
+	botThread = Thread(target = createAndStartChatbot)
+	botThread.start()

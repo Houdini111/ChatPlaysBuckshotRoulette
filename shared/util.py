@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import threading
 from time import sleep
 from typing import Callable
 import math
@@ -64,11 +65,20 @@ def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[
 	realX, realY = resizePointFrom1440p(x1440, y1440)
 	return [realX, realY, realW, realH]
 
-def get_event_loop() -> asyncio.AbstractEventLoop:
-	loop: asyncio.AbstractEventLoop
-	try: 
-		loop = asyncio.get_event_loop()
-	except RuntimeError:
-		loop = asyncio.new_event_loop()
-		asyncio.set_event_loop(loop)
-	return loop
+#This method from https://stackoverflow.com/a/61331974
+def run_task(coroutine: Callable):
+	try:
+		loop = asyncio.get_running_loop()
+	except RuntimeError:  # 'RuntimeError: There is no current event loop...'
+		loop = None
+
+	if loop and loop.is_running():
+		logger.debug('Async event loop already running. Adding coroutine to the event loop.')
+		tsk = loop.create_task(coroutine())
+		# ^-- https://docs.python.org/3/library/asyncio-task.html#task-object
+		# Optionally, a callback function can be executed when the coroutine completes
+		tsk.add_done_callback(
+			lambda t: print(f'Task done with result={t.result()}  << return val of coroutine()'))
+	else:
+		logger.debug('Starting new event loop')
+		result = asyncio.run(coroutine())
