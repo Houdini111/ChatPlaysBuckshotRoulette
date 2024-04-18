@@ -1,4 +1,5 @@
 import logging
+from msvcrt import getch
 from time import sleep
 
 from .items import getItemManager
@@ -134,6 +135,7 @@ class GameRunner():
 			actionSuccess: bool = False
 			retry: bool = False
 			invalid: bool = False
+			getChatbot().clearActionVotes()
 			logger.info("Starting input loop")
 			while not actionSuccess:
 				if not invalid:
