@@ -330,7 +330,7 @@ class VotingTally(Generic[VoteType]):
 		nextWinner: VotingTallyEntry[VoteType] | None = None 
 		#Check if current entryList empty
 		if self.currentTallyList is not None:
-			nextWinner = self.currentTallyList.getRandomWinner()
+			nextWinner = self.currentTallyList.getRandomWinner() #Random winner iterates
 		logger.debug(f"iterateWinner nextWinner at first check is {nextWinner}")
 		if nextWinner is None:
 			#If it returned None then it's empty, move to the next entry list

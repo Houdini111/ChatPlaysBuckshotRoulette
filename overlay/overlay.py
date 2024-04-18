@@ -88,13 +88,12 @@ class Overlay():
 		
 		self.voteList: list[int] = []
 		
-		self.voteLeaderboardY = 1000
+		self.voteLeaderboardY = 1050
 		#self.draw_text_1440("Chat Overlay Active", 12, 10, 50)
 		#self.statusText = self.draw_text_1440("", 12, 10 + int(1.25 * self.optionsFontSize), 40)
-		self.statusText = self.draw_text_1440("", 20, 20, 50)
+		self.statusText = self.draw_text_1440("", 20, 20, int(self.baseFontSize*50/80))
 		self.initNameLeaderboard()
 		self.initActionVotesDisplay()
-		self.canvas.itemconfigure("nameLeaderboard", state="hidden")
 	
 	def run(self) -> None:
 		tk.mainloop()
@@ -107,6 +106,7 @@ class Overlay():
 		font = ("Arial", fontSize)
 		if bold:
 			font += ("bold", )
+		logger.debug(f"Drawing text [[{text}]] at 1440 coordinates [{x1440}, {y1440}] with the font {font}, the tags {textTags} and the anchor {anchor}")
 		return self.canvas.create_text(realX, realY, text = text, fill = "white", font = font, anchor = anchor, tags = textTags) # type: ignore (doesn't like the anchor parameter)
 
 	def updateStatusText(self, text: str) -> None:
@@ -120,16 +120,20 @@ class Overlay():
 		self.clearOldNameLeaderboard()
 		for textId, vote in zip(self.voteList, votes):
 			voteStr = f"{vote.getVoteStr()} [{vote.getNumVotes()}] ({vote.getPercentageStr()})"
+			logger.debug(f"Drawing leaderboard name:  {voteStr}")
 			self.canvas.itemconfig(textId, text = voteStr)
 			
 	def initNameLeaderboard(self) -> None:
-		self.nameHeader = self.draw_text_1440("Next Name Ranking", 20, self.voteLeaderboardY, 60)
+		headerFontSize = int(self.baseFontSize/4)
+		self.nameHeader = self.draw_text_1440("Next Name Ranking", 10, self.voteLeaderboardY, 60, anchor = "sw")
 		#TODO: Scale positions
-		y = self.voteLeaderboardY + int(60 * 1.75) #Offset + fontsize
+		nameLeaderboardItemFontSize = int(self.baseFontSize*45/80)
+		y = self.voteLeaderboardY + int(headerFontSize * .1)
+		yInc = int(nameLeaderboardItemFontSize * 1.75)
 		for i in range(5):
-			voteId: int = self.draw_text_1440("", 20, y, 35, textTags = ["nameLeaderboard"])
+			voteId: int = self.draw_text_1440("", 20, y, nameLeaderboardItemFontSize, textTags = ["nameLeaderboard"], anchor = "nw")
 			self.voteList.append(voteId)
-			y += 65
+			y += yInc
 	
 	def initActionVotesDisplay(self) -> None:
 		self.itemActionVoteDisplays: dict[int, ItemActionVoteDisplay] = dict[int, ItemActionVoteDisplay]()
@@ -212,8 +216,6 @@ class Overlay():
 	def clearActionOverlay(self) -> None:
 		self.canvas.itemconfigure("actionOverlay", state="hidden")
 		self.lastDrawnActionNumbers = list[int]()
-		#self.lastDrawnActionNumbers.clear()
-		pass
 		
 	def clearActionVotes(self) -> None:
 		self.canvas.itemconfigure("voteStats", text="")

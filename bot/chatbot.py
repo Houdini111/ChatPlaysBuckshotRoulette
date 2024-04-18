@@ -244,7 +244,7 @@ class Chatbot(commands.Bot):
 			sleep(3) #TODO: configurable wait
 	
 	def updateNameLeaderboardDisplay(self) -> None:
-		logger.debug(f"updateNameLeaderboardDisplay -> {self.nameVotesByName}")
+		logger.info(f"Updating name votes -> {self.nameVotesByName}")
 		getOverlay().clearOldNameLeaderboard()
 		if len(self.nameVotesByName) < 1:
 			return
@@ -252,6 +252,7 @@ class Chatbot(commands.Bot):
 		getOverlay().drawNameVoteLeaderboard(tally.topNVotes(3))
 			
 	def updateActionVotesDisplay(self) -> None:
+		logger.info("Updating action votes")
 		getOverlay().clearActionVotes()
 		if not self.awaitingActionInputs:
 			logger.debug("Not displaying action votes as the bot isn't looking for inputs")
