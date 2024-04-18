@@ -24,7 +24,6 @@ def waitForFalse(checker: Callable[[], bool]) -> None:
 	i = 0
 	while checker():
 		i += 1
-		logger.debug(f"Waiting for method to return false. Attempts: {i}", end='\r')
 		logger.debug(f"Waiting for method to return false. Attempts: {i}")
 		sleep(0.1)
 
@@ -33,7 +32,6 @@ def waitForTrue(checker: Callable[[], bool]) -> None:
 	i = 0
 	while not checker():
 		i += 1
-		logger.debug(f"Waiting for method to return true. Attempts: {i}", end='\r')
 		logger.debug(f"Waiting for method to return true. Attempts: {i}")
 		sleep(0.1)
 
