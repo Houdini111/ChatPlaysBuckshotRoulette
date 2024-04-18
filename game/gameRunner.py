@@ -8,6 +8,7 @@ from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, Ra
 from .playerActions import Action, execute
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
+from .config import getActionVotePeriod
 from shared.actions import parseAction
 from overlay.overlay import Overlay, getOverlay
 from overlay.status import status
@@ -141,8 +142,8 @@ class GameRunner():
 				if not invalid:
 					logger.debug("Not invalid user input (which would be a retry), opening chat voting")
 					getChatbot().openActionInputVoting(retry)
-					logger.debug("Action voting opened. Waiting for input")
-					sleep(15) #TODO: Configurable voting time. When implemented, add time to open voting message.
+					logger.debug(f"Action voting opened. Waiting for input for {getActionVotePeriod()}")
+					sleep(getActionVotePeriod())
 					logger.debug("Waiting for input over. Closing action voting")
 					getChatbot().closeActionInputVoting(retry)
 					logger.debug("Action voting closed")
