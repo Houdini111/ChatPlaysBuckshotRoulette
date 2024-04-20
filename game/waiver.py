@@ -26,6 +26,11 @@ def pickUpWaiver() -> None:
 def enterName(name: str) -> None:
 	name = name.upper()[0:6] #Normalize to uppercase and truncate to the max of 6 characters
 	status(f"Entering name {name}")
+	
+	logger.debug("In case the player has tabbed out, reactivate cursor by moving off and on")
+	right()
+	left()
+
 	#cursorOnA() #TODO: Cycles, so I'll have to pixel peep with getpixelcolor to be safer
 	#   For now, this works without intervention
 	cursorX = 0 
@@ -58,22 +63,19 @@ def enterName(name: str) -> None:
 		'Y': [1, 7],
 		'Z': [2, 7]
 	}
+	lastChar: str = 'A'
 	for char in name:
+		if char == lastChar:
+			logger.debug(f"Wanting to enter \"{char}\" which is the same as the last one. Just pressing again.")
+			confirm()
+			continue
 		logger.info(f"Attempting to enter char {char}")
-		if char == 'A' and cursorX == 0 and cursorY == 0:
-			logger.debug("Navigating to char A (Special case)")
-			#Because char A is the starting, and the entering only works if there is a cursor
-			#  We need to move it off and back on to ensure it's selected
-			right()
-			left()
-			confirm()
-		else:
-			goalX, goalY = charMap[char]
-			logger.debug(f"Navigating to char {char}")
-			navToChar(cursorX, cursorY, goalX, goalY)
-			cursorX = goalX
-			cursorY = goalY
-			confirm()
+		goalX, goalY = charMap[char]
+		logger.debug(f"Navigating to char {char}")
+		navToChar(cursorX, cursorY, goalX, goalY)
+		cursorX = goalX
+		cursorY = goalY
+		confirm()
 		logger.debug(f"Should have entered char {char}")
 	submitName(cursorX, cursorY) 
 		
