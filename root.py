@@ -1,3 +1,4 @@
+import sys
 import asyncio
 import platform
 from threading import Thread
@@ -5,11 +6,13 @@ import logging
 import logging.handlers
 from time import sleep
 
+from shared.streamToLogger import StreamToLogger
 from overlay.overlay import Overlay
 from game.bathroom import throughToGameRoom
 from game.waiver import waive
 from game.gameRunner import GameRunner
 from bot.chatbot import createAndStartChatbot, createAndStartChatbotThread
+
 
 fileHandler: logging.handlers.RotatingFileHandler = logging.handlers.RotatingFileHandler("LOG.log", backupCount=3)
 fileHandler.setLevel(logging.DEBUG)
@@ -23,6 +26,10 @@ logging.basicConfig(
 	handlers=[fileHandler, consoleHandler]
 )
 
+stdErrLogger = logging.getLogger("STDERR")
+stdErrLoggerStream = StreamToLogger(stdErrLogger, logging.ERROR)
+sys.stderr = stdErrLoggerStream
+
 logger = logging.getLogger(__name__)
 
 #TODO: 
@@ -33,6 +40,7 @@ logger = logging.getLogger(__name__)
 #  Handle items being taken by dealer (their spots still register as being filled)
 #      - Guess this means I'll have to cursor and check for text after every turn? 
 #        Or many just attempt to place at every location in order?
+#  Shoot action text gone
 
 def initAsyncio():
 	if platform.system() == "Windows":
