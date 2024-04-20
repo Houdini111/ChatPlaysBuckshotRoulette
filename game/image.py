@@ -6,7 +6,7 @@ import pytesseract
 import numpy as np
 import cv2
 
-from .config import getTesseractPath, getOutputOcrImages
+from shared.config import getTesseractPath, getOutputOcrImages
 
 logger = logging.getLogger(__name__)
 

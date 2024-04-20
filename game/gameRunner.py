@@ -8,7 +8,7 @@ from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, Ra
 from .playerActions import Action, execute
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
-from .config import getActionVotePeriod
+from shared.config import getActionVotePeriod
 from shared.actions import parseAction
 from overlay.overlay import Overlay, getOverlay
 from overlay.status import status
