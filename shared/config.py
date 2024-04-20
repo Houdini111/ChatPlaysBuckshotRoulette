@@ -48,3 +48,6 @@ def getActionVotePeriod() -> int:
 
 def getOutputOcrImages() -> int:
 	return config.getKeyOrDefault("outputOcrImages", bool, False)
+
+def getInstructionsCooldown() -> int:
+	return config.getKeyOrDefault("instructionsCooldown", int, 15)

@@ -1,5 +1,5 @@
 from threading import Thread
-from time import sleep
+from time import sleep, thread_time_ns
 from typing import Any
 from twitchio import Message, Chatter, PartialChatter, Channel
 from twitchio.ext import commands
@@ -13,8 +13,8 @@ from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from shared.util import run_task
 from shared.actions import Action, ShootAction, UseItemAction
 from shared.consts import getShootNames, getUseNames
+from shared.config import getChannels, getDefaultName, getInstructionsCooldown
 from overlay.overlay import getOverlay
-from game.config import getChannels, getDefaultName
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +36,16 @@ class Chatbot(commands.Bot):
 		self.updateLeaderboardsThread = Thread(target = self.updateVoteCounts)
 		self.updateLeaderboardsThread.start()
 		
+		self.instructionsCooldownS: int = getInstructionsCooldown()
+		self.instructionsCooldownNs: int = self.instructionsCooldownS * 1000000000
+		self.instructionsLastCalled: int = thread_time_ns()
+
+		self.prefix = "!" #TODO: Make confugrable
 		self.channels: dict[str, Channel] = dict[str, Channel]()
 		super().__init__(
 			token = getSecrets().getAccessToken(), 
 			client_secret = getSecrets().getSecret(),
-			prefix='#', #Unused. Listens to raw messages, not commands
+			prefix= self.prefix,
 			initial_channels = getChannels(),
 			case_insensitive = True,
 		)
@@ -48,7 +53,7 @@ class Chatbot(commands.Bot):
 	#######
 	## "Public" methods
 	#######
-		
+
 	#TODO: Consolidate messages. For example "After ignoring invalid votes, the winner is"
 	def openActionInputVoting(self, retrying: bool) -> None:
 		self.awaitingActionInputs = True
@@ -143,10 +148,15 @@ class Chatbot(commands.Bot):
 		if author is None:
 			#Self messages? Or just messages that they failed to send?
 			return
-
+		
 		messageBody: str | None = message.content
 		if messageBody is None:
 			return
+		
+		if messageBody.startswith(self.prefix + "instructions"):
+			await self.printInstructions()
+			return
+
 		messageSplit = messageBody.split(' ')
 		if len(messageSplit) < 2:
 			return
@@ -260,6 +270,26 @@ class Chatbot(commands.Bot):
 		logger.debug(f"Tallying action votes. Action votes len: {len(self.actionVotesByAction)}")
 		tally: VotingTally = tallyVotes(self.actionVotesByAction)
 		getOverlay().drawActionVotes(tally.allVotes())
+
+	async def printInstructions(self, ctx: commands.Context | None = None):
+		logger.info("Instructions command called")
+		nowCalled: int = thread_time_ns()
+		elapsedNs: int = nowCalled - self.instructionsLastCalled
+		cooldownRemaining: int = self.instructionsCooldownNs - elapsedNs
+		if cooldownRemaining <= 0:
+			logger.info(f"Instructions command was called but was still on cooldown. Cooldown: {self.instructionsCooldownNs}ns Elapsed: {elapsedNs} Remaining: {cooldownRemaining}")
+			return
+		
+		msg: str = "To vote on a name write: \"name\" followed by your voted name. \
+				 To vote to shoot someone use \"shoot\" followed by either \"dealer\" or \"self\". \
+				 To vote to use an item write \"use\" and the item's position (1 through 8, left to right, top to bottom). \
+				 If you vote for an adrenaline your message should also include the dealer's item to use, for example: \"use 2 3\" to use the adrenaline in position 2 to use the dealers item in position 3."
+				 
+		if ctx is None:
+			self.sendMessage(msg)
+		else:
+			await ctx.send(msg)
+		
 
 bot: Chatbot | None = None
 def getChatbot() -> Chatbot:
