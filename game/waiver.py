@@ -77,6 +77,7 @@ def enterName(name: str) -> None:
 		cursorY = goalY
 		confirm()
 		logger.debug(f"Should have entered char {char}")
+		lastChar = char
 	submitName(cursorX, cursorY) 
 		
 def navToChar(startX: int, startY: int, goalX: int, goalY: int) -> None:
