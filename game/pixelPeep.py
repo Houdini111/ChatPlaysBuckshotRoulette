@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import logging
 
-from .image import scoreboardText
 from .screenColors import valuesInRangeInRect
 from shared.util import Rectangle
 
@@ -83,26 +82,6 @@ class AnyNotBlackPeep(RangePeep):
 	
 	def getRequirement(self) -> str:
 		return f"Any not black (>={self.lowPercent}%)"
-
-class OCRScoreboardPeep(Peep):
-	def __init__(self, name: str, expectedText: str, exact: bool = False):
-		self.name = name
-		self.expectedText = expectedText.upper().strip()
-		self.ocrTextFound = ""
-		self.exact = exact
-	
-	def passes(self) -> bool:
-		self.ocrTextFound = scoreboardText().upper().strip()
-		if self.exact:  
-			return self.ocrTextFound == self.expectedText
-		else:
-			return self.expectedText in self.ocrTextFound
-
-	def getName(self) -> str:
-		return self.name
-	
-	def getRequirement(self) -> str:
-		return f"Text to match \"{self.expectedText}\". Found \"{self.ocrTextFound}\"."
 
 class Peeper(Checker):
 	def __init__(self, name: str, *checkers: Checker):

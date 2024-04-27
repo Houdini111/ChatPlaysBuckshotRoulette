@@ -3,8 +3,8 @@ from msvcrt import getch
 from time import sleep
 
 from .items import getItemManager
-from .basicActions import up
-from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, AnyNotBlackPeep
+from .basicActions import up, left, confirm
+from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, AnyNotBlackPeep
 from .playerActions import Action, execute
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
@@ -48,13 +48,29 @@ class GameRunner():
 			AnyWhitePeep("centerLineWhite", 708, 424, 10, 10),
 			AnyWhitePeep("bulletSquareWhite", 1475, 392, 25, 25)
 		)
+		
 		self.roundIsWonPeeper = Peeper("RoundIsWonPeeper",
 			AllBlackPeep("scoreboardLeftBlack", 786, 475, 40, 150),
 			AllBlackPeep("scoreboardRightBlack", 1539, 700, 40, 150),
 			AnyWhitePeep("bulletSquareWhite", 675, 1246, 72, 72),
 			AnyWhitePeep("dealerItemSquare8White", 303, 962, 65, 65),
 			AllBlackPeep("blackAboveScoreboard", 615, 120, 31, 69),
-			OCRScoreboardPeep("OCRScoreboardPlayerWins", f"WINS!", exact = False)
+			AllBlackPeep("scoreboardDealerNameNotVisiblePeep", 773, 493, 124, 18),
+			AnyNotBlackPeep("scoreboardTextNotBlackPeep", 871, 595, 500, 100),
+			AllBlackPeep("scoreboardNoRoundTextPeep", 1164, 755, 100, 15)
+		)
+		
+		self.doubleOrNothingWinPeeper = Peeper("DoubleOrNothingPeeper",
+			AllBlackPeep("aboveRadioBlack", 1615, 237, 19, 19),
+			AllBlackPeep("belowScoreNumbersBlack", 1262, 1106, 20, 20),
+			AllBlackPeep("leftPillarBlack", 100, 490, 11, 11),
+			AnyWhitePeep("radioShineRightWhite", 1697, 317, 15, 15),
+			AnyWhitePeep("radioShineLeftWhite", 1248, 349, 10, 10),
+			AnyWhitePeep("centerLineWhite", 1256, 1414, 14, 14)
+		)
+		
+		self.doubleOrNothingCursorPeeper = Peeper("DoubleOrNothingCursorPeeper",
+			AnyWhitePeep("doubleOrNothingCursorPeeper", 705, 156, 32, 32)									
 		)
 		
 	def noDialogueTextBoxVisible(self) -> bool:
@@ -90,7 +106,8 @@ class GameRunner():
 		return True
 	
 	def checkForRoundIsWon(self) -> bool:
-		if self.roundIsWonPeeper.passes():
+		if (self.roundIsWonPeeper.passes()) or \
+			(self.roundsCleared == 2 and self.doubleOrNothingWinPeeper.passes()):
 			self.winRound()
 			return True
 		return False
@@ -106,8 +123,13 @@ class GameRunner():
 			logger.info("################")
 			self.roundsCleared = 0
 			#TODO: Choose to begin a new double or nothing set
-
-			#Do NOT clear items
+			status("Waiting to see cursor for double or nothing")
+			while not self.doubleOrNothingCursorPeeper.passes():
+				sleep(0.2)
+				left()
+			status("Confirming to start a new double or nothing set")
+			confirm()
+			#Do NOT clear items. The game keeps them for whatever reason.
 		else:
 			getItemManager().clearItems()
 		sleep(4) #Wait for extra to make sure round wins don't get counted multiple times
