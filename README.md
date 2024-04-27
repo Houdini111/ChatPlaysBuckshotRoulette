@@ -42,7 +42,7 @@ If all your requirements are met then you can simply start the bot by running `s
 This bot was designed for a 1440p screen. The overlay and pixel checking are all based on that. It should scale to other 16:9 resolutions but I have not tested any. 
 Further, the game overrides the cursor position if the mouse is on the screen. You should keep the cursor off the screen, but the game focused, at all time for proper functionality. 
 
-# How the bot runs
+# Implementation Details
 The "bot" is actually a combination of three programs in one. 
 1. The chatbot made with TwitchIO
 	- Reads the chats for votes
@@ -64,5 +64,48 @@ The "bot" is actually a combination of three programs in one.
 [TODO]
 
 ## The Game Runner
+Primarily, the Game Runner works by understanding the order of events (for example, after leaving the bathroom you are always on the walkway with only the option to continue forward) and checking the color of pixels to check for things that aren't a guaranteed order. 
 
-[TODO]
+Through most of the gameplay the order of events is seemingly random. Take shooting the dealer for example. A naive approach would say the turn is over. However:
+1. If the dealer was handcuffed then the player would have another turn. 
+2. But even if they were, if the dealer loses then it isn't the players turn immediately anyways.
+3. If that was the final shot loaded then it's time to grab more items. 
+
+Likewise, you might make the assumption that it will eventually be the player's turn. But if the player loses then that is not the case either. 
+As such, there are several game states to be handled that could happen in a mostly random order. 
+
+So during general gameplay the bot must attempt to figure out what, if anything, it needs to do at the moment. My solution to finding this is to check the color of groups of pixels. With a sufficient color range and spread locations it should be possible to tell every unique game state apart.
+
+### Pixel Peeping
+To facilitate these checks I implemented the `pixelPeep` module and the `Peeper` and `Peep` classes inside. 
+
+#### Peep
+The Peep class is a wrapper class around my method `valuesInRangeInArea` in the `screenColors` module. The `Peep` class keeps track of its name, the area it should check, and the values it expects from the check. It also provides an error message which can be fetched in the event of a failed check.
+
+#### Peeper
+The `Peeper` class simply contains a list of `Peeps` (or `Peepers`) and will run the check for each in turn. It provides the additional functionality of logging which `Peep` failed for easier debugging.
+
+#### valuesInRangeInArea
+This method scales the 2560x1440 pixel coordinates and size and scales it to the current display, and then uses the `getpixelcolor` library to get the pixels there. Next, it checks the values of every pixel to see if it matches. It supports both ANY and AND modes for the values (which are used in `AnyWhitePeep` and `AllBlackPeep` respectively, for example).
+
+#### Usage
+Defined in the relevant classes (mostly `GameRunner`), `Peeper`s are created with a list of `Peep`s with predefined areas to check and values ot expect. Then, when the `GameRunner` wants to check the game state it can simply ask the relevant `Peeper` if it passes the check. 
+
+### Complications
+Several complications which required additional solutions were encountered along the way. Here are a few and the solutions I implemented to attempt to resolve them.
+#### Flashes of Black and White
+After certain actions, like being shot or using a bad pill, the screen will full screen flash black and/or white. This can interfere with basic pixel peeping. If you only check one color then such flashes would appear to be a false positive for that game state.
+The solution is to ensure every check has at least some contrast. Due to the crushed colors there are many spaces that resolve to purely black. The game board also includes white lines though they often don't show as fully white, so some margin of error is needed. Including at least one of both black and white. 
+By checking both then fullscreen flashes should not trigger false positives.
+
+#### Double Checking
+Some places have breif periods where the state seems to match something that is wrong. For example, after the last shot was fired then the view will breifly match the view for when it is the player's turn before switching to present the item box. 
+The fullscreen flashes can do similar things, tricking even the multiple place checks if they happen at the exact timings. With as often as these checks occur such coincidences are actually surprisingly common.
+To mitigate these risks these problematic game states are made to double check when they are seen. It will run a check, and if it passes it will wait for a short period of 0.1 seconds and check again. If it passes again then it is assumed to be accurate.
+
+#### Bathroom View Bob
+
+#### OCR
+
+#### Adrenaline 
+(theirs and ours)
