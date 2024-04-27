@@ -46,6 +46,7 @@ def moveCursorToBathroomDoor() -> None:
 	raise RuntimeError("Couldn't locate door cursor")
 
 def enableEndless() -> None:
+	logger.debug("Enabling endless")
 	status("Waiting to be in starting bathroom")
 	while not inStartingBathroom():
 		sleep(1)

@@ -113,6 +113,9 @@ class GameRunner():
 		sleep(4) #Wait for extra to make sure round wins don't get counted multiple times
 
 	def hasPlayerLost(self) -> bool:
+		if not inStartingBathroom():
+			return False
+		sleep(0.1)
 		return inStartingBathroom()
 
 	def go(self) -> None:
