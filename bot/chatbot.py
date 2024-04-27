@@ -80,7 +80,7 @@ class Chatbot(commands.Bot):
 		winningVote: VotingTallyEntry | None = self.talliedActions.getWinner()
 		if winningVote is None:
 			return None #Don't allow tiebreakers in action votes. Wait longer.
-		self.sendMessage(f"Winning action of {winningVote.getVoteStr()} won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()})")
+		self.sendMessage(f"Winning action of [{winningVote.getVoteStr().upper()}] won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()})")
 		return winningVote.getVoteObj().getVote()
 		#Do not clear votes immediately, as it might not be valid. 
 	
