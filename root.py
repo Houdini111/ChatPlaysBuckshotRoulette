@@ -37,9 +37,6 @@ logger = logging.getLogger(__name__)
 #      - Combine votes for adrenaline items (by checking if they have multiple parameters)
 #      - Display votes for dealer items? Or just say which one won afterwards?
 #  End of double or nothing set
-#  Handle items being taken by dealer (their spots still register as being filled)
-#      - Guess this means I'll have to cursor and check for text after every turn? 
-#        Or many just attempt to place at every location in order?
 #  Shoot action text gone
 
 def initAsyncio():

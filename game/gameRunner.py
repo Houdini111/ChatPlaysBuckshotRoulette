@@ -4,7 +4,7 @@ from time import sleep
 
 from .items import getItemManager
 from .basicActions import up
-from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, RangePeep
+from .pixelPeep import Peeper, AllBlackPeep, AnyWhitePeep, OCRScoreboardPeep, AnyNotBlackPeep
 from .playerActions import Action, execute
 from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
@@ -26,8 +26,8 @@ class GameRunner():
 		
 		#TODO: Move these definitions to their own class/file
 		self.noDialogueTextBoxPeeper = Peeper("NoDialogueTextBoxPeeper", 
-			RangePeep("noDialogueLeft", 10, 100, False, 577, 1153, 11, 173),
-			RangePeep("noDialogueRight", 10, 100, False, 1972, 1153, 11, 173)
+			AnyNotBlackPeep("noDialogueLeft", 577, 1153, 11, 173),
+			AnyNotBlackPeep("noDialogueRight", 1972, 1153, 11, 173)
 		)
 		self.staticBoardPeeper = Peeper("StaticBoardPeeper", 
 			AllBlackPeep("staticBoardBlackTop", 1159, 31, 168, 1),
@@ -121,7 +121,7 @@ class GameRunner():
 			while not self.playerTurn():
 				if getItemManager().itemBoxCursorVisible():
 					logger.info("While waiting for the player's turn the item box was found to be open. Grabbing items.")
-					getItemManager().grabItems()
+					getItemManager().grabItemsV2()
 					continue
 				self.checkForClearingItems()
 				self.checkForRoundIsWon()
@@ -130,7 +130,8 @@ class GameRunner():
 					getItemManager().clearItems()
 					return
 				sleep(0.5)
-			logger.info("Should be player turn now.")
+			logger.info("Should be player turn now. Refreshing player items.")
+			getItemManager().refreshPlayerItems()
 			status("Awaiting player input")
 			getOverlay().showActionVotes(getItemManager().getAllCurrentItemPositions())
 			actionSuccess: bool = False

@@ -77,6 +77,12 @@ class AllBlackPeep(RangePeep):
 	def getRequirement(self) -> str:
 		return f"Black (<={self.lowPercent}%)"
 
+class AnyNotBlackPeep(RangePeep):
+	def __init__(self, name: str, x: int, y: int, w: int, h: int):
+		super().__init__(name, 1, 100, True, x, y, w, h)
+	
+	def getRequirement(self) -> str:
+		return f"Any not black (>={self.lowPercent}%)"
 
 class OCRScoreboardPeep(Peep):
 	def __init__(self, name: str, expectedText: str, exact: bool = False):
@@ -101,7 +107,7 @@ class OCRScoreboardPeep(Peep):
 class Peeper(Checker):
 	def __init__(self, name: str, *checkers: Checker):
 		self.name = name
-		self.checkers = list(checkers)
+		self.checkers: list[Checker] = list[Checker](checkers)
 		self.failedChecker: Checker
 	
 	def getName(self) -> str:
@@ -114,6 +120,7 @@ class Peeper(Checker):
 		return f"Peeper {self.name} fails because of -> {failedMessage}";
 	
 	def passes(self) -> bool:
+		checker: Checker
 		for checker in self.checkers:
 			if not checker.passes():
 				self.failedChecker = checker

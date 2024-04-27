@@ -30,18 +30,28 @@ def down() -> None:
 	logger.info("v DOWN")
 	pyautogui.press('down')
 	
-def enterDirections(directions: list[str]) -> None:
+def enterDirections(*directions: list[str] | str) -> None:
 	logger.info(f"Entering directions {directions}")
-	if len(directions) == 0:
+	combined = list[str]()
+	for direction in directions:
+		dirType: type = type(direction)
+		logger.debug(f"Direction {direction} in provided list of directions is of type {dirType}")
+		if dirType is str:
+			combined.append(direction)
+		elif dirType is list or dirType is tuple:
+			combined.extend(direction)
+	logger.debug(f"Combined list of requested directions: {combined}")
+	if len(combined) == 0:
 		return
-	for dir in directions:
-		if dir == 'l':
+	for inDir in combined:
+		inDir = inDir.lower()
+		if inDir in ('l', 'left'):
 			left()
-		elif dir == 'r':
+		elif inDir in ('r', 'right'):
 			right()
-		elif dir == 'u':
+		elif inDir in ('u', 'up'):
 			up()
-		elif dir == 'd':
+		elif inDir in ('d', 'down'):
 			down()
 		else:
 			logger.info(f"Unrecognized direction: [{dir}]")

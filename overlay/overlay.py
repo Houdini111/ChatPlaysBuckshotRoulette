@@ -216,6 +216,7 @@ class Overlay():
 			noVoteDisplay.displayVote(None)
 			
 	def clearActionOverlay(self) -> None:
+		logger.debug("Hiding action overlay")
 		self.canvas.itemconfigure("actionOverlay", state="hidden")
 		self.lastDrawnActionNumbers = list[int]()
 		
