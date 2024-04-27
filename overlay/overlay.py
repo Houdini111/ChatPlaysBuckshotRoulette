@@ -169,6 +169,7 @@ class Overlay():
 		logger.info(f"showActionVotes numbersToDraw: {numbersToDraw}")
 		self.clearActionOverlay()
 		self.displayItemActionGuides(numbersToDraw)
+		self.displayShootActionGuides()
 			
 	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
 		logger.info(f"displayItemActionGuides numbersToDraw: {numbersToDraw}")
