@@ -12,7 +12,7 @@ from .secrets import getSecrets
 from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from shared.util import run_task
 from shared.actions import Action, ShootAction, UseItemAction
-from shared.consts import getShootNames, getUseNames
+from shared.consts import getShootNames, getUseNames, getDealerNames, getPlayerNames
 from shared.config import getChannels, getDefaultName, getInstructionsCooldown
 from overlay.overlay import getOverlay
 
@@ -23,6 +23,7 @@ class Chatbot(commands.Bot):
 		print("Running with init")
 		global bot
 		bot = self
+		self.prefix = "!" #TODO: Make confugrable
 		
 		self.nameVotesByUser: dict[str, str] = dict[str, str]()
 		self.nameVotesByName: RunningVote[str] = RunningVote[str]()
@@ -39,8 +40,10 @@ class Chatbot(commands.Bot):
 		self.instructionsCooldownS: int = getInstructionsCooldown()
 		self.instructionsCooldownNs: int = self.instructionsCooldownS * 1000000000
 		self.instructionsLastCalled: int = thread_time_ns()
+		self.instructionsCommandStr = self.prefix + "instructions"
 
-		self.prefix = "!" #TODO: Make confugrable
+		self.initMessageMaxLen()
+		
 		self.channels: dict[str, Channel] = dict[str, Channel]()
 		super().__init__(
 			token = getSecrets().getAccessToken(), 
@@ -152,6 +155,7 @@ class Chatbot(commands.Bot):
 		messageBody: str | None = message.content
 		if messageBody is None:
 			return
+		messageBody = messageBody[ :self.maxMessageLen] #Truncate to the maximum message length to improve string .split() performance
 		
 		if messageBody.startswith(self.prefix + "instructions"):
 			await self.printInstructions()
@@ -289,6 +293,28 @@ class Chatbot(commands.Bot):
 			self.sendMessage(msg)
 		else:
 			await ctx.send(msg)
+			
+	def initMessageMaxLen(self) -> None:
+		#This could have been simply hard coded but I wanted it to be able to handle me making changes elsewhere.
+		#  But I'm calculating once and storing it so it's not a big deal
+
+		shootMaxLen: int = len(max(getShootNames(), key=len))
+		useMaxLen: int = len(max(getUseNames(), key=len))
+		nameLen: int = len("name")
+		votePrefixMaxLen: int = max(shootMaxLen, useMaxLen, nameLen)
+		
+		dealerNameValueLen: int = len(max(getDealerNames(), key=len))
+		playerNameValueLen: int = len(max(getPlayerNames(), key=len))
+		targetValueLen: int = max(dealerNameValueLen, playerNameValueLen)
+		useValueLen: int = 4 #Two 1 digit numbers separated from each other and the key by a space 
+		nameValueLen: int = 6 #5 character from the game +1
+		voteValueMaxLen: int = max(targetValueLen, useValueLen, nameValueLen)
+
+		voteMaxLen: int = votePrefixMaxLen + voteValueMaxLen
+
+		instructionsCommandLen: int = len(self.instructionsCommandStr)
+		
+		self.maxMessageLen: int = max(voteMaxLen, instructionsCommandLen)
 		
 
 bot: Chatbot | None = None
