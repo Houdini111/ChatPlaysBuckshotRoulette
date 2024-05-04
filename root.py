@@ -34,7 +34,6 @@ logger = logging.getLogger(__name__)
 
 #TODO: 
 #  Handle adrenaline
-#      - Combine votes for adrenaline items (by checking if they have multiple parameters)
 #      - Display votes for dealer items? Or just say which one won afterwards?
 
 def initAsyncio():

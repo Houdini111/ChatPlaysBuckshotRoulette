@@ -9,11 +9,12 @@ logger = logging.getLogger(__name__)
 
 VoteType = TypeVar("VoteType", str, Action)
 
-class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
-	def __init__(self, vote: VoteType, numVotes: int):
+class Vote(Generic[VoteType]): 
+	def __init__(self, vote: VoteType, numVotes: int, isAdrenalineItem: bool = False):
 		self.voteType: Type[VoteType] = type(vote)
 		self.vote: VoteType = vote
 		self.numVotes = numVotes
+		self._isAdrenalineItem = isAdrenalineItem
 	
 	def __lt__(self, other):
 		return self.numVotes < other.numVotes
@@ -22,10 +23,10 @@ class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
 		return self.__deepcopy__() 
 	
 	def __deepcopy__(self):
-		return Vote(self.vote, self.numVotes)
+		return Vote(self.vote, self.numVotes, self.isAdrenalineItem)
 	
 	def __str__(self):
-		return "Vote{vote:\"" + str(self.vote) + "\", numVotes: " + str(self.numVotes) + "}"
+		return "Vote{vote:\"" + str(self.vote) + "\", numVotes: " + str(self.numVotes) + ", isAdrenalineItem: " + str(self.isAdrenalineItem) + "}"
 	
 	def __eq__(self, other):
 		return str(self.vote) == str(other)
@@ -43,12 +44,18 @@ class Vote(Generic[VoteType]): #Inherit dict so it'll be json serializable
 	def removeAVote(self) -> int:
 		self.numVotes -= 1
 		return self.numVotes
+	
+	def isAdrenalineItem(self) -> bool:
+		return self._isAdrenalineItem
 
 
 class RunningVote(Generic[VoteType]):
-	def __init__(self, votes: list[Vote[VoteType]] | None = None):
+	def __init__(self, votes: list[Vote[VoteType]] | None = None, dealerItemVotes: list[int] | None = None):
 		self.voteType: TypeVar = VoteType
 		self.votes: OrderedDict[str, Vote[VoteType]] = OrderedDict()
+		self.dealerItemVotes: list[int] = list[int]()
+		for i in range(8):
+			self.dealerItemVotes.append(0)
 		self.totalVotes = 0
 		self.sorted = True
 
@@ -68,7 +75,7 @@ class RunningVote(Generic[VoteType]):
 		vote: Vote
 		for vote in self.votes.values():
 			copyList.append(copy(vote))
-		return RunningVote(copyList)
+		return RunningVote(copyList, self.dealerItemVotes.copy())
 
 	def __iter__(self):
 		if not self.sorted:
@@ -103,19 +110,40 @@ class RunningVote(Generic[VoteType]):
 	def addAVote(self, vote: VoteType | Vote[VoteType]) -> None:
 		self.totalVotes += 1
 		voteStr: str = str(vote)
+		
+		dealerVote: int = self.extractDealerVote(voteStr)
+		isAdrenaline: bool = dealerVote >= 0
+		if isAdrenaline:
+			self.dealerItemVotes[dealerVote] += 1
+		
+		voteStr = " ".join(voteStr.split(" ")[0: 2]) #Remove dealer vote to combine votes for the same item with different dealer votes into one.
+
 		if voteStr in self.votes:
 			self.votes[voteStr].addAVote()
 		else:
 			if type(vote) is str:
-				self.votes[voteStr] = Vote[VoteType](vote, 1)
+				self.votes[voteStr] = Vote[VoteType](vote, 1, isAdrenaline)
 			elif type(vote) is Vote[VoteType]:
 				vote.numVotes = 1
 				self.votes[voteStr] = vote
 			elif issubclass(type(vote), VoteType.__constraints__):
-				newVote: Vote[VoteType] = Vote[VoteType](vote, 1) # type: ignore   At this point I know it's a VoteType but python doesn't realize it, and doesn't allow me to cast to tell it it's fine
+				newVote: Vote[VoteType] = Vote[VoteType](vote, 1, isAdrenaline) # type: ignore   At this point I know it's a VoteType but python doesn't realize it, and doesn't allow me to cast to tell it it's fine
 				self.votes[voteStr] = newVote
 		self.sorted = False
 	
+	def extractDealerVote(self, voteStr: str) -> int:
+		voteSplit: list[str] = voteStr.split(" ")
+		if len(voteSplit) < 2: #More than 2 entries means dealer vote
+			return -1
+		dealerVote: str = voteStr[2]
+		if len(dealerVote) != 1:
+			logger.warn(f"Expected dealer vote \"{dealerVote}\" from vote \"{voteStr}\" to be a single character. Was {len(dealerVote)}")
+			return -1
+		if not dealerVote.isdigit():
+			logger.warn(f"Expected dealer vote \"{dealerVote}\" from vote \"{voteStr}\" to only contain a digit. Was not a digit.")
+			return -1
+		return int(dealerVote) - 1 #Turn into zero index. Votes are given 1 indexed.
+
 	def removeAVote(self, vote: VoteType | Vote[VoteType]) -> None:
 		self.totalVotes -= 1
 		voteStr: str = str(vote)
@@ -144,19 +172,23 @@ class RunningVote(Generic[VoteType]):
 	
 	def hasVotes(self) -> bool:
 		return self.totalVotes > 0
+	
+	def getAdrenalineItemVotes(self) -> list[int]:
+		return self.dealerItemVotes
 
 class VotingTallyEntry(Generic[VoteType]):
-	def __init__(self, vote: Vote[VoteType], totalVotes: int):
+	def __init__(self, vote: Vote[VoteType], totalVotes: int, adrenalineItemVote: int = -1):
 		self.vote = vote
 		self.totalVotes: int = totalVotes #Used only for copy
 		self.percentageRaw: float = float(vote.getNumVotes())*100/totalVotes
 		self.percentageRound: float = round(self.percentageRaw)
+		self.adrenalineItemVote = adrenalineItemVote
 		
 	def __copy__(self):
 		return self.__deepcopy__()
 	
 	def __deepcopy__(self):
-		return VotingTallyEntry(copy(self.vote), self.totalVotes)
+		return VotingTallyEntry(copy(self.vote), self.totalVotes, self.adrenalineItemVote)
 
 	def changeTotalVotes(self, newTotalVote: int) -> None:
 		self.totalVotes = newTotalVote
@@ -170,7 +202,10 @@ class VotingTallyEntry(Generic[VoteType]):
 		return self.vote
 
 	def getVoteStr(self) -> str:
-		return str(self.vote.getVote())
+		adrenalineAddition: str = ""
+		if self.getVoteObj().isAdrenalineItem():
+			adrenalineAddition = f" {self.adrenalineItemVote}"
+		return f"{self.vote.getVote()}{adrenalineAddition}"
 	
 	def getNumVotes(self) -> int:
 		return self.vote.getNumVotes()
@@ -267,11 +302,13 @@ class VotingTally(Generic[VoteType]):
 		runningVote.sort()
 		self.totalVotes = runningVote.getTotalVotes()
 		logger.debug(f"VotingTally.__init__, provided runningVote had {self.totalVotes} total votes")
+		self.adrenalineItemVotes: list[int] = runningVote.getAdrenalineItemVotes()
+		self.winningAdrenalineItemVote = self.getWinningAdrenalineItemVote()
 		self.tallies: list[VotingTallyEntryList] = list[VotingTallyEntryList]()
 		voteVal: str
 		voteObj: Vote
 		for voteVal, voteObj in runningVote.items():
-			tallyEntry: VotingTallyEntry[VoteType] = VotingTallyEntry[VoteType](voteObj, self.totalVotes)
+			tallyEntry: VotingTallyEntry[VoteType] = VotingTallyEntry[VoteType](voteObj, self.totalVotes, self.winningAdrenalineItemVote)
 			entryList: VotingTallyEntryList[VoteType] = self.getTalleyListForVoteCount(voteObj.getNumVotes())
 			entryList.add(tallyEntry)
 			logger.debug(f"Created vote talley entry: {tallyEntry}")
@@ -286,6 +323,16 @@ class VotingTally(Generic[VoteType]):
 		else: 
 			logger.debug("No tallies in VotingTally, so no iterators")
 	
+	def getWinningAdrenalineItemVote(self) -> int:
+		topVoteVoteCount: int = max(self.adrenalineItemVotes)
+		ties: list[int] = list[int]()
+		for vote in self.adrenalineItemVotes:
+			if vote == topVoteVoteCount:
+				ties.append(vote)
+		if len(ties) > 1:
+			logger.debug(f"There was a {len(ties)}-way tie for adrenaline vote.")
+		return random.choice(ties)
+
 	def getWinner(self) -> VotingTallyEntry[VoteType] | None:
 		if not self.hasTallies():
 			return None
