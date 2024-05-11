@@ -3,6 +3,7 @@ from time import sleep, thread_time_ns
 from typing import Any
 from twitchio import Message, Chatter, PartialChatter, Channel
 from twitchio.ext import commands
+from copy import deepcopy
 import logging
 import json
 import random
@@ -83,7 +84,11 @@ class Chatbot(commands.Bot):
 		winningVote: VotingTallyEntry | None = self.talliedActions.getWinner()
 		if winningVote is None:
 			return None #Don't allow tiebreakers in action votes. Wait longer.
-		self.sendMessage(f"Winning action of [{winningVote.getVoteStr().upper()}] won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()})")
+		if winningVote.getVoteObj().isAdrenalineItem():
+			winningAdrenalineVote: int = self.talliedActions.getWinningAdrenalineItemVote()
+			winningVote = deepcopy(winningVote)
+			winningVote.adrenalineItemVote = winningAdrenalineVote
+		self.sendMessage(f"Winning action of [{str(winningVote.getVoteObj().getVote()).upper()}] won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()})")
 		return winningVote.getVoteObj().getVote()
 		#Do not clear votes immediately, as it might not be valid. 
 	

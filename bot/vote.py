@@ -1,7 +1,7 @@
 import logging
 import random
 from typing import Generic, Iterator, OrderedDict, TypeVar, Type
-from copy import copy
+from copy import deepcopy
 
 from shared.actions import Action
 
@@ -20,18 +20,21 @@ class Vote(Generic[VoteType]):
 		return self.numVotes < other.numVotes
 	
 	def __copy__(self):
-		return self.__deepcopy__() 
+		return deepcopy(self)
 	
-	def __deepcopy__(self):
-		return Vote(self.vote, self.numVotes, self.isAdrenalineItem)
+	def __deepcopy__(self, memo):
+		ret = Vote(self.vote, self.numVotes, self.isAdrenalineItem)
+		memo[id(self)] = ret
+		return ret
 	
 	def __str__(self):
-		return "Vote{vote:\"" + str(self.vote) + "\", numVotes: " + str(self.numVotes) + ", isAdrenalineItem: " + str(self.isAdrenalineItem) + "}"
+		return "Vote{vote:\"" + str(self.vote) + "\", numVotes: " + str(self.numVotes) + ", isAdrenalineItem: " + str(self._isAdrenalineItem) + "}"
 	
 	def __eq__(self, other):
 		return str(self.vote) == str(other)
 	
 	def getVote(self) -> VoteType:
+		logger.debug(f"Vote's vote: [{self.vote}]")
 		return self.vote
 	
 	def getNumVotes(self) -> int:
@@ -68,14 +71,16 @@ class RunningVote(Generic[VoteType]):
 		self.sort()	
 		
 	def __copy__(self):
-		return self.__deepcopy__()
+		return deepcopy(self)
 	
-	def __deepcopy__(self):
+	def __deepcopy__(self, memo):
 		copyList: list[Vote[VoteType]] = list[Vote[VoteType]]()
 		vote: Vote
 		for vote in self.votes.values():
-			copyList.append(copy(vote))
-		return RunningVote(copyList, self.dealerItemVotes.copy())
+			copyList.append(deepcopy(vote))
+		ret = RunningVote(copyList, self.dealerItemVotes.copy())
+		memo[id(self)] = ret
+		return ret
 
 	def __iter__(self):
 		if not self.sorted:
@@ -124,18 +129,21 @@ class RunningVote(Generic[VoteType]):
 			self.votes[voteStr].addAVote()
 		else:
 			if type(vote) is str:
+				logger.debug(f"Adding new vote. Constructing from string \"{vote}\"")
 				self.votes[voteStr] = Vote[VoteType](vote, 1, isAdrenaline)
 			elif type(vote) is Vote[VoteType]:
+				logger.debug(f"Adding new vote. Constructing from Vote. Type: {type(vote)}. Vote val: {vote}")
 				vote.numVotes = 1
 				self.votes[voteStr] = vote
 			elif issubclass(type(vote), VoteType.__constraints__):
+				logger.debug(f"Adding new vote. Constructing from VoteType subtype. Type: {type(vote)}. Vote val: {vote}")
 				newVote: Vote[VoteType] = Vote[VoteType](vote, 1, isAdrenaline) # type: ignore   At this point I know it's a VoteType but python doesn't realize it, and doesn't allow me to cast to tell it it's fine
 				self.votes[voteStr] = newVote
 		self.sorted = False
 	
 	def extractDealerVoteIndex(self, voteStr: str) -> int:
 		voteSplit: list[str] = voteStr.split(" ")
-		if len(voteSplit) < 2: #More than 2 entries means dealer vote
+		if len(voteSplit) <= 2: #More than 2 entries means dealer vote
 			return -1
 		dealerVote: str = voteSplit[2]
 		if len(dealerVote) != 1:
@@ -189,10 +197,12 @@ class VotingTallyEntry(Generic[VoteType]):
 		self.adrenalineItemVote = adrenalineItemVote
 		
 	def __copy__(self):
-		return self.__deepcopy__()
+		return deepcopy(self)
 	
-	def __deepcopy__(self):
-		return VotingTallyEntry(copy(self.vote), self.totalVotes, self.adrenalineItemVote)
+	def __deepcopy__(self, memo):
+		ret = VotingTallyEntry(deepcopy(self.vote), self.totalVotes, self.adrenalineItemVote)
+		memo[id(self)] = ret
+		return ret
 
 	def changeTotalVotes(self, newTotalVote: int) -> None:
 		self.totalVotes = newTotalVote
@@ -205,10 +215,16 @@ class VotingTallyEntry(Generic[VoteType]):
 	def getVoteObj(self) -> Vote[VoteType]:
 		return self.vote
 
+	def getBaseVoteStr(self) -> str:
+		voteStr: str = self.vote.getVote().upper()
+		voteStrSplit: list[str] = voteStr.split(" ")
+		return f"{voteStrSplit[0]} {voteStrSplit[1]}"
+
 	def getVoteStr(self) -> str:
 		adrenalineAddition: str = ""
 		if self.getVoteObj().isAdrenalineItem():
 			adrenalineAddition = f" {self.adrenalineItemVote}"
+		logger.debug(f"Base vote: [{self.vote.getVote()}]. Addition: [{adrenalineAddition}]")
 		return f"{self.vote.getVote()}{adrenalineAddition}"
 	
 	def getNumVotes(self) -> int:
@@ -237,14 +253,16 @@ class VotingTallyEntryList(Generic[VoteType]):
 		return self.getTallyVoteCountToContain() < other.getTallyVoteCountToContain()
 	
 	def __copy__(self):
-		return self.__deepcopy__()
+		return deepcopy(self)
 
-	def __deepcopy__(self):
+	def __deepcopy__(self, memo):
 		copiedList: list[VotingTallyEntry] = list[VotingTallyEntry]()
 		entry: VotingTallyEntry
 		for entry in self.tallies:
-			copiedList.append(copy(entry))
-		return VotingTallyEntryList(self.tallyVoteCountToContain, copiedList)
+			copiedList.append(deepcopy(entry))
+		ret = VotingTallyEntryList(self.tallyVoteCountToContain, copiedList)
+		memo[id(self)] = ret
+		return ret
 	
 	#TODO: There should probably be two kinds of EntryList. Those that can choose randomly and those that can't
 	def getWinner(self) -> VotingTallyEntry[VoteType] | None:
