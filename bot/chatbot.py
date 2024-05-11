@@ -273,7 +273,7 @@ class Chatbot(commands.Bot):
 			return
 		logger.debug(f"Tallying action votes. Action votes len: {len(self.actionVotesByAction)}")
 		tally: VotingTally = tallyVotes(self.actionVotesByAction)
-		getOverlay().drawActionVotes(tally.allVotes())
+		getOverlay().drawActionVotes(tally.allVotes(), tally.getAdrenalineItemVotes())
 
 	async def printInstructions(self, ctx: commands.Context | None = None):
 		logger.info("Instructions command called")

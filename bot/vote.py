@@ -111,10 +111,12 @@ class RunningVote(Generic[VoteType]):
 		self.totalVotes += 1
 		voteStr: str = str(vote)
 		
-		dealerVote: int = self.extractDealerVote(voteStr)
-		isAdrenaline: bool = dealerVote >= 0
+		dealerVoteIndex: int = self.extractDealerVoteIndex(voteStr) #0 indexed
+		isAdrenaline: bool = dealerVoteIndex >= 0
+		logger.debug(f"Latest vote \"{voteStr}\" has a dealer vote of \"{dealerVoteIndex}\"")
 		if isAdrenaline:
-			self.dealerItemVotes[dealerVote] += 1
+			self.dealerItemVotes[dealerVoteIndex] += 1 #0 indexed
+			logger.debug(f"Dealer Item Votes after the latest dealer vote: {self.dealerItemVotes}")
 		
 		voteStr = " ".join(voteStr.split(" ")[0: 2]) #Remove dealer vote to combine votes for the same item with different dealer votes into one.
 
@@ -131,11 +133,11 @@ class RunningVote(Generic[VoteType]):
 				self.votes[voteStr] = newVote
 		self.sorted = False
 	
-	def extractDealerVote(self, voteStr: str) -> int:
+	def extractDealerVoteIndex(self, voteStr: str) -> int:
 		voteSplit: list[str] = voteStr.split(" ")
 		if len(voteSplit) < 2: #More than 2 entries means dealer vote
 			return -1
-		dealerVote: str = voteStr[2]
+		dealerVote: str = voteSplit[2]
 		if len(dealerVote) != 1:
 			logger.warn(f"Expected dealer vote \"{dealerVote}\" from vote \"{voteStr}\" to be a single character. Was {len(dealerVote)}")
 			return -1
@@ -180,7 +182,9 @@ class VotingTallyEntry(Generic[VoteType]):
 	def __init__(self, vote: Vote[VoteType], totalVotes: int, adrenalineItemVote: int = -1):
 		self.vote = vote
 		self.totalVotes: int = totalVotes #Used only for copy
-		self.percentageRaw: float = float(vote.getNumVotes())*100/totalVotes
+		self.percentageRaw: float = 0
+		if vote.getNumVotes() > 0 and totalVotes > 0:
+			self.percentageRaw = float(vote.getNumVotes())*100/totalVotes
 		self.percentageRound: float = round(self.percentageRaw)
 		self.adrenalineItemVote = adrenalineItemVote
 		
@@ -323,6 +327,15 @@ class VotingTally(Generic[VoteType]):
 		else: 
 			logger.debug("No tallies in VotingTally, so no iterators")
 	
+	def getAdrenalineItemVotes(self) -> list[VotingTallyEntry[int]]:
+		total: int = sum(self.adrenalineItemVotes)
+		ret: list[VotingTallyEntry[int]] = list[VotingTallyEntry[int]]()
+		for i, adrenalineItemVoteCount in enumerate(self.adrenalineItemVotes):
+			vote: Vote = Vote[int](i + 1, adrenalineItemVoteCount, True)
+			entry: VotingTallyEntry = VotingTallyEntry(vote, total, 0)
+			ret.append(entry)
+		return ret
+
 	def getWinningAdrenalineItemVote(self) -> int:
 		topVoteVoteCount: int = max(self.adrenalineItemVotes)
 		ties: list[int] = list[int]()

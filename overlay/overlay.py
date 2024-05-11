@@ -28,7 +28,11 @@ class ActionVoteDisplay(Generic[ActionVoteType]):
 		self.y1440: int = y1440
 		self.fontSize: int = fontSize
 		self.canvas: tk.Canvas = canvas
-		self.mainTextId: int = draw_text_1440(str(actionGuide), x1440, y1440, self.fontSize, textTags = ["actionOverlay"], anchor = "center")
+		actionGuideStr: str = str(actionGuide)
+		logger.debug(f"Action Guide Str Type: {type(self)}")
+		if type(self) is DealerVoteDisplay:
+			actionGuideStr = ""
+		self.mainTextId: int = draw_text_1440(actionGuideStr, x1440, y1440, self.fontSize, textTags = ["actionOverlay"], anchor = "center")
 		verticalOffset: int = int(fontSize * 1.1)
 		horizontalOffset: int = 0 #These default values are for str actionGuides (shoot type)
 		anchor: str = "center"
@@ -39,12 +43,23 @@ class ActionVoteDisplay(Generic[ActionVoteType]):
 			else: #Odd goes left, so anchor right
 				anchor = "e"
 				horizontalOffset = 60 
-		if type(actionGuide) is Target:
+		elif type(actionGuide) is Target:
 			logger.debug("Action guide is for Targets")
 			if actionGuide == Target.DEALER:
 				logger.debug("Action guide is for Target DEALER")
 				verticalOffset = verticalOffset * -1
-		logger.debug(f"Vertical offset for actionGuide: {actionGuide} is {verticalOffset}")
+		if type(self) is DealerVoteDisplay:
+			if actionGuide == 2:
+				verticalOffset = -17
+			elif actionGuide == 3:
+				verticalOffset = -70
+			elif actionGuide == 6:
+				verticalOffset = 27
+			elif actionGuide == 7:
+				verticalOffset = -27
+			else:
+				verticalOffset = 0
+		logger.debug(f"Vertical offset for actionGuide: {actionGuide} is {verticalOffset}. Type: {type(self)}")
 		self.statsTextId: int = draw_text_1440("", x1440 + horizontalOffset, y1440 - verticalOffset, int(self.fontSize * 0.5), textTags = ["actionOverlay", "voteStats"], anchor = anchor)
 	
 	def getActionGuide(self) -> ActionVoteType:
@@ -55,20 +70,29 @@ class ActionVoteDisplay(Generic[ActionVoteType]):
 		self.canvas.itemconfig(self.mainTextId, state="normal")
 
 	def displayVote(self, voteEntry: VotingTallyEntry | None) -> None:
-		logger.debug(f"Displaying vote for vote guide {self.actionGuide}. Vote: {voteEntry}")
+		logger.debug(f"{type(self)}: Displaying vote for vote guide {self.actionGuide}. Vote: {voteEntry}")
 		numVotesStr: str = "0"
 		percentStr: str = "0%"
 		if voteEntry is not None:
 			numVotesStr = str(voteEntry.getNumVotes())
 			percentStr = voteEntry.getPercentageStr()
 		statsText = f"{numVotesStr} ({percentStr})"
+		#statsText = f"{numVotesStr} {percentStr}"
+		logger.debug(f"{type(self)}: Displaying vote for vote guide {self.actionGuide}. Vote: {voteEntry}. Stats Text: \"{statsText}\"")
 		self.canvas.itemconfig(self.statsTextId, text=statsText)
 		self.canvas.itemconfig(self.statsTextId, state="normal")
+		
+	def clearVoteStats(self):
+		self.canvas.itemconfigure(self.statsTextId, state="hidden")
+		#self.canvas.itemconfig(self.statsTextId, text="")
 		
 class ItemActionVoteDisplay(ActionVoteDisplay):
 	pass
 
 class ShootActionVoteDisplay(ActionVoteDisplay):
+	pass
+
+class DealerVoteDisplay(ActionVoteDisplay):
 	pass
 
 class Overlay():
@@ -139,6 +163,7 @@ class Overlay():
 	
 	def initActionVotesDisplay(self) -> None:
 		self.itemActionVoteDisplays: dict[int, ItemActionVoteDisplay] = dict[int, ItemActionVoteDisplay]()
+		self.dealerItemVoteDisplays: dict[int, ItemActionVoteDisplay] = dict[int, ItemActionVoteDisplay]()
 		self.lastDrawnActionNumbers: list[int] = list[int]()
 		numberFontSize: int =  int(self.baseFontSize*1.2)
 		voteDisplay: ActionVoteDisplay
@@ -158,8 +183,31 @@ class Overlay():
 			pos = playerNumGridPositions[i]
 			voteDisplay = ItemActionVoteDisplay(i, pos[0], pos[1], numberFontSize, self.draw_text_1440, self.canvas)
 			self.itemActionVoteDisplays[i] = voteDisplay
+			#myFakeTallyEntry = VotingTallyEntry(Vote[str]("999", 999), 999)
+			#voteDisplay.displayVote(myFakeTallyEntry)
+		
+		dealerNumGridPositions = {
+			1: [790, 200],	
+			2: [1121, 200],
+			3: [1417, 200],
+			4: [1749, 200],
+			5: [700, 350],
+			6: [1095, 350],
+			7: [1450, 350],
+			8: [1850, 350]
+		}
+		for i in range(1, 9): #[1, 9)
+			if i < 1 or i > 8:
+				continue
+			pos = dealerNumGridPositions[i]
+			voteDisplay = DealerVoteDisplay(i, pos[0], pos[1], int(numberFontSize *0.75), self.draw_text_1440, self.canvas)
+			self.dealerItemVoteDisplays[i] = voteDisplay
+			#myFakeTallyEntry = VotingTallyEntry(Vote[str]("999", 999), 999)
+			#voteDisplay.displayVote(myFakeTallyEntry)
+		
 		self.shootActionVoteDisplays: dict[Target, ShootActionVoteDisplay] =  dict[Target, ShootActionVoteDisplay]()
 		voteDisplay = ShootActionVoteDisplay(Target.DEALER, int(2560/2), self.baseFontSize, self.baseFontSize, self.draw_text_1440, self.canvas)
+		#voteDisplay.displayVote(VotingTallyEntry(Vote[Target](Target.DEALER, 1), 1))
 		self.shootActionVoteDisplays[Target.DEALER] = voteDisplay
 		voteDisplay = ShootActionVoteDisplay(Target.SELF, int(2560/2), 1440 - self.baseFontSize, self.baseFontSize, self.draw_text_1440, self.canvas)
 		self.shootActionVoteDisplays[Target.SELF] = voteDisplay
@@ -187,7 +235,7 @@ class Overlay():
 		for voteDisplay in self.shootActionVoteDisplays.values():
 			voteDisplay.displayVoteGuide()
 
-	def drawActionVotes(self, actionVotes: list[VotingTallyEntry]) -> None:
+	def drawActionVotes(self, actionVotes: list[VotingTallyEntry], adrenalineItemVotes: list[VotingTallyEntry]) -> None:
 		logger.info(f"drawActionVotes. lastDrawnActionNumbers -> {self.lastDrawnActionNumbers}, len actionVotes: {len(actionVotes)}")
 		noVoteDisplays: list[ActionVoteDisplay] = list[ActionVoteDisplay]()
 		noVoteDisplays.extend(list(self.itemActionVoteDisplays.values()))
@@ -215,6 +263,16 @@ class Overlay():
 					logger.debug(f"Skipping unvoted action {noVoteDisplay.getActionGuide()} because it was not drawn previously")
 					continue
 			noVoteDisplay.displayVote(None)
+			
+		for i in range(0, 8): #[0, 9)
+			logger.debug(f"Accessing index {i} for votes and {i + 1} for displays")
+			adrenalineItemVote = adrenalineItemVotes[i] #0 indexed
+			logger.debug(f"Vote for {i+1}: {str(adrenalineItemVote)}. Str: {adrenalineItemVote.getVoteStr()}. Num Votes: {adrenalineItemVote.getNumVotes()}")
+			voteDisplay = self.dealerItemVoteDisplays[i + 1] #1 indexed
+			if adrenalineItemVote.getNumVotes() < 1:
+				voteDisplay.clearVoteStats()
+			else:
+				voteDisplay.displayVote(adrenalineItemVote)
 			
 	def clearActionOverlay(self) -> None:
 		logger.debug("Hiding action overlay")
