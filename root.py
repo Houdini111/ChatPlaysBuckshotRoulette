@@ -34,8 +34,12 @@ logger = logging.getLogger(__name__)
 
 #TODO: 
 #  Alternative vote display (list mode)
-#  Sometimes winning action vote text is wrong. Sometimes one too many (like [USE 3 7 1]) sometimes too few (leaving off adrenaline item vote)
 #  Targeting circle for current winners. Nothing if normal tie. But also draw adrenaline item circle.
+#  
+#  Sometimes bugs 
+#    * Sometimes winning action vote text is wrong. Somestimes doesn't include adrenaline item number.
+#    * Sometimes adrenaline item votes for the same player item don't combine.
+
 
 def initAsyncio():
 	if platform.system() == "Windows":
