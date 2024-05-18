@@ -191,7 +191,7 @@ class Chatbot(commands.Bot):
 				self.shootVote(authorName, commandArgs)
 	
 	def nameVote(self, authorName: str, name: str) -> None:
-		name = name[0: 5].upper().strip()
+		name = name[0: 6].upper().strip()
 
 		for char in name:
 			if not char.isalpha():
@@ -305,14 +305,14 @@ class Chatbot(commands.Bot):
 
 		shootMaxLen: int = len(max(getShootNames(), key=len))
 		useMaxLen: int = len(max(getUseNames(), key=len))
-		nameLen: int = len("name")
+		nameLen: int = len("name ")
 		votePrefixMaxLen: int = max(shootMaxLen, useMaxLen, nameLen)
 		
 		dealerNameValueLen: int = len(max(getDealerNames(), key=len))
 		playerNameValueLen: int = len(max(getPlayerNames(), key=len))
 		targetValueLen: int = max(dealerNameValueLen, playerNameValueLen)
 		useValueLen: int = 4 #Two 1 digit numbers separated from each other and the key by a space 
-		nameValueLen: int = 6 #5 character from the game +1
+		nameValueLen: int = 6 #6 character from the game
 		voteValueMaxLen: int = max(targetValueLen, useValueLen, nameValueLen)
 
 		voteMaxLen: int = votePrefixMaxLen + voteValueMaxLen
