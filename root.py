@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 #TODO: 
 #  Alternative vote display (list mode)
+#  Option for vote display on/off. 
+#     If on, then position matters based on vote display mode
 #  Targeting circle for current winners. Nothing if normal tie. But also draw adrenaline item circle.
 #  
 #  Sometimes bugs 

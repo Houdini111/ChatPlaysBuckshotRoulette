@@ -118,6 +118,7 @@ class Chatbot(commands.Bot):
 	def clearNameVotes(self) -> None:
 		self.nameVotesByName.clear()
 		self.nameVotesByUser.clear()
+		logger.debug(f"Name dict lens after clear: {len(self.nameVotesByName)} {len(self.nameVotesByName)}")
 	
 	def sendMessage(self, message: str) -> None:
 		if len(self.channels) > 1:
