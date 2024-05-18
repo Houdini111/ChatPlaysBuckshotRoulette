@@ -139,12 +139,7 @@ class FullScreenVoteDisplay():
 		voteDisplay = ShootActionVoteDisplay(Target.SELF, int(2560/2), 1440 - self.baseFontSize, self.baseFontSize, draw_text_1440, canvas)
 		self.shootActionVoteDisplays[Target.SELF] = voteDisplay
 		
-	#def showActionVoteStatic(self) -> None:
-	#	voteDisplay: ActionVoteDisplay
-	#	for voteDisplay in self.shootActionVoteDisplays.values():
-	#		voteDisplay.displayVoteGuide()
-			
-	def showActionVoteStatic(self, numbersToDraw: list[int]) -> None:
+	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
 		logger.info(f"showActionVoteStatic numbersToDraw: {numbersToDraw}")
 		self.lastDrawnActionNumbers = numbersToDraw
 		voteDisplay: ActionVoteDisplay
