@@ -8,6 +8,8 @@ shootNames = ["shoot", "shot", "attack", "hit", "target"]
 dealerNames = ["dealer", "them", "guy", "other"]
 playerNames = ["self", "me", "player", "i", "myself"]
 
+maxNameLength: int = 6
+
 class StrEnum(Enum):
 	def __str__(self):
 		return self.value
@@ -33,3 +35,6 @@ def getDealerNames():
 
 def getPlayerNames():
 	return playerNames
+
+def getMaxNameLength():
+	return maxNameLength

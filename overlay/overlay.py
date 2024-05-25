@@ -14,7 +14,12 @@ from shared.util import resizePointFrom1440p
 from shared.actions import Action, ShootAction, UseItemAction
 from bot.vote import Vote, VotingTally, VotingTallyEntry
 from .consts import Tags
+from .actionVoteDisplay import ActionVoteDisplay
 from .fullScreenVoteDisplay import FullScreenVoteDisplay
+from .sidebarVoteDisplay import SidebarVoteDisplay
+from .leaderboard import Leaderboard
+from .voteActionLeaderboard import VoteActionLeaderboard
+from .nameLeaderboard import NameLeaderboard
 
 #TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?, countdown (including clock?) for voting time
 
@@ -40,12 +45,11 @@ class Overlay():
 		
 		self.voteList: list[int] = []
 		
-		self.voteLeaderboardY = 1050
-		#self.draw_text_1440("Chat Overlay Active", 12, 10, 50)
-		#self.statusText = self.draw_text_1440("", 12, 10 + int(1.25 * self.optionsFontSize), 40)
 		self.statusText = self.draw_text_1440("", 20, 20, int(self.baseFontSize*50/80), self.canvas)
 		self.initNameLeaderboard()
 		self.initActionVotesDisplay()
+		
+		#self.voteActionLeaderboard: Leaderboard = VoteActionLeaderboard("Test Header", 5, 1080, 420, 50, self.draw_text_1440, self.canvas)
 	
 	def run(self) -> None:
 		tk.mainloop()
@@ -53,7 +57,7 @@ class Overlay():
 	def stop(self) -> None:
 		self.root.destroy()
 
-	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, canvas: tk.Canvas, bold: bool = True, textTags: list[str] = [], anchor: str = "nw") -> int:
+	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, canvas: tk.Canvas, bold: bool = True, textTags: list[str] = list[str](), anchor: str = "nw") -> int:
 		realX, realY = resizePointFrom1440p(x1440, y1440)
 		#font = ("Arial", fontSize)
 		font = ("Lucida Console", fontSize) #I really want a cleaner monospace font included in windows...
@@ -67,9 +71,17 @@ class Overlay():
 	
 	def clearOldNameLeaderboard(self) -> None:
 		logger.info("Clearing old name leaderboard")
+		self.nameLeaderboard.clearRows()
+
+	def oldClearOldNameLeaderboard(self) -> None:
+		logger.info("Clearing old name leaderboard")
 		self.canvas.itemconfig(Tags.NAME_LEADERBOARD, text="")
 
 	def drawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
+		self.clearOldNameLeaderboard()
+		self.nameLeaderboard.displayVotes(votes)
+
+	def oldDrawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
 		self.clearOldNameLeaderboard()
 		for textId, vote in zip(self.voteList, votes):
 			namePadding = " " * (6 - len(vote.getVoteStr()))
@@ -79,10 +91,16 @@ class Overlay():
 			self.canvas.itemconfig(textId, text = voteStr)
 			
 	def initNameLeaderboard(self) -> None:
+		#self.initOldNameLeaderboard()
+		self.nameLeaderboard: Leaderboard = NameLeaderboard("Next Name Ranking", 5, 20, 950, int(math.ceil(self.baseFontSize*0.85)), self.draw_text_1440, self.canvas)
+
+	def initOldNameLeaderboard(self) -> None:
+		nameLeaderboardY = 1050
+
 		headerFontSize = int(self.baseFontSize/4)
-		self.nameHeader = self.draw_text_1440("Next Name Ranking", 10, self.voteLeaderboardY, 60, self.canvas, anchor = "sw")
+		self.nameHeader = self.draw_text_1440("Next Name Ranking", 10, nameLeaderboardY, 60, self.canvas, anchor = "sw")
 		nameLeaderboardItemFontSize = int(self.baseFontSize*45/80)
-		y = self.voteLeaderboardY + int(headerFontSize * .1)
+		y = nameLeaderboardY + int(headerFontSize * .1)
 		yInc = int(nameLeaderboardItemFontSize * 1.75)
 		for i in range(5):
 			voteId: int = self.draw_text_1440("", 20, y, nameLeaderboardItemFontSize, self.canvas, textTags = [Tags.NAME_LEADERBOARD], anchor = "nw")
@@ -92,9 +110,9 @@ class Overlay():
 	def initActionVotesDisplay(self) -> None:
 		#TODO: Config value and sidebarVoteDisplay
 		if True:
-			self.actionVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas)
+			self.actionVoteDisplay: ActionVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas)
 		else:
-			pass 
+			self.actionVoteDisplay: ActionVoteDisplay = SidebarVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas) 
 		self.clearActionOverlay()
 
 	def showActionVoteStatic(self, numbersToDraw: list[int]) -> None:

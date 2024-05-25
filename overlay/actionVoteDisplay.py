@@ -21,7 +21,3 @@ class ActionVoteDisplay(ABC):
 	@abstractmethod
 	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
 		pass
-
-	@abstractmethod
-	def displayVoteStatic(self) -> None:
-		pass

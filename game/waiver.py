@@ -2,6 +2,7 @@ import logging
 from time import sleep
 
 from .basicActions import up, down, left, right, confirm, anyUse
+from shared.consts import getMaxNameLength
 from overlay.status import status
 from bot.chatbot import getChatbot
 
@@ -24,7 +25,7 @@ def pickUpWaiver() -> None:
 	sleep(3.5) #Do I need more? Can I get away with less?
 
 def enterName(name: str) -> None:
-	name = name.upper()[0:6] #Normalize to uppercase and truncate to the max of 6 characters
+	name = name.upper()[0: getMaxNameLength()] #Normalize to uppercase and truncate to the max of 6 characters
 	status(f"Entering name {name}")
 	
 	logger.debug("In case the player has tabbed out, reactivate cursor by moving off and on")
