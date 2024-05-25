@@ -12,6 +12,7 @@ import logging
 from shared.consts import Target
 from shared.util import resizePointFrom1440p
 from shared.actions import Action, ShootAction, UseItemAction
+from shared.config import useSidebarActionOverlay
 from bot.vote import Vote, VotingTally, VotingTallyEntry
 from .consts import Tags
 from .actionVoteDisplay import ActionVoteDisplay
@@ -81,27 +82,15 @@ class Overlay():
 		self.nameLeaderboard: Leaderboard = NameLeaderboard("Next Name Ranking", 5, 20, 950, int(math.ceil(self.baseFontSize*0.85)), self.draw_text_1440, self.canvas)
 
 	def initActionVotesDisplay(self) -> None:
-		#TODO: Config value and sidebarVoteDisplay
-		if True:
-			self.actionVoteDisplay: ActionVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas)
+		if useSidebarActionOverlay():
+			self.actionVoteDisplay: FullScreenVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas)
 		else:
-			self.actionVoteDisplay: ActionVoteDisplay = SidebarVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas) 
+			self.actionVoteDisplay: SidebarVoteDisplay = SidebarVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas) 
 		self.clearActionOverlay()
 
 	def showActionVoteStatic(self, numbersToDraw: list[int]) -> None:
 		logger.info(f"showActionVoteStatic numbersToDraw: {numbersToDraw}")
 		self.actionVoteDisplay.showActionVoteStatic(numbersToDraw)
-			
-	#TODO: Remove?
-	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
-		logger.info(f"displayItemActionGuides numbersToDraw: {numbersToDraw}")
-		self.lastDrawnActionNumbers = numbersToDraw
-		voteDisplay: ActionVoteDisplay
-		for i in numbersToDraw:
-			if i < 1 or i > 8:	
-				continue
-			voteDisplay = self.itemActionVoteDisplays[i]
-			voteDisplay.displayVoteGuide()
 
 	def drawActionVotes(self, actionVotes: list[VotingTallyEntry], adrenalineItemVotes: list[VotingTallyEntry]) -> None:
 		logger.info(f"drawActionVotes. lastDrawnActionNumbers -> {self.lastDrawnActionNumbers}, len actionVotes: {len(actionVotes)}")

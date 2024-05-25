@@ -216,7 +216,7 @@ class VotingTallyEntry(Generic[VoteType]):
 		return self.vote
 
 	def getBaseVoteStr(self) -> str:
-		voteStr: str = self.vote.getVote().upper()
+		voteStr: str = str(self.vote.getVote()).upper()
 		voteStrSplit: list[str] = voteStr.split(" ")
 		return f"{voteStrSplit[0]} {voteStrSplit[1]}"
 

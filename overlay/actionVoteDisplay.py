@@ -7,11 +7,10 @@ logger = logging.getLogger(__name__)
 
 class ActionVoteDisplay(ABC):
 	
+	#TODO: Remove?
 	def showActionVoteStatic(self, numbersToDraw: list[int]) -> None:
 		logger.debug(f"showActionVoteStatic {numbersToDraw}")
-		self.clearVoteStatic()
 		self.displayItemActionGuides(numbersToDraw)
-		self.displayVoteStatic()
 		
 	def clearActionStatic(self) -> None:
 		logger.debug("Hiding action static")

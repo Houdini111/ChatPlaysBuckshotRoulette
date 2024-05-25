@@ -59,3 +59,6 @@ def getRunGamebot() -> bool:
 
 def getRunOverlay() -> bool:
 	return config.getKeyOrDefault("runOverlay", bool, True)
+
+def useSidebarActionOverlay() -> bool:
+	return config.getKeyOrDefault("useSidebarActionOverlay", bool, False)
