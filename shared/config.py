@@ -31,7 +31,6 @@ class Config():
 			return val
 		return expectedType(val)
 
-
 config: Config = Config()
 
 def getTesseractPath() -> str:
@@ -51,3 +50,12 @@ def getOutputOcrImages() -> int:
 
 def getInstructionsCooldown() -> int:
 	return config.getKeyOrDefault("instructionsCooldown", int, 15)
+
+def getRunChatbot() -> bool:
+	return config.getKeyOrDefault("runChatbot", bool, True)
+
+def getRunGamebot() -> bool:
+	return config.getKeyOrDefault("runGamebot", bool, True)
+
+def getRunOverlay() -> bool:
+	return config.getKeyOrDefault("runOverlay", bool, True)

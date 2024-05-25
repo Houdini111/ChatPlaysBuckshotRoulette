@@ -7,6 +7,7 @@ import logging.handlers
 from time import sleep
 
 from shared.streamToLogger import StreamToLogger
+from shared.config import getRunChatbot, getRunGamebot, getRunOverlay
 from overlay.overlay import Overlay
 from game.bathroom import throughToGameRoom
 from game.waiver import waive
@@ -37,7 +38,8 @@ logger = logging.getLogger(__name__)
 #  Option for vote display on/off. 
 #     If on, then position matters based on vote display mode
 #  Targeting circle for current winners. Nothing if normal tie. But also draw adrenaline item circle.
-#  
+#  Convert name leaderboard to leaderboard object
+#
 #  Sometimes bugs 
 #    * Sometimes winning action vote text is wrong. Somestimes doesn't include adrenaline item number.
 #    * Sometimes adrenaline item votes for the same player item don't combine.
@@ -51,18 +53,29 @@ def startGame() -> None:
 	logger.info("Starting all processes")
 	initAsyncio()
 
-	chatOverlay: Overlay = Overlay()
+	chatOverlay: Overlay = None
+	if getRunOverlay():
+		chatOverlay: Overlay = Overlay()
+	else:
+		logger.warning("WARNING: Config says to not run overlay! Will not run correctly!")
 	
-	createAndStartChatbotThread()
-	#createAndStartChatbot() #For running just the bot. Be sure to remove the overlay connections.
-	
-	gameThread = Thread(target = runGame)
-	gameThread.start()
+	if getRunChatbot():
+		createAndStartChatbotThread()
+		#createAndStartChatbot() #For running just the bot. Be sure to remove the overlay connections.
+	else:
+		logger.warning("WARNING: Config says to not run chatbot! Will not run correctly!")
+		
+	if getRunGamebot():	
+		gameThread = Thread(target = runGame)
+		gameThread.start()
+	else:
+		logger.warning("WARNING: Config says to not run gamebot! Will not run correctly!")
 	
 	# And similar to TwithcIO, Tkinter has its own requirement. 
 	# It literally just refuses to run if it's not on the main thread.
 	# At least TwitchIO tries... 
-	chatOverlay.run()
+	if getRunOverlay():
+		chatOverlay.run()
 
 def runGame() -> None:
 	logger.info("Starting game bot.")

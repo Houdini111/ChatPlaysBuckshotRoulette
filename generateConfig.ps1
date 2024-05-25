@@ -7,6 +7,9 @@ $defaultConfig = [PSCustomObject]@{
   defaultName='CHAT'
   actionVotePeriod=15
   instructionsCooldown=15
+  runChatbot=$true
+  runGamebot=$true
+  runOverlay=$true
 } 
 $config = $defaultConfig.PsObject.Copy()
 
