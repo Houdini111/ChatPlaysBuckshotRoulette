@@ -22,7 +22,6 @@ from .leaderboard import Leaderboard
 from .voteActionLeaderboard import VoteActionLeaderboard
 from .nameLeaderboard import NameLeaderboard
 
-#TODO: Round number, Double or nothing set number, voting numbers (absolute, percent, bars, pie chart), the names and votes of chatters as they come in?, countdown (including clock?) for voting time
 
 logger = logging.getLogger(__name__)
 

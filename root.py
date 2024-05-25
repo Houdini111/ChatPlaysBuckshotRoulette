@@ -34,11 +34,14 @@ sys.stderr = stdErrLoggerStream
 logger = logging.getLogger(__name__)
 
 #TODO: 
-#  Alternative vote display (list mode)
 #  Option for vote display on/off. 
-#     If on, then position matters based on vote display mode
 #  Targeting circle for current winners. Nothing if normal tie. But also draw adrenaline item circle.
-#  Convert name leaderboard to leaderboard object
+#     If on, then position matters based on vote display mode
+#  Round number, 
+#  Double or nothing set number
+#  Countdown (including clock?) for voting time
+#  Voting stats? (absolute, percent, bars, pie chart)
+#  The names and votes of chatters as they come in?
 #
 #  Sometimes bugs 
 #    * Sometimes winning action vote text is wrong. Somestimes doesn't include adrenaline item number.
