@@ -4,6 +4,7 @@ from typing import Any
 from twitchio import Message, Chatter, PartialChatter, Channel
 from twitchio.ext import commands
 from copy import deepcopy
+from unidecode import unidecode
 import logging
 import json
 import random
@@ -13,7 +14,7 @@ from .secrets import getSecrets
 from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from shared.util import run_task
 from shared.actions import Action, ShootAction, UseItemAction
-from shared.consts import getShootNames, getUseNames, getDealerNames, getPlayerNames
+from shared.consts import getShootNames, getUseNames, getDealerNames, getPlayerNames, getMaxNameLength
 from shared.config import getChannels, getDefaultName, getInstructionsCooldown
 from overlay.overlay import getOverlay
 
@@ -192,7 +193,9 @@ class Chatbot(commands.Bot):
 				self.shootVote(authorName, commandArgs)
 	
 	def nameVote(self, authorName: str, name: str) -> None:
-		name = name[0: 6].upper().strip()
+		name = unidecode(name)
+		name = name.replace(" ", "")
+		name = name[0: getMaxNameLength()].upper().strip()
 
 		for char in name:
 			if not char.isalpha():
@@ -313,7 +316,7 @@ class Chatbot(commands.Bot):
 		playerNameValueLen: int = len(max(getPlayerNames(), key=len))
 		targetValueLen: int = max(dealerNameValueLen, playerNameValueLen)
 		useValueLen: int = 4 #Two 1 digit numbers separated from each other and the key by a space 
-		nameValueLen: int = 6 #6 character from the game
+		nameValueLen: int = getMaxNameLength() #6 character limit from the game
 		voteValueMaxLen: int = max(targetValueLen, useValueLen, nameValueLen)
 
 		voteMaxLen: int = votePrefixMaxLen + voteValueMaxLen
