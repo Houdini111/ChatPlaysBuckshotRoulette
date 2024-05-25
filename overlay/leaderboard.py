@@ -41,11 +41,10 @@ class Leaderboard(ABC):
 		self.canvas.itemconfig(self.header, state="hidden")
 
 	def hideRows(self) -> None:
-		self.canvas.itemconfig(self.getBoardRowTags, state="hidden")
+		self.canvas.itemconfig(self.getBoardRowTags(), state="hidden")
 	
 	def clearRows(self) -> None:
-		#TODO: NAME LEADERBOARD DIDN'T CLEAR
-		self.canvas.itemconfig(self.getBoardRowTags, text="")
+		self.canvas.itemconfig(self.getBoardRowTags(), text="")
 			
 	def displayVotes(self, votes: list[VotingTallyEntry]) -> None:
 		for i in range(len(votes)):
