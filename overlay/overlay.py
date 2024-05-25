@@ -73,40 +73,13 @@ class Overlay():
 		logger.info("Clearing old name leaderboard")
 		self.nameLeaderboard.clearRows()
 
-	def oldClearOldNameLeaderboard(self) -> None:
-		logger.info("Clearing old name leaderboard")
-		self.canvas.itemconfig(Tags.NAME_LEADERBOARD, text="")
-
 	def drawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
 		self.clearOldNameLeaderboard()
 		self.nameLeaderboard.displayVotes(votes)
 
-	def oldDrawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
-		self.clearOldNameLeaderboard()
-		for textId, vote in zip(self.voteList, votes):
-			namePadding = " " * (6 - len(vote.getVoteStr()))
-			numPadding = " " * (3 - len(str(vote.getNumVotes()))) #I doubt this bot is ever going to see >999. If it does then it'll screw up the spacing. Oh no. 
-			voteStr = f"{vote.getVoteStr()}{namePadding} {numPadding}[{vote.getNumVotes()}] ({vote.getPercentageStr()})"
-			logger.debug(f"Drawing leaderboard name:  {voteStr}")
-			self.canvas.itemconfig(textId, text = voteStr)
-			
 	def initNameLeaderboard(self) -> None:
-		#self.initOldNameLeaderboard()
 		self.nameLeaderboard: Leaderboard = NameLeaderboard("Next Name Ranking", 5, 20, 950, int(math.ceil(self.baseFontSize*0.85)), self.draw_text_1440, self.canvas)
 
-	def initOldNameLeaderboard(self) -> None:
-		nameLeaderboardY = 1050
-
-		headerFontSize = int(self.baseFontSize/4)
-		self.nameHeader = self.draw_text_1440("Next Name Ranking", 10, nameLeaderboardY, 60, self.canvas, anchor = "sw")
-		nameLeaderboardItemFontSize = int(self.baseFontSize*45/80)
-		y = nameLeaderboardY + int(headerFontSize * .1)
-		yInc = int(nameLeaderboardItemFontSize * 1.75)
-		for i in range(5):
-			voteId: int = self.draw_text_1440("", 20, y, nameLeaderboardItemFontSize, self.canvas, textTags = [Tags.NAME_LEADERBOARD], anchor = "nw")
-			self.voteList.append(voteId)
-			y += yInc
-	
 	def initActionVotesDisplay(self) -> None:
 		#TODO: Config value and sidebarVoteDisplay
 		if True:
