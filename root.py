@@ -37,9 +37,12 @@ logger = logging.getLogger(__name__)
 #  Option for vote display on/off. 
 #  Targeting circle for current winners. Nothing if normal tie. But also draw adrenaline item circle.
 #     If on, then position matters based on vote display mode
+#     Make dealer item circle dotted when winning vote isn't a dealer item, to show winning dealer item in case the vote swings
+#  BUG: Fullscreen vote display dealer text not clearing? 
+#  
 #  Round number, 
 #  Double or nothing set number
-#  Countdown (including clock?) for voting time
+#  Countdown (including clock?) for voting time. See https://stackoverflow.com/a/17985217 for circle
 #  Voting stats? (absolute, percent, bars, pie chart)
 #  The names and votes of chatters as they come in?
 #

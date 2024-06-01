@@ -7,6 +7,7 @@ from shared.actions import Action, ShootAction, UseItemAction
 from bot.vote import Vote, VotingTally, VotingTallyEntry
 from .consts import Tags
 from .actionVoteDisplay import ActionVoteDisplay
+from .winningActionReticle import WinningActionReticle
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class ActionVoteDisplay(Generic[ActionVoteType]):
 		self.y1440: int = y1440
 		self.fontSize: int = fontSize
 		self.canvas: tk.Canvas = canvas
+		
 		actionGuideStr: str = str(actionGuide)
 		logger.debug(f"Action Guide Str Type: {type(self)}")
 		if type(self) is DealerVoteDisplay:
@@ -87,8 +89,9 @@ class DealerVoteDisplay(ActionVoteDisplay):
 	pass
 
 class FullScreenVoteDisplay(ActionVoteDisplay):
-	def __init__(self, baseFontSize: int, draw_text_1440: Callable, canvas: tk.Canvas):
+	def __init__(self, baseFontSize: int, draw_text_1440: Callable, canvas: tk.Canvas, winningActionReticle: WinningActionReticle | None):
 		self.baseFontSize = baseFontSize
+		self.winningActionReticle: WinningActionReticle | None = winningActionReticle
 
 		self.itemActionVoteDisplays: dict[int, ItemActionVoteDisplay] = dict[int, ItemActionVoteDisplay]()
 		self.dealerItemVoteDisplays: dict[int, ItemActionVoteDisplay] = dict[int, ItemActionVoteDisplay]()
@@ -141,7 +144,7 @@ class FullScreenVoteDisplay(ActionVoteDisplay):
 		self.shootActionVoteDisplays[Target.SELF] = voteDisplay
 		
 	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
-		logger.info(f"showActionVoteStatic numbersToDraw: {numbersToDraw}")
+		logger.info(f"displayItemActionGuides numbersToDraw: {numbersToDraw}")
 		self.lastDrawnActionNumbers = numbersToDraw
 		voteDisplay: ActionVoteDisplay
 		for i in numbersToDraw:
@@ -182,12 +185,15 @@ class FullScreenVoteDisplay(ActionVoteDisplay):
 		for i in range(0, 8): #[0, 9)
 			logger.debug(f"Accessing index {i} for votes and {i + 1} for displays")
 			adrenalineItemVote = adrenalineItemVotes[i] #0 indexed
-			logger.debug(f"Vote for {i+1}: {str(adrenalineItemVote)}. Str: {adrenalineItemVote.getVoteStr()}. Num Votes: {adrenalineItemVote.getNumVotes()}")
+			logger.debug(f"Vote for adrenaline item {i+1}: {str(adrenalineItemVote)}. Str: {adrenalineItemVote.getVoteStr()}. Num Votes: {adrenalineItemVote.getNumVotes()}")
 			voteDisplay = self.dealerItemVoteDisplays[i + 1] #1 indexed
 			if adrenalineItemVote.getNumVotes() < 1:
 				voteDisplay.clearVoteStats()
 			else:
 				voteDisplay.displayVote(adrenalineItemVote)
+			
+		if self.winningActionReticle is not None:
+			self.winningActionReticle.showForList(actionVotes, adrenalineItemVotes)
 
 	def clearActionVotes(self) -> None:
 		self.canvas.itemconfigure(Tags.ACTION_VOTE_STATS, text="")

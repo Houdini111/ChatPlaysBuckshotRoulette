@@ -8,15 +8,17 @@ from .leaderboard import Leaderboard
 from .actionVoteDisplay import ActionVoteDisplay
 from shared.consts import getMaxNameLength
 from bot.vote import Vote, VotingTally, VotingTallyEntry
+from .winningActionReticle import WinningActionReticle
 
 logger = logging.getLogger(__name__)
 
 class SidebarVoteDisplay(Leaderboard, ActionVoteDisplay):
-	def __init__(self, baseFontSize: int, draw_text_1440: Callable, canvas: tk.Canvas):
+	def __init__(self, baseFontSize: int, draw_text_1440: Callable, canvas: tk.Canvas, winningActionReticle: WinningActionReticle | None):
 		self.headerTags = list[str]()
 		self.headerTags.append(Tags.ACTION_VOTE_STATIC)
 		self.rowTags = list[str]()
 		self.rowTags.append(Tags.ACTION_VOTE_STATS)
+		self.winningActionReticle: WinningActionReticle | None = winningActionReticle
 		
 		self.baseFontSize = baseFontSize
 		self.draw_text_1440 = draw_text_1440
@@ -40,12 +42,20 @@ class SidebarVoteDisplay(Leaderboard, ActionVoteDisplay):
 	
 	def drawActionVotes(self, actionVotes: list[VotingTallyEntry], adrenalineItemVotes: list[VotingTallyEntry]) -> None:
 		#TODO:  Handle adrenaline votes. Separate leaderboard? Make it a subordinate one?
+		sortedAdrenalineVotes: list[VotingTallyEntry] = sorted(adrenalineItemVotes, key = lambda vote: (vote.getNumVotes(), vote.getAdrenalineItemVote()))
 
-		sortedVotes: list[VotingTallyEntry] = sorted(actionVotes, key = lambda vote: (vote.getNumVotes(), vote.getBaseVoteStr()))
-		sortedVotes = sortedVotes[: self.maxLen]
-		for i in range(len(sortedVotes)):
-			vote: VotingTallyEntry = sortedVotes[i]
+		sortedActionVotes: list[VotingTallyEntry] = sorted(actionVotes, key = lambda vote: (vote.getNumVotes(), vote.getBaseVoteStr()))
+		sortedActionVotes = sortedActionVotes[: self.maxLen]
+		for i in range(len(sortedActionVotes)):
+			vote: VotingTallyEntry = sortedActionVotes[i]
 			self.canvas.itemconfigure(self.boardRowText[i], text = self.formatRowText(vote))
-			
+		
+		if self.winningActionReticle is not None:
+			self.winningActionReticle.showForList(actionVotes, adrenalineItemVotes)
+		
 	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
 		self.showHeader()
+		
+	def hide(self) -> None:
+		super().hide()
+		self.winningActionReticle.hide()

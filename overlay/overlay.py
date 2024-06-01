@@ -10,9 +10,9 @@ from operator import itemgetter
 import logging
 
 from shared.consts import Target
-from shared.util import resizePointFrom1440p
+from shared.util import resizePointArrFrom1440p, resizeXFrom1440p
 from shared.actions import Action, ShootAction, UseItemAction
-from shared.config import useSidebarActionOverlay
+from shared.config import useSidebarActionOverlay, useWinningActionReticle
 from bot.vote import Vote, VotingTally, VotingTallyEntry
 from .consts import Tags
 from .actionVoteDisplay import ActionVoteDisplay
@@ -21,6 +21,7 @@ from .sidebarVoteDisplay import SidebarVoteDisplay
 from .leaderboard import Leaderboard
 from .voteActionLeaderboard import VoteActionLeaderboard
 from .nameLeaderboard import NameLeaderboard
+from .winningActionReticle import WinningActionReticle
 
 
 logger = logging.getLogger(__name__)
@@ -47,8 +48,8 @@ class Overlay():
 		
 		self.statusText = self.draw_text_1440("", 20, 20, int(self.baseFontSize*50/80), self.canvas)
 		self.initNameLeaderboard()
+		self.initActionWinnerReticle()
 		self.initActionVotesDisplay()
-		
 		#self.voteActionLeaderboard: Leaderboard = VoteActionLeaderboard("Test Header", 5, 1080, 420, 50, self.draw_text_1440, self.canvas)
 	
 	def run(self) -> None:
@@ -58,7 +59,7 @@ class Overlay():
 		self.root.destroy()
 
 	def draw_text_1440(self, text: str, x1440: int, y1440: int, fontSize: float, canvas: tk.Canvas, bold: bool = True, textTags: list[str] = list[str](), anchor: str = "nw") -> int:
-		realX, realY = resizePointFrom1440p(x1440, y1440)
+		realX, realY = resizePointArrFrom1440p(x1440, y1440)
 		#font = ("Arial", fontSize)
 		font = ("Lucida Console", fontSize) #I really want a cleaner monospace font included in windows...
 		if bold:
@@ -82,14 +83,20 @@ class Overlay():
 
 	def initActionVotesDisplay(self) -> None:
 		if useSidebarActionOverlay():
-			self.actionVoteDisplay: FullScreenVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas)
+			self.actionVoteDisplay: FullScreenVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle)
 		else:
-			self.actionVoteDisplay: SidebarVoteDisplay = SidebarVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas) 
+			self.actionVoteDisplay: SidebarVoteDisplay = SidebarVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle) 
 		self.clearActionOverlay()
 
-	def showActionVoteStatic(self, numbersToDraw: list[int]) -> None:
-		logger.info(f"showActionVoteStatic numbersToDraw: {numbersToDraw}")
-		self.actionVoteDisplay.showActionVoteStatic(numbersToDraw)
+	def initActionWinnerReticle(self) -> None:
+		if not useWinningActionReticle():
+			self.winningActionReticle = None
+			return
+		self.winningActionReticle = WinningActionReticle(self.canvas)
+
+	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
+		logger.info(f"displayItemActionGuides numbersToDraw: {numbersToDraw}")
+		self.actionVoteDisplay.displayItemActionGuides(numbersToDraw)
 
 	def drawActionVotes(self, actionVotes: list[VotingTallyEntry], adrenalineItemVotes: list[VotingTallyEntry]) -> None:
 		logger.info(f"drawActionVotes. lastDrawnActionNumbers -> {self.lastDrawnActionNumbers}, len actionVotes: {len(actionVotes)}")
@@ -98,6 +105,7 @@ class Overlay():
 	def clearActionOverlay(self) -> None:
 		self.clearActionVotes()
 		self.clearActionVoteStatic()
+		self.hideActionReticle()
 
 	def clearActionVoteStatic(self) -> None:
 		self.canvas.itemconfigure(Tags.ACTION_VOTE_STATIC, state="hidden")
@@ -105,6 +113,9 @@ class Overlay():
 		
 	def clearActionVotes(self) -> None:
 		self.canvas.itemconfigure(Tags.ACTION_VOTE_STATS, text="")
+
+	def hideActionReticle(self) -> None:
+		self.winningActionReticle.hide()
 		
 
 overlay: Overlay

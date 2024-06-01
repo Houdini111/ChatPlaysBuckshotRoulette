@@ -18,7 +18,15 @@ class Rectangle():
 		self.h = h
 	
 	def __str__(self) -> str:
-		return "{" + f"x: {self.x}, y: {self.y}, w: {self.w}, y: {self.h}" + "}"
+		return "{" + f"x: {self.x}, y: {self.y}, w: {self.w}, h: {self.h}" + "}"
+
+class Point:
+	def __init__(self, x: int, y: int):
+		self.x = x
+		self.y = y
+	
+	def __str__(self) -> str:
+		return "{" + f"x: {self.x}, y: {self.y}" + "}"
 
 def waitForFalse(checker: Callable[[], bool]) -> None:
 	logger.info("Waiting for method to return false")
@@ -53,8 +61,11 @@ def safeInt(inVal: str | int | None, defaultValue: int) -> int:
 		return int(inVal)
 	return defaultValue
 
-def resizePointFrom1440p(x1440: int, y1440: int) -> list[int]:
+def resizePointArrFrom1440p(x1440: int, y1440: int) -> list[int]:
 	return [resizeXFrom1440p(x1440), resizeYFrom1440p(y1440)]
+
+def resizePointFrom1440p(p1440: Point) -> Point:
+	return Point(resizeXFrom1440p(p1440.x), resizeYFrom1440p(p1440.y))
 
 def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[int]:
 	wPercent = w1440/2560
@@ -62,7 +73,7 @@ def resizeRectFrom1440p(x1440: int, y1440: int, w1440: int, h1440: int) -> list[
 	displayW, displayH = pyautogui.size()
 	realW = int(math.ceil(wPercent * displayW))
 	realH = int(math.ceil(hPercent * displayH))
-	realX, realY = resizePointFrom1440p(x1440, y1440)
+	realX, realY = resizePointArrFrom1440p(x1440, y1440)
 	return [realX, realY, realW, realH]
 
 #This method from https://stackoverflow.com/a/61331974

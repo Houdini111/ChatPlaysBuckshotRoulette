@@ -11,6 +11,7 @@ $defaultConfig = [PSCustomObject]@{
   runGamebot=$true
   runOverlay=$true
   useSidebarActionOverlay=$false
+  useWinningActionReticle=$false
 } 
 $config = $defaultConfig.PsObject.Copy()
 

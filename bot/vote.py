@@ -218,7 +218,10 @@ class VotingTallyEntry(Generic[VoteType]):
 	def getBaseVoteStr(self) -> str:
 		voteStr: str = str(self.vote.getVote()).upper()
 		voteStrSplit: list[str] = voteStr.split(" ")
-		return f"{voteStrSplit[0]} {voteStrSplit[1]}"
+		second: str = ""
+		if len(voteStrSplit) > 1:
+			second = f" {voteStrSplit[1]}"
+		return f"{voteStrSplit[0]}{second}"
 
 	def getVoteStr(self) -> str:
 		adrenalineAddition: str = ""
@@ -238,6 +241,9 @@ class VotingTallyEntry(Generic[VoteType]):
 	
 	def getPercentageStr(self) -> str:
 		return f"{self.percentageRound}%"
+	
+	def getAdrenalineItemVote(self) -> int:
+		return self.adrenalineItemVote
 
 class VotingTallyEntryList(Generic[VoteType]):
 	def __init__(self, tallyVoteCountToContain: int, tallies: list[VotingTallyEntry[VoteType]] | None = None):
@@ -331,6 +337,9 @@ class VotingTally(Generic[VoteType]):
 		voteObj: Vote
 		for voteVal, voteObj in runningVote.items():
 			tallyEntry: VotingTallyEntry[VoteType] = VotingTallyEntry[VoteType](voteObj, self.totalVotes, self.winningAdrenalineItemVote)
+			
+			logger.info(f"Vote \"{voteObj}\" Type: {type(voteObj.getVote())}")
+
 			entryList: VotingTallyEntryList[VoteType] = self.getTalleyListForVoteCount(voteObj.getNumVotes())
 			entryList.add(tallyEntry)
 			logger.debug(f"Created vote talley entry: {tallyEntry}")
