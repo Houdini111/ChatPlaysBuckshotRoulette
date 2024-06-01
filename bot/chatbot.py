@@ -197,8 +197,12 @@ class Chatbot(commands.Bot):
 		name = name.replace(" ", "")
 		name = name[0: getMaxNameLength()].upper().strip()
 
+		#Note: Does not like the following :
+		# "ー" like in "ビール". Converts to "-", which is non-alpha
+
 		for char in name:
-			if not char.isalpha():
+			if not char.isalpha(): 
+				logger.debug(f"Voted name \"{name}\" contains non alpha char \"{char}\". Name rejected.")
 				return
 
 		#TODO: Ignore names the game won't allow ("GOD", "DEALER")
