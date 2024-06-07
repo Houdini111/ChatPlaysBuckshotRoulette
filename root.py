@@ -20,7 +20,7 @@ fileHandler.setLevel(logging.DEBUG)
 consoleHandler: logging.StreamHandler = logging.StreamHandler()
 consoleHandler.setLevel(logging.INFO)
 logging.basicConfig(
-    format='%(asctime)s   %(levelname)-8s %(filename)15s->%(funcName)-30s %(message)s',
+    format='%(asctime)s   %(levelname)-8s %(filename)15s:%(lineno)4d ->%(funcName)-30s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     encoding="UTF-8",
 	level=logging.NOTSET, #So it doesn't override the logger's levels
@@ -47,6 +47,8 @@ logger = logging.getLogger(__name__)
 #  The names and votes of chatters as they come in?
 #
 #  Sometimes bugs 
+#    * Same player vote for same item, different dealer item is double counted? 
+#         "Winning action of [USE 1 2] won with a vote count of 2 (200%)"
 #    * Sometimes winning action vote text is wrong. Somestimes doesn't include adrenaline item number.
 #    * Sometimes adrenaline item votes for the same player item don't combine.
 
