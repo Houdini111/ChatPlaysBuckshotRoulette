@@ -37,13 +37,15 @@ class ShootAction(Action):
 class UseItemAction(Action):
 	def __init__(self, itemNum: str | int, adrenalineItemNum: str | int | None = None):
 		self.itemNum = safeInt(itemNum, 0)
-		#TODO: Check if adrenaline number needed
+		#TODO: Check if adrenaline number needed? Is there a way to check?
 		self.adrenalineItemNum = safeInt(adrenalineItemNum, 0)
+		#logger.debug(f"Created UseItemAction with itemNum {self.itemNum} and adrenalineItemNum {self.adrenalineItemNum} from args: {itemNum} and {adrenalineItemNum}")
 	
 	def __str__(self):
 		adrenalineNumStr = ""
-		if self.adrenalineItemNum > 1:
+		if self.adrenalineItemNum > 0:
 			adrenalineNumStr = f" {self.adrenalineItemNum}"
+		#logger.debug(f"UseItemAction#__str__ {self.itemNum} and {self.adrenalineItemNum}")
 		return f"use {self.itemNum}{adrenalineNumStr}"
 	
 	def getItemNum(self) -> int:

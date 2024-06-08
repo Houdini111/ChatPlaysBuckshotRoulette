@@ -34,10 +34,10 @@ sys.stderr = stdErrLoggerStream
 logger = logging.getLogger(__name__)
 
 #TODO: 
-#  Option for vote display on/off. 
-#  Targeting circle for current winners. Nothing if normal tie. But also draw adrenaline item circle.
-#     If on, then position matters based on vote display mode
-#     Make dealer item circle dotted when winning vote isn't a dealer item, to show winning dealer item in case the vote swings
+#  Option for vote display stats on/off. 
+#  Option for vote guides on/off
+#     
+#  Make dealer item circle dotted when winning vote isn't a dealer item, to show winning dealer item in case the vote swings
 #  BUG: Fullscreen vote display dealer text not clearing? 
 #  
 #  Round number, 

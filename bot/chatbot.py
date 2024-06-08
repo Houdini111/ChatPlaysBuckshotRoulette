@@ -212,16 +212,19 @@ class Chatbot(commands.Bot):
 		logger.debug(f"Adding name vote: {name}")
 		self.nameVotesByName.addAVote(name)
 		self.nameVotesByUser[authorName] = name
+		logger.debug(f"Added name vote for {authorName}: \"{name}\"")
 
-	def removeExistingVote(self, nameDict: dict[str, Any], votes: RunningVote, authorName: str) -> None:
-		if authorName in nameDict:
-			oldVote: str = nameDict[authorName]
+	def removeExistingVote(self, voteDict: dict[str, Any], votes: RunningVote, authorName: str) -> None:
+		if authorName in voteDict:
+			oldVote: Any = voteDict[authorName]
+			logger.debug(f"User \"{authorName}\" already voted. Removing their previous vote of \"{oldVote}\"")
 			votes.removeAVote(oldVote)
 
 	def addActionVote(self, authorName: str, vote: Action) -> None:
 		logger.debug(f"Adding action vote: {vote}")
 		self.actionVotesByUser[authorName] = vote
 		self.actionVotesByAction.addAVote(vote)
+		logger.debug(f"Added action vote for {authorName}: \"{vote}\"")
 
 	def shootVote(self, authorName: str, args: list[str]) -> None:
 		normalizedShootVote: ShootAction | None = self.normalizeShootVote(args)
@@ -248,8 +251,10 @@ class Chatbot(commands.Bot):
 		return None
 
 	def normalizeUseVote(self, args: list[str]) -> UseItemAction | None:
+		logger.debug(f"Normalizing Use Vote with args: {args}")
 		argLen: int = len(args)
 		if argLen <= 0:
+			logger.debug("No arguments found for use vote. Invalid.")
 			return None
 		elif argLen > 2:
 			args = args[0:2]
@@ -259,9 +264,13 @@ class Chatbot(commands.Bot):
 		if len(args) > 1:
 			arg2 = args[1]
 
+		logger.debug(f"Parsed normalized Use Vote args of: [{arg1}] and [{arg2}]")
+
 		useItem: UseItemAction = UseItemAction(arg1, arg2)
 		if useItem.valid():
+			logger.debug(f"Use Item Action created was valid: {useItem}")
 			return useItem
+		logger.debug(f"Use Item Action was Invalid: {useItem}")
 		return None
 	
 	def updateVoteCounts(self) -> None:

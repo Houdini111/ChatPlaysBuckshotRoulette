@@ -116,11 +116,11 @@ class RunningVote(Generic[VoteType]):
 		self.totalVotes += 1
 		voteStr: str = str(vote)
 		
-		dealerVoteIndex: int = self.extractDealerVoteIndex(voteStr) #0 indexed
-		isAdrenaline: bool = dealerVoteIndex >= 0
+		dealerVoteIndex: int = self.extractDealerVoteIndex(voteStr) #1 indexed
+		isAdrenaline: bool = dealerVoteIndex >= 1 and dealerVoteIndex <=8
 		logger.debug(f"Latest vote \"{voteStr}\" has a dealer vote of \"{dealerVoteIndex}\"")
 		if isAdrenaline:
-			self.dealerItemVotes[dealerVoteIndex] += 1 #0 indexed
+			self.dealerItemVotes[dealerVoteIndex - 1] += 1 #1 indexed -> 0 indexed
 			logger.debug(f"Dealer Item Votes after the latest dealer vote: {self.dealerItemVotes}")
 		
 		voteStr = " ".join(voteStr.split(" ")[0: 2]) #Remove dealer vote to combine votes for the same item with different dealer votes into one.
@@ -142,8 +142,10 @@ class RunningVote(Generic[VoteType]):
 		self.sorted = False
 	
 	def extractDealerVoteIndex(self, voteStr: str) -> int:
+		logger.debug(f"Extracting dealer vote from str: \"{voteStr}\"")
 		voteSplit: list[str] = voteStr.split(" ")
 		if len(voteSplit) <= 2: #More than 2 entries means dealer vote
+			logger.debug(f"Found not enough entries for there to be a dealer vote in: \"{voteStr}\". Count: {len(voteSplit)}")
 			return -1
 		dealerVote: str = voteSplit[2]
 		if len(dealerVote) != 1:
@@ -152,17 +154,30 @@ class RunningVote(Generic[VoteType]):
 		if not dealerVote.isdigit():
 			logger.warn(f"Expected dealer vote \"{dealerVote}\" from vote \"{voteStr}\" to only contain a digit. Was not a digit.")
 			return -1
-		return int(dealerVote) - 1 #Turn into zero index. Votes are given 1 indexed.
+		return int(dealerVote) #Return 1 indexed
 
 	def removeAVote(self, vote: VoteType | Vote[VoteType]) -> None:
-		self.totalVotes -= 1
-		voteStr: str = str(vote)
+		voteStrFull: str = str(vote)
+		voteStr = " ".join(voteStrFull.split(" ")[0: 2]) #Remove dealer vote to combine votes for the same item with different dealer votes into one.
 		if voteStr in self.votes:
+			logger.debug(f"Asked to remove vote [{vote}] and found it. Removing.")
+			self.totalVotes -= 1
 			newCount: int = self.votes[voteStr].removeAVote()
 			#Don't leave old votes with no one voting for them around to clog things up
 			if newCount < 1:
 				self.removeVote(voteStr)
-		self.sorted = False
+				
+			dealerVoteIndex: int = self.extractDealerVoteIndex(voteStrFull) #1 indexed
+			isAdrenaline: bool = dealerVoteIndex >= 1 and dealerVoteIndex <=8
+			logger.debug(f"Vote to remove \"{voteStr}\" has a dealer vote of \"{dealerVoteIndex}\"")
+			if isAdrenaline:
+				logger.debug(f"Dealer Item Votes before the latest dealer vote removed: {self.dealerItemVotes}")
+				self.dealerItemVotes[dealerVoteIndex - 1] -= 1 #1 indexed -> 0 indexed
+				logger.debug(f"Dealer Item Votes after the latest dealer vote removed: {self.dealerItemVotes}")
+			
+			self.sorted = False
+		else: 
+			logger.debug(f"Asked to remove vote [{vote}] and did NOT find it. Skipping.")
 	
 	#To be used if vote is invalid
 	def removeVote(self, vote: str | VoteType | Vote[VoteType]) -> None:
