@@ -10,11 +10,11 @@ logger = logging.getLogger(__name__)
 VoteType = TypeVar("VoteType", str, Action)
 
 class Vote(Generic[VoteType]): 
-	def __init__(self, vote: VoteType, numVotes: int, isAdrenalineItem: bool = False):
+	def __init__(self, vote: VoteType, numVotes: int, adrenalineVotes: int = 0):
 		self.voteType: Type[VoteType] = type(vote)
 		self.vote: VoteType = vote
 		self.numVotes = numVotes
-		self._isAdrenalineItem = isAdrenalineItem
+		self.adrenalineVotes = adrenalineVotes
 	
 	def __lt__(self, other):
 		return self.numVotes < other.numVotes
@@ -23,12 +23,12 @@ class Vote(Generic[VoteType]):
 		return deepcopy(self)
 	
 	def __deepcopy__(self, memo):
-		ret = Vote(self.vote, self.numVotes, self.isAdrenalineItem)
+		ret = Vote(self.vote, self.numVotes, self.adrenalineVotes)
 		memo[id(self)] = ret
 		return ret
 	
 	def __str__(self):
-		return "Vote{vote:\"" + str(self.vote) + "\", numVotes: " + str(self.numVotes) + ", isAdrenalineItem: " + str(self._isAdrenalineItem) + "}"
+		return "Vote{vote:\"" + str(self.vote) + "\", numVotes: " + str(self.numVotes) + ", adrenalineVotes: " + str(self.adrenalineVotes) + "}"
 	
 	def __eq__(self, other):
 		return str(self.vote) == str(other)
@@ -40,16 +40,24 @@ class Vote(Generic[VoteType]):
 	def getNumVotes(self) -> int:
 		return self.numVotes
 	
-	def addAVote(self) -> int:
+	def addAVote(self, isAdrenalineVote: bool = False) -> int:
 		self.numVotes += 1
+		if isAdrenalineVote:
+			self.adrenalineVotes += 1
 		return self.numVotes
 	
 	def removeAVote(self) -> int:
 		self.numVotes -= 1
 		return self.numVotes
 	
+	def getAdrenalineVotes(self) -> int:
+		return self.adrenalineVotes
+	
+	def getAdrenalinePercent(self) -> float:
+		return float(self.adrenalineVotes) / self.numVotes
+
 	def isAdrenalineItem(self) -> bool:
-		return self._isAdrenalineItem
+		return self.adrenalineVotes >= float(self.numVotes)/2
 
 
 class RunningVote(Generic[VoteType]):
@@ -117,27 +125,30 @@ class RunningVote(Generic[VoteType]):
 		voteStr: str = str(vote)
 		
 		dealerVoteIndex: int = self.extractDealerVoteIndex(voteStr) #1 indexed
-		isAdrenaline: bool = dealerVoteIndex >= 1 and dealerVoteIndex <=8
+		isAdrenaline: bool = dealerVoteIndex >= 1 and dealerVoteIndex <= 8
+		adrenalineVoteCount: int = 0
 		logger.debug(f"Latest vote \"{voteStr}\" has a dealer vote of \"{dealerVoteIndex}\"")
 		if isAdrenaline:
 			self.dealerItemVotes[dealerVoteIndex - 1] += 1 #1 indexed -> 0 indexed
+			adrenalineVoteCount = 1
 			logger.debug(f"Dealer Item Votes after the latest dealer vote: {self.dealerItemVotes}")
 		
 		voteStr = " ".join(voteStr.split(" ")[0: 2]) #Remove dealer vote to combine votes for the same item with different dealer votes into one.
 
+		
 		if voteStr in self.votes:
-			self.votes[voteStr].addAVote()
+			self.votes[voteStr].addAVote(isAdrenalineVote= isAdrenaline)
 		else:
 			if type(vote) is str:
 				logger.debug(f"Adding new vote. Constructing from string \"{vote}\"")
-				self.votes[voteStr] = Vote[VoteType](vote, 1, isAdrenaline)
+				self.votes[voteStr] = Vote[VoteType](vote, 1, adrenalineVoteCount)
 			elif type(vote) is Vote[VoteType]:
 				logger.debug(f"Adding new vote. Constructing from Vote. Type: {type(vote)}. Vote val: {vote}")
 				vote.numVotes = 1
 				self.votes[voteStr] = vote
 			elif issubclass(type(vote), VoteType.__constraints__):
 				logger.debug(f"Adding new vote. Constructing from VoteType subtype. Type: {type(vote)}. Vote val: {vote}")
-				newVote: Vote[VoteType] = Vote[VoteType](vote, 1, isAdrenaline) # type: ignore   At this point I know it's a VoteType but python doesn't realize it, and doesn't allow me to cast to tell it it's fine
+				newVote: Vote[VoteType] = Vote[VoteType](vote, 1, adrenalineVoteCount) # type: ignore   At this point I know it's a VoteType but python doesn't realize it, and doesn't allow me to cast to tell it it's fine
 				self.votes[voteStr] = newVote
 		self.sorted = False
 	

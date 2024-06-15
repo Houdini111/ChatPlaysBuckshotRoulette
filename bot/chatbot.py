@@ -85,9 +85,11 @@ class Chatbot(commands.Bot):
 		winningVote: VotingTallyEntry | None = self.talliedActions.getWinner()
 		if winningVote is None:
 			return None #Don't allow tiebreakers in action votes. Wait longer.
+		
+		logger.debug(f"Winning vote [{winningVote.getVoteObj()}] has adrenaline percent of {winningVote.getVoteObj().getAdrenalinePercent() * 100}%. Is adrenaline item: {winningVote.getVoteObj().isAdrenalineItem()}")
 		if winningVote.getVoteObj().isAdrenalineItem():
 			winningAdrenalineVote: int = self.talliedActions.getWinningAdrenalineItemVote()
-			winningVote = deepcopy(winningVote)
+			winningVote: VotingTallyEntry = deepcopy(winningVote)
 			winningVote.adrenalineItemVote = winningAdrenalineVote
 		self.sendMessage(f"Winning action of [{str(winningVote.getVoteObj().getVote()).upper()}] won with a vote count of {winningVote.getNumVotes()} ({winningVote.getPercentageStr()})")
 		return winningVote.getVoteObj().getVote()
