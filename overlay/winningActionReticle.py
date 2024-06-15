@@ -29,10 +29,10 @@ class Circle:
 		self.canvas.itemconfigure(self.circle, state="hidden")
 
 	def solid(self) -> None:
-		pass #TODO: Show solid, hide dotted
+		self.canvas.itemconfigure(self.circle, dash="")
 	
 	def dotted(self) -> None:
-		pass #TODO: Show dotted, hide solid
+		self.canvas.itemconfigure(self.circle, dash="5")
 	
 	def init_circle(self, p1440: Point, r, tags: list[str] = list[str]()) -> int: #center coordinates, radius
 		logging.debug(f"Circle ID: {self.circle} creating reticle at 1440p cooridinates of {p1440}. Previous position: ({self.lastX}, {self.lastY}).")
@@ -174,7 +174,7 @@ class PlayerActionReticle():
 class WinningActionReticle(ABC): 
 	def __init__(self, canvas: tk.Canvas):
 		self.canvas = canvas
-		
+
 		self.playerReticle: PlayerActionReticle = PlayerActionReticle(canvas)
 		self.dealerReticle: DealerActionReticle = DealerActionReticle(canvas)
 		
@@ -211,10 +211,12 @@ class WinningActionReticle(ABC):
 		return None
 		
 	def showForList(self, actionVotes: list[VotingTallyEntry], adrenalineItemVotes: list[VotingTallyEntry]) -> None:
-		winningActionVote = None
+		winningActionVote: VotingTallyEntry = None
 		if actionVotes is not None:
 			winningActionVote = self.getWinningVoteActionToShow(actionVotes)
 		
+		#winnerIsAdrenaline: bool = winningActionVote is not None and winningActionVote.getVoteObj().isAdrenalineItem()	
+
 		winningDealerItemVotes: list[VotingTallyEntry] = list[VotingTallyEntry]()
 		if adrenalineItemVotes is not None:
 			actualVotesForAdrenalineItems: list[VotingTallyEntry] = list[VotingTallyEntry]()
