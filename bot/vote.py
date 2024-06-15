@@ -205,6 +205,8 @@ class RunningVote(Generic[VoteType]):
 		self.totalVotes = 0
 		self.votes.clear()
 		self.sorted = True
+		for i in range(8):
+			self.dealerItemVotes[i] = 0
 	
 	def hasVotes(self) -> bool:
 		return self.totalVotes > 0
