@@ -83,9 +83,9 @@ class Overlay():
 
 	def initActionVotesDisplay(self) -> None:
 		if useSidebarActionOverlay():
-			self.actionVoteDisplay: FullScreenVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle)
-		else:
 			self.actionVoteDisplay: SidebarVoteDisplay = SidebarVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle) 
+		else:
+			self.actionVoteDisplay: FullScreenVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle)
 		self.clearActionOverlay()
 
 	def initActionWinnerReticle(self) -> None:

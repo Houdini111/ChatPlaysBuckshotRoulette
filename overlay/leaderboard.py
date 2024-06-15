@@ -31,26 +31,33 @@ class Leaderboard(ABC):
 			self.boardRowText.append(newRow)
 
 	def hide(self) -> None:
+		logger.debug("Leaderboard hiding all of itself")
 		self.hideHeader()
 		self.hideRows()
 	
 	def showHeader(self) -> None:
+		logger.debug("Leaderboard showing header")
 		self.canvas.itemconfig(self.header, state="normal")
 		
 	def hideHeader(self) -> None:
+		logger.debug("Leaderboard hiding header")
 		self.canvas.itemconfig(self.header, state="hidden")
 
 	def hideRows(self) -> None:
+		logger.debug("Leaderboard hiding its rows")
 		self.canvas.itemconfig(self.getBoardRowTags(), state="hidden")
 	
 	def clearRows(self) -> None:
+		logger.debug("Leaderboard clearing its rows")
 		self.canvas.itemconfig(self.getBoardRowTags(), text="")
 			
 	def displayVotes(self, votes: list[VotingTallyEntry]) -> None:
+		logger.debug(f"Leaderboard displaying {len(votes)} rows")
 		for i in range(len(votes)):
 			self.displayVote(i, votes[i])
 
 	def displayVote(self, i: int, vote: VotingTallyEntry) -> None:
+		logger.debug(f"Leaderboard displaying vote index [{i}] has vote: \"{vote}\"")
 		self.canvas.itemconfig(self.boardRowText[i], text = self.formatRowText(vote))
 
 	@abstractmethod	
