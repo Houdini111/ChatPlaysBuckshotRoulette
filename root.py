@@ -42,14 +42,14 @@ logger = logging.getLogger(__name__)
 #  
 #  Round number, 
 #  Double or nothing set number
-#  Countdown (including clock?) for voting time. See https://stackoverflow.com/a/17985217 for circle
+#  Countdown clock? for voting time. See https://stackoverflow.com/a/17985217 for circle
 #  Voting stats? (absolute, percent, bars, pie chart)
 #  The names and votes of chatters as they come in?
 #
-#  Sometimes bugs 
+#  Sometimes bugs -- These might all be fixed
 #    * Same player vote for same item, different dealer item is double counted? 
 #         "Winning action of [USE 1 2] won with a vote count of 2 (200%)"
-#    * Sometimes winning action vote text is wrong. Somestimes doesn't include adrenaline item number.
+#    *         Maybe fixed?   Sometimes winning action vote text is wrong. Somestimes doesn't include adrenaline item number.
 #    * Sometimes adrenaline item votes for the same player item don't combine.
 
 

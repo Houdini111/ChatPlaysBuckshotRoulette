@@ -12,9 +12,10 @@ import logging
 from shared.consts import Target
 from shared.util import resizePointArrFrom1440p, resizeXFrom1440p
 from shared.actions import Action, ShootAction, UseItemAction
-from shared.config import useSidebarActionOverlay, useWinningActionReticle
+from shared.config import useSidebarActionOverlay, useWinningActionReticle, getActionVotePeriod
 from bot.vote import Vote, VotingTally, VotingTallyEntry
 from .consts import Tags
+from .countdown import Countdown
 from .actionVoteDisplay import ActionVoteDisplay
 from .fullScreenVoteDisplay import FullScreenVoteDisplay
 from .sidebarVoteDisplay import SidebarVoteDisplay
@@ -47,6 +48,9 @@ class Overlay():
 		self.voteList: list[int] = []
 		
 		self.statusText = self.draw_text_1440("", 20, 20, int(self.baseFontSize*50/80), self.canvas)
+		self.actionCountdown: Countdown = Countdown(int(2560/2), 1420, int(self.baseFontSize*1.25), 30, getActionVotePeriod(), 5, 3, self.draw_text_1440, self.root, self.canvas)
+		self.actionCountdown.start()
+
 		self.initNameLeaderboard()
 		self.initActionWinnerReticle()
 		self.initActionVotesDisplay()
