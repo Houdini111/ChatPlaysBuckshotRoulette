@@ -61,7 +61,7 @@ def getRunOverlay() -> bool:
 	return config.getKeyOrDefault("runOverlay", bool, True)
 
 def useSidebarActionOverlay() -> bool:
-	return config.getKeyOrDefault("useSidebarActionOverlay", bool, False)
+	return config.getKeyOrDefault("useSidebarActionOverlay", bool, True)
 
 def useWinningActionReticle() -> bool:
 	return config.getKeyOrDefault("useWinningActionReticle", bool, True)

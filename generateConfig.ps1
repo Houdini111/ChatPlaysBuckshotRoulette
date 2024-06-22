@@ -10,8 +10,8 @@ $defaultConfig = [PSCustomObject]@{
   runChatbot=$true
   runGamebot=$true
   runOverlay=$true
-  useSidebarActionOverlay=$false
-  useWinningActionReticle=$false
+  useSidebarActionOverlay=$true
+  useWinningActionReticle=$true
 } 
 $config = $defaultConfig.PsObject.Copy()
 
