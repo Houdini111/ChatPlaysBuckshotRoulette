@@ -8,6 +8,8 @@ from threading import Thread
 import math
 from operator import itemgetter
 import logging
+import random
+import string
 
 from shared.consts import Target
 from shared.util import resizePointArrFrom1440p, resizeXFrom1440p
@@ -43,7 +45,7 @@ class Overlay():
 		self.canvas = tk.Canvas(width = self.displayW, height = self.displayH, bg="green")
 		self.canvas.pack(expand=tk.YES, fill=tk.BOTH)
 		
-		self.baseFontSize = math.ceil(80 * (float(self.displayH) / 1440)) #80 is the size I want at 1440p
+		self.baseFontSize: int = (math.ceil(80 * (float(self.displayH) / 1440))) #80 is the size I want at 1440p
 		
 		self.voteList: list[int] = []
 		
@@ -54,8 +56,7 @@ class Overlay():
 		self.initNameLeaderboard()
 		self.initActionWinnerReticle()
 		self.initActionVotesDisplay()
-		#self.voteActionLeaderboard: Leaderboard = VoteActionLeaderboard("Test Header", 5, 1080, 420, 50, self.draw_text_1440, self.canvas)
-	
+		
 	def run(self) -> None:
 		tk.mainloop()
 	
@@ -86,10 +87,11 @@ class Overlay():
 		self.nameLeaderboard: Leaderboard = NameLeaderboard("Next Name Ranking", 5, 20, 950, int(math.ceil(self.baseFontSize*0.85)), self.draw_text_1440, self.canvas)
 
 	def initActionVotesDisplay(self) -> None:
+		self.actionVoteDisplay: ActionVoteDisplay
 		if useSidebarActionOverlay():
-			self.actionVoteDisplay: SidebarVoteDisplay = SidebarVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle) 
+			self.actionVoteDisplay = SidebarVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle) 
 		else:
-			self.actionVoteDisplay: FullScreenVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle)
+			self.actionVoteDisplay = FullScreenVoteDisplay(self.baseFontSize, self.draw_text_1440, self.canvas, self.winningActionReticle)
 		self.clearActionOverlay()
 
 	def initActionWinnerReticle(self) -> None:
@@ -112,14 +114,15 @@ class Overlay():
 		self.hideActionReticle()
 
 	def clearActionVoteStatic(self) -> None:
-		self.canvas.itemconfigure(Tags.ACTION_VOTE_STATIC, state="hidden")
+		self.canvas.itemconfigure(str(Tags.ACTION_VOTE_STATIC), state="hidden")
 		self.lastDrawnActionNumbers = list[int]()
 		
 	def clearActionVotes(self) -> None:
-		self.canvas.itemconfigure(Tags.ACTION_VOTE_STATS, text="")
+		self.canvas.itemconfigure(str(Tags.ACTION_VOTE_STATS), text="")
 
 	def hideActionReticle(self) -> None:
-		self.winningActionReticle.hide()
+		if self.winningActionReticle:
+			self.winningActionReticle.hide()
 		
 
 overlay: Overlay

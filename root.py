@@ -61,9 +61,9 @@ def startGame() -> None:
 	logger.info("Starting all processes")
 	initAsyncio()
 
-	chatOverlay: Overlay = None
+	chatOverlay: Overlay | None = None
 	if getRunOverlay():
-		chatOverlay: Overlay = Overlay()
+		chatOverlay = Overlay()
 	else:
 		logger.warning("WARNING: Config says to not run overlay! Will not run correctly!")
 	
