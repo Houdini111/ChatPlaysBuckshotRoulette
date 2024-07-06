@@ -79,7 +79,7 @@ class LeaderboardWidget():
 		self.layoutRoot.addSpacing(headerBottomMargin)
 		self.children = []
 		for i in range(self.max_children):
-			child = createLabel(f"Child {i}", fontSize= childFontSize, parent= self.layoutRoot, alignment= alignment)
+			child = createLabel(f"", fontSize= childFontSize, parent= self.layoutRoot, alignment= alignment)
 			self.children.append(child)
 			self.layoutRoot.addWidget(child)
 		#Extra spacing to keep away from the bottom
@@ -110,6 +110,11 @@ class LeaderboardWidget():
 			wReal = resizeYFrom1440p(h1440)
 			
 		return (hReal, wReal)
+	
+	def set_list_text(self, i: int, text: str):
+		if i < 0 or i >= self.max_children:
+			return
+		self.children[i].setText(text)
 
 class Overlay():
 	def __init__(self):
@@ -128,7 +133,8 @@ class Overlay():
 
 		#self.createLabel("First Label", 900, 200)
 		#self.createLabel("Second label", 0, 0, alignment= Qt.AlignTop | Qt.AlignRight)
-		LeaderboardWidget(0, 870, "Name Leaderboard", self.createLabel, self.window, h1440=1440-870, alignment= Qt.AlignLeft | Qt.AlignTop)
+		leaderboard: LeaderboardWidget = LeaderboardWidget(0, 870, "Name Leaderboard", self.createLabel, self.window, h1440=1440-870, alignment= Qt.AlignLeft | Qt.AlignTop)
+		leaderboard.set_list_text(2, "This is a test third")
 
 		window.show()
 		app.exec()
