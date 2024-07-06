@@ -43,6 +43,9 @@ def resizeYFrom1440p(y1440: int) -> int:
 	yPercent = y1440/1440
 	displayW, displayH = pyautogui.size()
 	return int(math.ceil(yPercent * displayH))
+
+class VotingTallyEntry:
+	pass #Just here to exist for now
 #END TEMP
 
 
@@ -70,7 +73,7 @@ class LeaderboardWidget():
 		self.widgetRoot.move(x1440, y1440)
 		self.widgetRoot.setFixedSize(wReal, hReal)
 
-	def init_elements(self, headerText: str, createLabel: Callable, baseFontSize: int, childFontFactor: float, alignment: Qt.Alignment | Qt.AlignmentFlag):
+	def init_elements(self, headerText: str, createLabel: Callable, baseFontSize: int, childFontFactor: float, alignment: Qt.Alignment | Qt.AlignmentFlag) -> None:
 		childFontSize = int(math.ceil(baseFontSize * childFontFactor))
 
 		self.header = createLabel(headerText, fontSize= baseFontSize, parent= self.layoutRoot, alignment= alignment)
@@ -111,10 +114,21 @@ class LeaderboardWidget():
 			
 		return (hReal, wReal)
 	
-	def set_list_text(self, i: int, text: str):
+	def set_list_text(self, i: int, text: str) -> None:
 		if i < 0 or i >= self.max_children:
 			return
 		self.children[i].setText(text)
+		
+class Leaderboard():
+	def __init__(self, leaderboardWidget: LeaderboardWidget):
+		self.leaderboardWidget = leaderboardWidget
+		
+	def diplayVotes(self, votes: list[VotingTallyEntry]) -> None:
+		pass #TODO
+	
+	def clearRows(self) -> None:
+		for i in range(self.leaderboardWidget.max_children):
+			self.leaderboardWidget.set_list_text(i, "")
 
 class Overlay():
 	def __init__(self):
@@ -131,10 +145,13 @@ class Overlay():
 		window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 		window.setFixedSize(self.displayW, self.displayH)
 
-		#self.createLabel("First Label", 900, 200)
-		#self.createLabel("Second label", 0, 0, alignment= Qt.AlignTop | Qt.AlignRight)
-		leaderboard: LeaderboardWidget = LeaderboardWidget(0, 870, "Name Leaderboard", self.createLabel, self.window, h1440=1440-870, alignment= Qt.AlignLeft | Qt.AlignTop)
-		leaderboard.set_list_text(2, "This is a test third")
+		self.baseFontSize: int = (math.ceil(80 * (float(self.displayH) / 1440))) #80 is the size I want at 1440p
+
+		leaderboardWidget: LeaderboardWidget = LeaderboardWidget(0, 870, "Name Leaderboard", self.createLabel, self.window, h1440=1440-870, alignment= Qt.AlignLeft | Qt.AlignTop)
+		self.nameLeaderboard = Leaderboard(leaderboardWidget)
+
+		statusTextFontSize = int(self.baseFontSize*50/80)
+		self.statusText = self.createLabel("Here is a sample status text. Let's see if it works just fine the first time.", 5, -10, fontSize= statusTextFontSize)
 
 		window.show()
 		app.exec()
@@ -157,6 +174,17 @@ class Overlay():
 		if x1440 != -1 and y1440 != -1:
 			label.move(realX, realY)
 		return label
+	
+	def updateStatusText(self, text: str) -> None:
+		self.statusText.setText(text)
+		
+	def clearOldNameLeaderboard(self) -> None:
+		logger.info("Clearing old name leaderboard")
+		self.nameLeaderboard.clearRows()
+
+	def drawNameVoteLeaderboard(self, votes: list[VotingTallyEntry]) -> None:
+		self.clearOldNameLeaderboard()
+		self.nameLeaderboard.displayVotes(votes)
 		
 		
 
