@@ -59,33 +59,33 @@ class LeaderboardWidget():
 		self.widgetRoot = QtWidgets.QWidget()
 		self.layoutRoot = QtWidgets.QVBoxLayout()
 		self.widgetRoot.setLayout(self.layoutRoot)
-		
 		self.parent = parent
 		self.widgetRoot.setParent(self.parent)
+		self.max_children = maxChildren
 		
-		#self.layoutRoot.setContentsMargins(0, 0, 0, 0)
-		#self.layoutRoot.setSpacing(0)
-		#self.layoutRoot.setSpacing
-		
+		self.init_elements(headerText, createLabel, baseFontSize, childFontFactor, alignment)
+
+		(hReal, wReal) = self.calculate_size(h1440, w1440, lineSpacingFactor, headerText)
+
+		self.widgetRoot.move(x1440, y1440)
+		self.widgetRoot.setFixedSize(wReal, hReal)
+
+	def init_elements(self, headerText: str, createLabel: Callable, baseFontSize: int, childFontFactor: float, alignment: Qt.Alignment | Qt.AlignmentFlag):
 		childFontSize = int(math.ceil(baseFontSize * childFontFactor))
 
 		self.header = createLabel(headerText, fontSize= baseFontSize, parent= self.layoutRoot, alignment= alignment)
 		self.layoutRoot.addWidget(self.header)
-		
 		headerBottomMargin: int = int(math.ceil(baseFontSize * 0.5))
 		self.layoutRoot.addSpacing(headerBottomMargin)
-
 		self.children = []
-		for i in range(maxChildren):
+		for i in range(self.max_children):
 			child = createLabel(f"Child {i}", fontSize= childFontSize, parent= self.layoutRoot, alignment= alignment)
 			self.children.append(child)
 			self.layoutRoot.addWidget(child)
-			
-			
 		#Extra spacing to keep away from the bottom
 		self.layoutRoot.addSpacing(int(headerBottomMargin/2))
 		
-		
+	def calculate_size(self, h1440: int, w1440: int, lineSpacingFactor: float, headerText: str):
 		headerFontMetrics: QtGui.QFontMetrics = self.header.fontMetrics()
 		childFontMetrics: QtGui.QFontMetrics = self.children[0].fontMetrics()
 		hReal = 1
@@ -94,7 +94,7 @@ class LeaderboardWidget():
 			childFontHeight: int = childFontMetrics.height()
 			headerTotalHeight: int = int(math.ceil(headerFontHeight * (1 + lineSpacingFactor)))
 			childTotalHeight: int = int(math.ceil(childFontHeight * (1 + lineSpacingFactor)))
-			allChildrenHeight: int = childTotalHeight * maxChildren
+			allChildrenHeight: int = childTotalHeight * self.max_children
 			hReal = headerTotalHeight + allChildrenHeight
 		else:
 			hReal = resizeYFrom1440p(h1440)
@@ -108,10 +108,8 @@ class LeaderboardWidget():
 			wReal = textBaseWidth + labelMargin + layoutMargin + widgetMargin
 		else:
 			wReal = resizeYFrom1440p(h1440)
-
-		self.widgetRoot.move(x1440, y1440)
-		self.widgetRoot.setFixedSize(wReal, hReal)
-
+			
+		return (hReal, wReal)
 
 class Overlay():
 	def __init__(self):
