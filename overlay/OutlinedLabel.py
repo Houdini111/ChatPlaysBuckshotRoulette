@@ -58,7 +58,7 @@ class OutlinedLabel(QLabel):
         else:
             indent = self.indent()
 
-        if self.alignment() & Qt.AlignLeft:
+        if self.alignment() & Qt.AlignLeft and len(self.text()) > 0:
             x = rect.left() + indent - min(metrics.leftBearing(self.text()[0]), 0)
         elif self.alignment() & Qt.AlignRight:
             x = rect.x() + rect.width() - indent - tr.width()
