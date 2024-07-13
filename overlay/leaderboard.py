@@ -52,6 +52,7 @@ class Leaderboard(ABC):
 		self.canvas.itemconfig(self.getBoardRowTags(), text="")
 			
 	def displayVotes(self, votes: list[VotingTallyEntry]) -> None:
+		self.clearRows()
 		logger.debug(f"Leaderboard displaying {len(votes)} rows")
 		for i in range(len(votes)):
 			self.displayVote(i, votes[i])

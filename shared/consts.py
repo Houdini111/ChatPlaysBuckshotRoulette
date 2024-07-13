@@ -9,6 +9,7 @@ dealerNames = ["dealer", "them", "guy", "other"]
 playerNames = ["self", "me", "player", "i", "myself"]
 
 maxNameLength: int = 6
+nameLeaderboardCount: int = 5
 
 class StrEnum(Enum):
 	def __str__(self):

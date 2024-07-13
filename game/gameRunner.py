@@ -10,7 +10,7 @@ from .bathroom import inStartingBathroom
 from .waiver import getPlayerName
 from shared.config import getActionVotePeriod
 from shared.actions import parseAction
-from overlay.overlay import Overlay, getOverlay
+from overlay.overlay import getOverlay
 from overlay.status import status
 from bot.chatbot import getChatbot
 

@@ -8,7 +8,9 @@ from time import sleep
 
 from shared.streamToLogger import StreamToLogger
 from shared.config import getRunChatbot, getRunGamebot, getRunOverlay
-from overlay.overlay import Overlay
+from overlay.overlay import Overlay, getOverlay
+from overlay.overlay1 import Overlay1
+from overlay.overlay2 import Overlay2
 from game.bathroom import throughToGameRoom
 from game.waiver import waive
 from game.gameRunner import GameRunner
@@ -36,7 +38,9 @@ logger = logging.getLogger(__name__)
 #TODO: 
 #  Option for vote display stats on/off. 
 #  Option for vote guides on/off
-#     
+#
+#  Move debug config options to an optional additional config file     
+#
 #  Make dealer item circle dotted when winning vote isn't a dealer item, to show winning dealer item in case the vote swings
 #  BUG: Fullscreen vote display dealer text not clearing? 
 #  
@@ -57,13 +61,18 @@ def initAsyncio():
 	if platform.system() == "Windows":
 		asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+def createOverlay(version: int):
+	if version == 1:
+		Overlay1()
+	elif version == 2:
+		Overlay2()
+
 def startGame() -> None:
 	logger.info("Starting all processes")
 	initAsyncio()
 
-	chatOverlay: Overlay | None = None
 	if getRunOverlay():
-		chatOverlay = Overlay()
+		createOverlay(2)
 	else:
 		logger.warning("WARNING: Config says to not run overlay! Will not run correctly!")
 	
@@ -83,7 +92,7 @@ def startGame() -> None:
 	# It literally just refuses to run if it's not on the main thread.
 	# At least TwitchIO tries... 
 	if getRunOverlay():
-		chatOverlay.run()
+		getOverlay().start()
 
 def runGame() -> None:
 	logger.info("Starting game bot.")

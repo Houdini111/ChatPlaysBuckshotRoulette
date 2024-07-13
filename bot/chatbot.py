@@ -14,7 +14,7 @@ from .secrets import getSecrets
 from .vote import RunningVote, Vote, VotingTally, VotingTallyEntry, tallyVotes
 from shared.util import run_task
 from shared.actions import Action, ShootAction, UseItemAction
-from shared.consts import getShootNames, getUseNames, getDealerNames, getPlayerNames, getMaxNameLength
+from shared.consts import getShootNames, getUseNames, getDealerNames, getPlayerNames, getMaxNameLength, nameLeaderboardCount
 from shared.config import getChannels, getDefaultName, getInstructionsCooldown
 from overlay.overlay import getOverlay
 
@@ -283,11 +283,11 @@ class Chatbot(commands.Bot):
 	
 	def updateNameLeaderboardDisplay(self) -> None:
 		logger.info(f"Updating name votes -> {self.nameVotesByName}")
-		getOverlay().clearOldNameLeaderboard()
 		if len(self.nameVotesByName) < 1:
+			getOverlay().clearOldNameLeaderboard()
 			return
 		tally: VotingTally = tallyVotes(self.nameVotesByName)
-		getOverlay().drawNameVoteLeaderboard(tally.topNVotes(3))
+		getOverlay().drawNameVoteLeaderboard(tally.topNVotes(nameLeaderboardCount))
 			
 	def updateActionVotesDisplay(self) -> None:
 		logger.info("Updating action votes")
@@ -350,12 +350,15 @@ def getChatbot() -> Chatbot:
 
 def createAndStartChatbot():
 	#asyncio.run destroys the loop after
+	logger.info("Starting chatbot token refresh")
 	asyncio.run(getSecrets().refresh_tokens_and_save())
+	logger.info("Done with chatbot token refresh")
 	
 	#TwitchIO bots expect get_event_loop to succeed, so I need to prepare for that. 
 	loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
 	asyncio.set_event_loop(loop)
 	getChatbot()
+	logger.info("Running chatbot now")
 	getChatbot().run()
 
 #TwitchIO REALLY doesn't like being run in asyncio. It expects free access to its own asyncio loop, so it needs to be in its own thread

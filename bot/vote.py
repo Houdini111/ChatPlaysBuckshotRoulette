@@ -1,5 +1,6 @@
 import logging
 import random
+import json
 from typing import Generic, Iterator, OrderedDict, TypeVar, Type
 from copy import deepcopy
 
@@ -214,7 +215,7 @@ class RunningVote(Generic[VoteType]):
 	def getAdrenalineItemVotes(self) -> list[int]:
 		return self.dealerItemVotes
 
-class VotingTallyEntry(Generic[VoteType]):
+class VotingTallyEntry(dict, Generic[VoteType]):
 	def __init__(self, vote: Vote[VoteType], totalVotes: int, adrenalineItemVote: int = -1):
 		self.vote = vote
 		self.totalVotes: int = totalVotes #Used only for copy
@@ -231,6 +232,19 @@ class VotingTallyEntry(Generic[VoteType]):
 		ret = VotingTallyEntry(deepcopy(self.vote), self.totalVotes, self.adrenalineItemVote)
 		memo[id(self)] = ret
 		return ret
+
+	def __str__(self):
+		return \
+		"{ " \
+		f"\"vote\": {self.vote}, " \
+		f"\"totalVotes\": {self.totalVotes}, " \
+		f"\"percentageRaw\": {self.percentageRaw}, " \
+		f"\"percentageRound\": {self.percentageRound}, " \
+		f"\"adrenalineItemVote\": {self.adrenalineItemVote} " \
+		"}";
+
+	def __repr__(self):
+		return self.__str__()
 
 	def changeTotalVotes(self, newTotalVote: int) -> None:
 		self.totalVotes = newTotalVote
@@ -297,6 +311,18 @@ class VotingTallyEntryList(Generic[VoteType]):
 		ret = VotingTallyEntryList(self.tallyVoteCountToContain, copiedList)
 		memo[id(self)] = ret
 		return ret
+	
+	def __str__(self):
+		return \
+		"{ " \
+		f"\"tallyVoteCountToContain\": {self.tallyVoteCountToContain}, " \
+		f"\"tallies\": {self.tallies}, " \
+		f"\"chosenRandomly\": {self.chosenRandomly}, " \
+		f"\"winnerIter\": {self.winnerIter} " \
+		"}";
+
+	def __repr__(self):
+		return self.__str__()
 	
 	#TODO: There should probably be two kinds of EntryList. Those that can choose randomly and those that can't
 	def getWinner(self) -> VotingTallyEntry[VoteType] | None:
