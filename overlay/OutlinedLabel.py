@@ -82,3 +82,10 @@ class OutlinedLabel(QLabel):
         if 1 < self.brush.style() < 15:
             qp.fillPath(path, self.palette().window())
         qp.fillPath(path, self.brush)
+        
+		#Added by me
+        outlinePen = QPen()
+        outlinePen.setWidth(self.lineWidth())
+        path.clear()
+        path.addRect(0, 0, rect.width(), rect.height())
+        qp.strokePath(path, outlinePen)

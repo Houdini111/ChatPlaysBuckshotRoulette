@@ -100,7 +100,7 @@ class Overlay1(Overlay):
 			return
 		self.winningActionReticle = WinningActionReticle(self.canvas)
 
-	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
+	def displayStaticActionOverlayDisplayElements(self, numbersToDraw: list[int]) -> None:
 		logger.info(f"displayItemActionGuides numbersToDraw: {numbersToDraw}")
 		self.actionVoteDisplay.displayItemActionGuides(numbersToDraw)
 
@@ -110,10 +110,10 @@ class Overlay1(Overlay):
 			
 	def clearActionOverlay(self) -> None:
 		self.clearActionVotes()
-		self.clearActionVoteStatic()
+		self.clearStaticActionVoteDisplayElements()
 		self.hideActionReticle()
 
-	def clearActionVoteStatic(self) -> None:
+	def clearStaticActionVoteDisplayElements(self) -> None:
 		self.canvas.itemconfigure(str(Tags.ACTION_VOTE_STATIC), state="hidden")
 		self.lastDrawnActionNumbers = list[int]()
 		

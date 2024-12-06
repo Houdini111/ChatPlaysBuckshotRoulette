@@ -184,8 +184,11 @@ class Chatbot(commands.Bot):
 			return
 		
 		if command == "name":
-			logger.debug(f"Got name vote command: \"{command} {messageSplit[1]}\"")
-			self.nameVote(authorName, messageSplit[1])
+			if messageSplit[1].split() == "":
+				logger.warn(f"Got name vote command but the name was somehow empty. Full message: \"{messageBody}\"")
+			else:
+				logger.debug(f"Got name vote command: \"{command} {messageSplit[1]}\"")
+				self.nameVote(authorName, messageSplit[1])
 		elif self.awaitingActionInputs:
 			if command in getUseNames():
 				logger.debug(f"Got use vote command: \"{command} {commandArgs}\"")

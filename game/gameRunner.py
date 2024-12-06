@@ -158,7 +158,7 @@ class GameRunner():
 			logger.info("Should be player turn now. Refreshing player items.")
 			getItemManager().refreshPlayerItems()
 			status("Awaiting player input")
-			getOverlay().displayItemActionGuides(getItemManager().getAllCurrentItemPositions())
+			getOverlay().displayStaticActionOverlayDisplayElements(getItemManager().getAllCurrentItemPositions())
 			actionSuccess: bool = False
 			retry: bool = False
 			invalid: bool = False

@@ -93,3 +93,8 @@ def run_task(coroutine: Callable):
 	else:
 		logger.debug('Starting new event loop')
 		result = asyncio.run(coroutine())
+		
+def flagValueInFlag(flagValue: int, flag: int):
+	#If the flagValue & flagValue == flagValue
+	#  then any bits on in flagValue must also have been on in flag
+	return flag & flagValue == flagValue

@@ -24,7 +24,7 @@ class Overlay(ABC):
 		pass
 		
 	@abstractmethod
-	def displayItemActionGuides(self, numbersToDraw: list[int]) -> None:
+	def displayStaticActionOverlayDisplayElements(self, numbersToDraw: list[int]) -> None:
 		pass
 		
 	@abstractmethod
@@ -36,7 +36,7 @@ class Overlay(ABC):
 		pass
 		
 	@abstractmethod
-	def clearActionVoteStatic(self) -> None:
+	def clearStaticActionVoteDisplayElements(self) -> None:
 		pass
 		
 	@abstractmethod
