@@ -72,7 +72,7 @@ def startGame() -> None:
 	initAsyncio()
 
 	if getRunOverlay():
-		createOverlay(2)
+		createOverlay(1)
 	else:
 		logger.warning("WARNING: Config says to not run overlay! Will not run correctly!")
 	

@@ -35,7 +35,7 @@ ActionVoteType = TypeVar("ActionVoteType", int, Target)
 
 class Overlay1(Overlay):
 	def __init__(self):
-		setOveralyToThis(self)
+		setOverlayToThis(self)
 		self.displayW, self.displayH = pyautogui.size()
 		self.root: tk.Tk = tk.Tk()
 		self.root.title("Chat Plays Buckshot Roulette - Chat Overlay")
@@ -51,7 +51,6 @@ class Overlay1(Overlay):
 		
 		self.statusText = self.draw_text_1440("", 20, 20, int(self.baseFontSize*50/80), self.canvas)
 		self.actionCountdown: Countdown = Countdown(int(2560/2), 1420, int(self.baseFontSize*1.25), 30, getActionVotePeriod(), 5, 3, self.draw_text_1440, self.root, self.canvas)
-		self.actionCountdown.start()
 
 		self.initNameLeaderboard()
 		self.initActionWinnerReticle()
