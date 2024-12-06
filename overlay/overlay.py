@@ -46,6 +46,14 @@ class Overlay(ABC):
 	@abstractmethod
 	def hideActionReticle(self) -> None:
 		pass
+		
+	@abstractmethod
+	def startCountdown(self) -> None:
+		pass
+		
+	@abstractmethod
+	def hideCountdown(self) -> None:
+		pass
 	
 overlay: Overlay
 def setOverlayToThis(newOverlay: Overlay) -> None:

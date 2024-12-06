@@ -93,3 +93,9 @@ class Countdown():
 			limited = limited[:-1]
 
 		return limited
+
+	def show(self):
+		self.canvas.itemconfigure(self.textElem, state='normal')
+
+	def hide(self):
+		self.canvas.itemconfigure(self.textElem, state='hidden')

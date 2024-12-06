@@ -159,6 +159,7 @@ class GameRunner():
 			getItemManager().refreshPlayerItems()
 			status("Awaiting player input")
 			getOverlay().displayItemActionGuides(getItemManager().getAllCurrentItemPositions())
+			getOverlay().startCountdown()
 			actionSuccess: bool = False
 			retry: bool = False
 			invalid: bool = False
@@ -179,8 +180,10 @@ class GameRunner():
 					if action is None: #Tie or something. Re-open votes
 						retry = True
 						invalid = False
+						getOverlay().startCountdown()
 						break
 					if action.valid():
+						getOverlay().hideCountdown()
 						getOverlay().clearActionOverlay()
 						execute(action)
 						actionSuccess = True

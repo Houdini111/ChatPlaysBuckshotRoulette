@@ -122,3 +122,11 @@ class Overlay1(Overlay):
 	def hideActionReticle(self) -> None:
 		if self.winningActionReticle:
 			self.winningActionReticle.hide()
+
+	def startCountdown(self) -> None:
+		self.actionCountdown.show()
+		self.actionCountdown.start()
+
+	def hideCountdown(self) -> None:
+		self.actionCountdown.end()
+		self.actionCountdown.hide()

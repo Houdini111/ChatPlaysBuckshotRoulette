@@ -93,3 +93,9 @@ class Overlay2(Overlay):
 		
 	def hideActionReticle(self) -> None:
 		pass
+	
+	def startCountdown(self) -> None:
+		pass
+
+	def hideCountdown(self) -> None:
+		pass
